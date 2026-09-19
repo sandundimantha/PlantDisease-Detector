@@ -24,12 +24,15 @@ class LocationService {
         return null;
       }
 
-      return await Geolocator.getCurrentPosition(
+      Position? position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.medium,
       ).timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 5),
         onTimeout: () => throw Exception('Location timeout'),
-      );
+      ).catchError((_) => null);
+
+      position ??= await Geolocator.getLastKnownPosition();
+      return position;
     } catch (e) {
       return null;
     }
@@ -37,10 +40,8 @@ class LocationService {
 
   /// Convert coordinates to a readable address.
   Future<String> getAddressFromCoordinates(double lat, double lon) async {
-    // Try native geocoding first
     try {
-      final placemarks = await Geocoding()
-          .placemarkFromCoordinates(lat, lon)
+      final placemarks = await Geocoding().placemarkFromCoordinates(lat, lon)
           .timeout(const Duration(seconds: 8));
       if (placemarks.isNotEmpty) {
         final place = placemarks[0];

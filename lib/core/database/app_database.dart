@@ -24,9 +24,9 @@ LazyDatabase _openConnection() {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'db.sqlite'));
 
-    if (Platform.isAndroid) {
-      // await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
-    }
+    // if (Platform.isAndroid) {
+    //   await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
+    // }
 
     final cachebase = (await getTemporaryDirectory()).path;
     sqlite3.tempDirectory = cachebase;

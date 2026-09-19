@@ -70,7 +70,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     );
     _confAnim = Tween<double>(begin: 0, end: _scan.confidenceScore).animate(
       CurvedAnimation(parent: _confCtrl, curve: Curves.easeOutCubic),
-    )..addListener(() => setState(() {}));
+    );
     
     _confCtrl.forward();
 
@@ -299,21 +299,31 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                               stops: [0.0, 1.0],
                               transform: GradientRotation(-3.14159 / 2),
                             ).createShader(bounds),
-                            child: CircularProgressIndicator(
-                              value: _confAnim.value,
-                              strokeWidth: 7,
-                              backgroundColor: const Color(0xFFF0EDE8),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                              strokeCap: StrokeCap.round,
+                            child: AnimatedBuilder(
+                              animation: _confAnim,
+                              builder: (context, child) {
+                                return CircularProgressIndicator(
+                                  value: _confAnim.value,
+                                  strokeWidth: 7,
+                                  backgroundColor: const Color(0xFFF0EDE8),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                  strokeCap: StrokeCap.round,
+                                );
+                              }
                             ),
                           ),
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              '${(_confAnim.value * 100).round()}%',
-                              style: AppTextStyles.headlineLarge.copyWith(letterSpacing: -1),
+                            AnimatedBuilder(
+                              animation: _confAnim,
+                              builder: (context, child) {
+                                return Text(
+                                  '${(_confAnim.value * 100).round()}%',
+                                  style: AppTextStyles.headlineLarge.copyWith(letterSpacing: -1),
+                                );
+                              }
                             ),
                             Text(
                               'Confidence',
@@ -780,32 +790,28 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                     BoxShadow(color: AppColors.primary.withValues(alpha: 0.38), blurRadius: 32, offset: const Offset(0, 12)),
                   ],
                 ),
-                child: Row(
-                    children: [
-                      Builder(
-                        builder: (context) {
-                          final officer = getNearestOfficer(locationState.address);
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.phone_rounded, color: Colors.white, size: 18),
-                            const SizedBox(width: 10),
-                            Flexible(
-                              child: Text(
-                                locationState.isLoading
-                                    ? 'Call Nearest Officer'
-                                    : 'Officer ${officer.name.split(' ').first} · ${officer.distanceKm}km',
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ],
-                        );
-                        }
-                      ),
-                    ],
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final officer = getNearestOfficer(locationState.address);
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.phone_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            locationState.isLoading
+                                ? 'Call Nearest Officer'
+                                : 'Officer ${officer.name.split(' ').first} · ${officer.distanceKm}km',
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                ),
               ),
             ),
           ),

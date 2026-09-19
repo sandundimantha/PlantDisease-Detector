@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:ui';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
 import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
+import 'package:plant_disease_detector/core/providers/user_provider.dart';
+
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
 import 'package:plant_disease_detector/features/weather/presentation/screens/weather_forecast_screen.dart';
-import 'package:plant_disease_detector/features/treatment/presentation/screens/disease_catalogue_screen.dart';
-import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
 import 'package:plant_disease_detector/features/community/presentation/screens/community_feed_screen.dart';
-import 'package:plant_disease_detector/features/community/presentation/screens/disease_radar_screen.dart';
-import 'package:plant_disease_detector/core/providers/user_provider.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HomeScreen — Matches Figma HomeScreen.tsx
+// HomeScreen — Dribbble Premium Redesign
 // ─────────────────────────────────────────────────────────────────────────────
-// Helper: builds a colored circle with the user's initials as a profile avatar fallback
+
 Widget _buildInitialsAvatar(String fullName, double size) {
   final parts = fullName.trim().split(' ');
   final initials = parts.length >= 2
@@ -28,20 +28,21 @@ Widget _buildInitialsAvatar(String fullName, double size) {
   return Container(
     width: size,
     height: size,
-    decoration: const BoxDecoration(
+    decoration: BoxDecoration(
       shape: BoxShape.circle,
-      gradient: LinearGradient(
+      gradient: const LinearGradient(
         colors: [Color(0xFFE07A5F), Color(0xFFF2A98A)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
+      border: Border.all(color: Colors.white, width: 2),
     ),
     child: Center(
       child: Text(
         initials,
         style: TextStyle(
           color: Colors.white,
-          fontSize: size * 0.35,
+          fontSize: size * 0.4,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -49,469 +50,562 @@ Widget _buildInitialsAvatar(String fullName, double size) {
   );
 }
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scanHistory = ref.watch(scanHistoryProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    
+    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userData = ref.watch(userProvider);
     final locationState = ref.watch(locationProvider);
     final weatherState = ref.watch(weatherProvider);
-    final userData = ref.watch(userProvider);
-    
-    // Dynamic greeting based on time of day
-    final hour = DateTime.now().hour;
-    String greeting = 'Good Evening,';
-    if (hour < 12) {
-      greeting = 'Good Morning,';
-    } else if (hour < 17) {
-      greeting = 'Good Afternoon,';
-    }
+    final scanHistory = ref.watch(scanHistoryProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+      backgroundColor: const Color(0xFFF9F9F9), // Clean off-white background
+      body: Stack(
+        children: [
+          // Background Top Emerald Shape
+          Container(
+            height: 320,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF0F2618), Color(0xFF143623)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 1. Premium Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(greeting, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
-                        Text('${userData.fullName.split(' ').first} 👋', style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5)),
-                        const SizedBox(height: 4),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Icon(Icons.location_on_rounded, size: 14, color: AppColors.primary),
-                            const SizedBox(width: 4),
                             Text(
-                              locationState.isLoading ? 'Locating...' : locationState.address,
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                              'CropGuard: AI Disease Identification',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 10,
+                                color: Colors.white.withOpacity(0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            _buildUserAvatar(userData, 32),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Good Morning, ${userData.fullName.split(' ').first}!',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 24,
+                            color: Color(0xFFF2CC8F), // Copper/Sand tint for name
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 2. Dynamic Weather Widget
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherForecastScreen())),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFF2CC8F).withOpacity(0.3), width: 1),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                // Weather Icon
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFE07A5F), Color(0xFFF2CC8F)],
+                                      begin: Alignment.bottomLeft,
+                                      end: Alignment.topRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(color: const Color(0xFFE07A5F).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.cloud_queue_rounded, color: Colors.white, size: 24),
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      locationState.isLoading ? 'Locating...' : (locationState.address.split(',').first.isNotEmpty ? locationState.address.split(',').first : 'Unknown'),
+                                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '10:07 AM', // Mock time as in design, or dynamic
+                                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12, fontFamily: 'Poppins'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  weatherState.isLoading ? '--' : '${weatherState.weather?.temperature.round() ?? 24}°C',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  weatherState.isLoading ? '--' : 'Sunny',
+                                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12, fontFamily: 'Poppins'),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFFE07A5F).withValues(alpha: 0.3), width: 2.5),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: userData.imagePath != null
-                                ? ((userData.imagePath!.startsWith('http') || kIsWeb)
-                                    ? Image.network(
-                                        userData.imagePath!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => _buildInitialsAvatar(userData.fullName, 48),
-                                      )
-                                    : Image.file(File(userData.imagePath!), fit: BoxFit.cover))
-                                : _buildInitialsAvatar(userData.fullName, 48),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: -2,
-                          right: -2,
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF81B29A),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Weather strip
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherForecastScreen()));
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                  const SizedBox(height: 32),
+
+                  // 3. Middle Section: Recent Activities
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Manage your farm's health.",
+                          style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF333333)),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "RECENT ACTIVITIES",
+                          style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF8B6C5C), letterSpacing: 1.2),
+                        ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  SizedBox(
+                    height: 220,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        _buildRecentActivityImageTile(
+                          'Tomato\nEarly Blight',
+                          '88% Confirmed',
+                          0.88,
+                          'https://images.unsplash.com/photo-1592841200221-a6898f307baa?q=80&w=600&auto=format&fit=crop',
+                        ),
+                        _buildRecentActivityChartTile(
+                          'TOMATO\nDISEASE',
+                          '88% Confirmed\nSep 15',
+                          0.88,
+                        ),
+                        if (scanHistory.isNotEmpty)
+                          _buildRecentActivityImageTile(
+                            scanHistory.first.diseaseName.replaceAll(' ', '\n'),
+                            scanHistory.first.dateLabel,
+                            0.94,
+                            scanHistory.first.imageUrl,
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // View All
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'View All >',
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFFC96A4F)),
+                      ),
+                    ),
+                  ),
+
+                  // 4. Quick Actions & Centerpiece
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildWeatherStat('💧', weatherState.isLoading ? '--' : '${weatherState.weather?.humidity ?? 72}%', 'Humidity'),
-                        _buildWeatherStat('🌡️', weatherState.isLoading ? '--' : '${weatherState.weather?.temperature.toStringAsFixed(1) ?? 28.5}°C', 'Temp'),
-                        _buildWeatherStat('🌬️', weatherState.isLoading ? '--' : '${weatherState.weather?.windSpeed.toStringAsFixed(1) ?? 12.0} km/h', 'Wind'),
+                        _buildQuickActionTile(
+                          context,
+                          'Expert\nInsights',
+                          Icons.lightbulb_rounded, // Matches the copper bulb
+                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
+                        ),
+                        
+                        // CENTERPIECE: Scan Field Button (Squarish with rounded corners)
+                        GestureDetector(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CameraCaptureScreen())),
+                          child: AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              return Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24), // Squarish
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF143623), Color(0xFF0F2618)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF143623).withOpacity(0.4 * _pulseAnimation.value),
+                                      blurRadius: 20 * _pulseAnimation.value,
+                                      spreadRadius: 4 * _pulseAnimation.value,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                  border: Border.all(
+                                    color: const Color(0xFF81B29A).withOpacity(0.5),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.document_scanner_rounded, color: Colors.white, size: 28),
+                                    SizedBox(height: 6),
+                                    Text(
+                                      'Scan\nField',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Poppins',
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          ),
+                        ),
+
+                        _buildQuickActionTile(
+                          context,
+                          'Community\nHub',
+                          Icons.people_alt_rounded,
+                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
+                        ),
                       ],
                     ),
                   ),
-                ),
-              ),
-
-              // Disease Radar Banner
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseRadarScreen())),
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(24, 8, 24, 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF1A3A2A), Color(0xFF0D2518)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFF81B29A).withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF81B29A).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Center(child: Icon(Icons.radar_rounded, color: Color(0xFF81B29A), size: 20)),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Promo / Upgrade Banner
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4)),
+                        ],
+                        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Community Disease Radar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                            Text('⚠️ 14 Blight reports within 2.3km', style: TextStyle(color: Colors.red.shade300, fontSize: 11, fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE07A5F).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(color: const Color(0xFFE07A5F).withValues(alpha: 0.5)),
-                        ),
-                        child: const Text('LIVE', style: TextStyle(color: Color(0xFFE07A5F), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Hero Card
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const CameraCaptureScreen()));
-                },
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFE07A5F), Color(0xFFC96A4F), Color(0xFFB85A3F)],
-                      stops: [0.0, 0.5, 1.0],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFFE07A5F).withValues(alpha: 0.4), blurRadius: 48, offset: const Offset(0, 16)),
-                      BoxShadow(color: const Color(0xFFE07A5F).withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Subtle background image blended with the gradient
-                      Positioned.fill(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Opacity(
-                            opacity: 0.15,
-                            child: Image.network(
-                              'https://images.unsplash.com/photo-1592841200221-a6898f307baa?q=80&w=800&auto=format&fit=crop',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: -50,
-                        right: -40,
-                        child: Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -40,
-                        left: -20,
-                        child: Container(
-                          width: 112,
-                          height: 112,
-                          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), shape: BoxShape.circle),
-                        ),
-                      ),
-                      Row(
+                      child: Row(
                         children: [
                           Container(
-                            width: 56,
-                            height: 56,
+                            width: 48,
+                            height: 48,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: const Color(0xFFF9EAE1),
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Center(
-                              child: Icon(Icons.document_scanner_outlined, color: Colors.white, size: 28),
-                            ),
+                            child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFC96A4F), size: 28),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('AI-Powered Detection', style: AppTextStyles.bodySmall.copyWith(color: Colors.white.withValues(alpha: 0.75), fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 4),
-                                Text('Scan Crop for Diseases', style: AppTextStyles.headlineMedium.copyWith(color: Colors.white, fontSize: 20, letterSpacing: -0.3, height: 1.1)),
-                                const SizedBox(height: 6),
-                                Text('Instant results · 94% accuracy', style: AppTextStyles.bodySmall.copyWith(color: Colors.white.withValues(alpha: 0.65), fontWeight: FontWeight.w500)),
+                                const Text('Upgrade to CropGuard Pro', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2D3748))),
+                                const SizedBox(height: 2),
+                                const Text('Get unlimited AI scans & expert advice.', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF7A869A))),
                               ],
-                            ),
-                          ),
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.chevron_right_rounded, color: Colors.white, size: 20),
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-
-              // Quick Stats (Grid)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildQuickStatCard(
-                            context,
-                            'Disease',
-                            'Catalogue',
-                            Icons.menu_book_rounded,
-                            AppColors.primary,
-                            const Color(0xFFFFFFFF),
-                            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseCatalogueScreen())),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildQuickStatCard(
-                            context,
-                            'Saved',
-                            'Items',
-                            Icons.bookmark_rounded,
-                            AppColors.primary,
-                            const Color(0xFFFFF5F2),
-                            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedItemsScreen())),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildQuickStatCard(
-                            context,
-                            'Expert',
-                            'Consult',
-                            Icons.support_agent_rounded,
-                            AppColors.secondary,
-                            const Color(0xFFFFFFFF),
-                            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildQuickStatCard(
-                            context,
-                            'Community',
-                            'Forum',
-                            Icons.forum_rounded,
-                            AppColors.secondary,
-                            const Color(0xFFF2F9F6),
-                            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Recent Scans
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Recent Scans', style: AppTextStyles.titleSmall),
-                    Text('See all →', style: AppTextStyles.bodySmall.copyWith(color: const Color(0xFFE07A5F), fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-
-              SizedBox(
-                height: 156,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: scanHistory.length > 5 ? 5 : scanHistory.length,
-                  itemBuilder: (context, index) {
-                    final scan = scanHistory[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => DiagnosticResultScreen(scan: scan)));
-                      },
-                      child: Container(
-                        width: 116,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              height: 84,
-                              width: double.infinity,
-                              child: Stack(
-                                children: [
-                                  Hero(
-                                    tag: 'scan_image_${scan.id}',
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
-                                      child: Image.network(scan.imageUrl, fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: scan.severityColor,
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                      child: Text(
-                                        scan.severityLabel,
-                                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(scan.diseaseName, style: AppTextStyles.titleSmall.copyWith(fontSize: 12, height: 1.2), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  const SizedBox(height: 4),
-                                  Text(scan.dateLabel, style: AppTextStyles.bodySmall.copyWith(fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserAvatar(dynamic userData, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0xFFF2CC8F), width: 1.5), // Copper border
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size / 2),
+        child: userData.imagePath != null
+            ? ((userData.imagePath!.startsWith('http') || kIsWeb)
+                ? Image.network(userData.imagePath!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildInitialsAvatar(userData.fullName, size))
+                : Image.file(File(userData.imagePath!), fit: BoxFit.cover))
+            : _buildInitialsAvatar(userData.fullName, size),
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityImageTile(String title, String subtitle, double progress, String imageUrl) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image Box
+            Container(
+              height: 110,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey[200])),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2D3748), height: 1.2),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFFC96A4F), fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  // Progress Bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: const Color(0xFFF0F0F0),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC96A4F)),
+                      minHeight: 4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildWeatherStat(String icon, String val, String label) {
-    return Column(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 16)),
-            const SizedBox(width: 6),
-            Flexible(child: Text(val, style: AppTextStyles.titleSmall.copyWith(fontSize: 14), overflow: TextOverflow.ellipsis)),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(label, style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
-      ],
-    );
-  }
-
-  Widget _buildQuickStatCard(BuildContext context, String line1, String line2, IconData icon, Color iconColor, Color bgColor, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-        ),
+  Widget _buildRecentActivityChartTile(String title, String subtitle, double progress) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: iconColor, size: 28),
+            // Dark Green Box with Chart
+            Container(
+              height: 110,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF143623), Color(0xFF0F2618)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 6,
+                        backgroundColor: Colors.white.withOpacity(0.1),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE07A5F)), // Copper
+                        strokeCap: StrokeCap.round,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2D3748), height: 1.2),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF7A869A), height: 1.2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionTile(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 70,
+        color: Colors.transparent, // expand tap area
+        child: Column(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Icon(icon, color: const Color(0xFFC96A4F), size: 24),
+            ),
             const SizedBox(height: 8),
-            Text(line1, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 2),
-            Text(line2, style: AppTextStyles.bodySmall.copyWith(fontSize: 10)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2D3748), height: 1.2),
+            ),
           ],
         ),
       ),

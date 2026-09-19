@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/home_screen.dart';
-import 'package:plant_disease_detector/features/history/presentation/screens/history_screen.dart';
 import 'package:plant_disease_detector/features/farm_log/presentation/screens/farm_screen.dart';
+import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
+import 'package:plant_disease_detector/features/community/presentation/screens/community_feed_screen.dart';
 import 'package:plant_disease_detector/features/profile/presentation/screens/profile_screen.dart';
-import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MainScreen — Handles Bottom Navigation (Glassmorphism)
+// MainScreen — Premium Pill-Shaped Bottom Navigation (Dribbble Accurate)
 // ─────────────────────────────────────────────────────────────────────────────
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -23,13 +22,15 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = const [
     HomeScreen(),
     FarmScreen(),
-    HistoryScreen(),
+    ExpertConsultScreen(),
+    CommunityFeedScreen(),
     ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: Stack(
         children: [
           // The active page
@@ -38,78 +39,34 @@ class _MainScreenState extends State<MainScreen> {
             children: _pages,
           ),
           
-          // Glassmorphism Bottom Nav
+          // Premium Floating Pill Bottom Nav (Solid White, Copper Active)
           Positioned(
             left: 24,
             right: 24,
             bottom: 24,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                child: Container(
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 24, offset: const Offset(0, 8)),
-                    ],
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(40),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(0, Icons.home_rounded, 'Home'),
-                      _buildNavItem(1, Icons.grid_view_rounded, 'Farm'),
-                      const SizedBox(width: 56), // Space for FAB
-                      _buildNavItem(2, Icons.history_rounded, 'History'),
-                      _buildNavItem(3, Icons.person_rounded, 'Profile'),
-                    ],
-                  ),
-                ),
+                ],
               ),
-            ),
-          ),
-          
-          // Floating Action Button
-          Positioned(
-            bottom: 44, // 24 + (72 / 2) - (64 / 2) + offset slightly for visual balance
-            left: 0,
-            right: 0,
-            child: Center(
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CameraCaptureScreen()),
-                  );
-                },
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    gradient: AppGradients.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: Colors.white,
-                        blurRadius: 0,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.center_focus_strong_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildNavItem(0, Icons.home_rounded, 'Home'),
+                  _buildNavItem(1, Icons.document_scanner_rounded, 'Scans'),
+                  _buildNavItem(2, Icons.person_search_rounded, 'Expert'),
+                  _buildNavItem(3, Icons.people_alt_rounded, 'Community'),
+                  _buildNavItem(4, Icons.person_rounded, 'Profile'),
+                ],
               ),
             ),
           ),
@@ -120,29 +77,38 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _currentIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _currentIndex = index),
-        behavior: HitTestBehavior.opaque,
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutQuint,
+        padding: isSelected ? const EdgeInsets.symmetric(horizontal: 16, vertical: 8) : const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF9EAE1) : Colors.transparent, // Light Copper Background for active
+          borderRadius: BorderRadius.circular(24),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : const Color(0xFF9AA5B4),
-              size: 26,
+              color: isSelected ? const Color(0xFFC96A4F) : const Color(0xFFB0B7C3), // Copper active, Grey inactive
+              size: 24,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : const Color(0xFF9AA5B4),
+            if (isSelected) ...[
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFC96A4F),
+                ),
               ),
-            ),
+            ]
           ],
         ),
       ),
