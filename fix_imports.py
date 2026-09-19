@@ -1,58 +1,119 @@
 import os
 
-base_dir = r"c:\Users\sheha\Desktop\HCI Group Project\PlantDisease-Detector\lib"
+base_dir = r"c:\Users\Admin\Desktop\Plant_Disease\PlantDisease-Detector\lib"
 
-screen_moves = {
-    "onboarding_screen.dart": "features/onboarding/presentation/screens/onboarding_screen.dart",
-    "login_screen.dart": "features/auth/presentation/screens/login_screen.dart",
-    "otp_verification_screen.dart": "features/auth/presentation/screens/otp_verification_screen.dart",
-    "signup_screen.dart": "features/auth/presentation/screens/signup_screen.dart",
-    "camera_capture_screen.dart": "features/diagnosis/presentation/screens/camera_capture_screen.dart",
-    "scanning_screen.dart": "features/diagnosis/presentation/screens/scanning_screen.dart",
-    "diagnostic_result_screen.dart": "features/diagnosis/presentation/screens/diagnostic_result_screen.dart",
-    "photo_guide_screen.dart": "features/diagnosis/presentation/screens/photo_guide_screen.dart",
-    "history_screen.dart": "features/history/presentation/screens/history_screen.dart",
-    "treatment_detail_screen.dart": "features/treatment/presentation/screens/treatment_detail_screen.dart",
-    "treatment_reminder_screen.dart": "features/treatment/presentation/screens/treatment_reminder_screen.dart",
-    "disease_catalogue_screen.dart": "features/treatment/presentation/screens/disease_catalogue_screen.dart",
-    "disease_comparison_screen.dart": "features/treatment/presentation/screens/disease_comparison_screen.dart",
-    "expert_consult_screen.dart": "features/expert_consult/presentation/screens/expert_consult_screen.dart",
-    "consultation_status_screen.dart": "features/expert_consult/presentation/screens/consultation_status_screen.dart",
-    "farm_screen.dart": "features/farm_log/presentation/screens/farm_screen.dart",
-    "add_farm_log_screen.dart": "features/farm_log/presentation/screens/add_farm_log_screen.dart",
-    "weather_forecast_screen.dart": "features/weather/presentation/screens/weather_forecast_screen.dart",
-    "tips_feed_screen.dart": "features/tips/presentation/screens/tips_feed_screen.dart",
-    "tip_detail_screen.dart": "features/tips/presentation/screens/tip_detail_screen.dart",
-    "profile_screen.dart": "features/profile/presentation/screens/profile_screen.dart",
-    "edit_profile_screen.dart": "features/profile/presentation/screens/edit_profile_screen.dart",
-    "settings_screen.dart": "features/profile/presentation/screens/settings_screen.dart",
-    "sync_status_screen.dart": "features/sync/presentation/screens/sync_status_screen.dart",
-    "main_screen.dart": "features/home/presentation/screens/main_screen.dart",
-    "home_screen.dart": "features/home/presentation/screens/home_screen.dart",
-    "saved_items_screen.dart": "features/home/presentation/screens/saved_items_screen.dart",
-}
+# 1. Fix app_router.dart
+router_path = os.path.join(base_dir, "core", "routing", "app_router.dart")
+with open(router_path, "r", encoding="utf-8") as f:
+    router_content = f.read()
+router_content = router_content.replace(
+    "builder: (context, state) => const ScanningScreen(),",
+    "builder: (context, state) => ScanningScreen(imagePath: state.extra as String? ?? ''),"
+)
+with open(router_path, "w", encoding="utf-8") as f:
+    f.write(router_content)
 
-for root, dirs, files in os.walk(base_dir):
-    for file in files:
-        if file.endswith('.dart'):
-            filepath = os.path.join(root, file)
-            with open(filepath, 'r', encoding='utf-8') as f:
-                content = f.read()
+# 2. Fix scanning_screen.dart
+scanning_path = os.path.join(base_dir, "features", "diagnosis", "presentation", "screens", "scanning_screen.dart")
+with open(scanning_path, "r", encoding="utf-8") as f:
+    scanning_content = f.read()
 
-            new_content = content
-            
-            for screen_file, new_path in screen_moves.items():
-                old_import_1 = f"package:plant_disease_detector/screens/{screen_file}"
-                new_import_1 = f"package:plant_disease_detector/{new_path}"
-                new_content = new_content.replace(old_import_1, new_import_1)
+# Replace ScanRecord initialization
+scanning_content = scanning_content.replace(
+"""        scan = ScanRecord(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          imagePath: widget.imagePath,
+          diseaseName: result['label'] as String,
+          confidenceScore: result['confidence'] as double,
+          date: DateTime.now(),
+        );""",
+"""        scan = ScanRecord(
+          id: DateTime.now().millisecondsSinceEpoch,
+          imageUrl: widget.imagePath,
+          diseaseName: result['label'] as String,
+          confidenceScore: result['confidence'] as double,
+          scannedAt: DateTime.now(),
+          latinName: 'Unknown',
+          cropType: 'Unknown',
+          severity: 'none',
+          fieldLocation: 'Unknown',
+          treatable: false,
+        );"""
+)
 
-            new_content = new_content.replace("package:plant_disease_detector/theme/", "package:plant_disease_detector/core/theme/")
-            new_content = new_content.replace("package:plant_disease_detector/widgets/", "package:plant_disease_detector/shared/widgets/")
-            new_content = new_content.replace("package:plant_disease_detector/utils/", "package:plant_disease_detector/shared/utils/")
+scanning_content = scanning_content.replace(
+"""        scan = ScanRecord(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          imagePath: widget.imagePath,
+          diseaseName: 'Unknown',
+          confidenceScore: 0.0,
+          date: DateTime.now(),
+        );""",
+"""        scan = ScanRecord(
+          id: DateTime.now().millisecondsSinceEpoch,
+          imageUrl: widget.imagePath,
+          diseaseName: 'Unknown',
+          confidenceScore: 0.0,
+          scannedAt: DateTime.now(),
+          latinName: 'Unknown',
+          cropType: 'Unknown',
+          severity: 'none',
+          fieldLocation: 'Unknown',
+          treatable: false,
+        );"""
+)
 
-            if new_content != content:
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    f.write(new_content)
-                print(f"Updated imports in {file}")
+with open(scanning_path, "w", encoding="utf-8") as f:
+    f.write(scanning_content)
 
-print("Import fixing complete.")
+
+# 3. Fix diagnostic_result_screen.dart
+diag_path = os.path.join(base_dir, "features", "diagnosis", "presentation", "screens", "diagnostic_result_screen.dart")
+with open(diag_path, "r", encoding="utf-8") as f:
+    diag_content = f.read()
+
+diag_content = diag_content.replace("id: _scan.id,", "id: _scan.id.toString(),")
+diag_content = diag_content.replace("clientUuid: _scan.id,", "clientUuid: _scan.id.toString(),")
+diag_content = diag_content.replace("_scan.imagePath", "_scan.imageUrl")
+
+# Fix Row with 1 positional arg
+diag_content = diag_content.replace(
+"""                    Builder(
+                      builder: (context) {
+                        final officer = getNearestOfficer(locationState.address);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,""",
+"""                    children: [
+                      Builder(
+                        builder: (context) {
+                          final officer = getNearestOfficer(locationState.address);
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,"""
+)
+diag_content = diag_content.replace(
+"""                      }
+                    ),
+                  ),""",
+"""                        }
+                      ),
+                    ],
+                  ),"""
+)
+
+with open(diag_path, "w", encoding="utf-8") as f:
+    f.write(diag_content)
+
+# 4. Fix tflite_service.dart imports and methods
+tflite_path = os.path.join(base_dir, "features", "diagnosis", "data", "tflite_service.dart")
+with open(tflite_path, "r", encoding="utf-8") as f:
+    tflite_content = f.read()
+
+tflite_content = tflite_content.replace("import 'package:image/image.dart' as img;", "import 'package:image/image.dart' as img;")
+tflite_content = tflite_content.replace("img.decodeImage", "img.decodeImage")
+tflite_content = tflite_content.replace("img.copyResize", "img.copyResize")
+# Wait, decodeImage and copyResize are correct for package:image. The issue was that package:image was missing!
+
+with open(tflite_path, "w", encoding="utf-8") as f:
+    f.write(tflite_content)
+
+print("Fixed dart files.")

@@ -19,6 +19,36 @@ import 'package:flutter/foundation.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // HomeScreen — Matches Figma HomeScreen.tsx
 // ─────────────────────────────────────────────────────────────────────────────
+// Helper: builds a colored circle with the user's initials as a profile avatar fallback
+Widget _buildInitialsAvatar(String fullName, double size) {
+  final parts = fullName.trim().split(' ');
+  final initials = parts.length >= 2
+      ? '${parts[0][0]}${parts[1][0]}'.toUpperCase()
+      : (parts[0].isNotEmpty ? parts[0][0].toUpperCase() : '?');
+  return Container(
+    width: size,
+    height: size,
+    decoration: const BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: LinearGradient(
+        colors: [Color(0xFFE07A5F), Color(0xFFF2A98A)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    ),
+    child: Center(
+      child: Text(
+        initials,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size * 0.35,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  );
+}
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -86,12 +116,13 @@ class HomeScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(14),
                             child: userData.imagePath != null
                                 ? ((userData.imagePath!.startsWith('http') || kIsWeb)
-                                    ? Image.network(userData.imagePath!, fit: BoxFit.cover)
+                                    ? Image.network(
+                                        userData.imagePath!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _buildInitialsAvatar(userData.fullName, 48),
+                                      )
                                     : Image.file(File(userData.imagePath!), fit: BoxFit.cover))
-                                : Image.network(
-                                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&auto=format',
-                                    fit: BoxFit.cover,
-                                  ),
+                                : _buildInitialsAvatar(userData.fullName, 48),
                           ),
                         ),
                         Positioned(

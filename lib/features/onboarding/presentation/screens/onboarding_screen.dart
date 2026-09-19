@@ -48,12 +48,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
             itemCount: _onboardingData.length,
             itemBuilder: (context, index) {
+              // Fallback gradient colors per slide
+              final gradients = [
+                [const Color(0xFF2D5016), const Color(0xFF4A7C2F)],
+                [const Color(0xFF1A3A2A), const Color(0xFF2E6B4F)],
+                [const Color(0xFF3B2506), const Color(0xFF7A5C2E)],
+              ];
               return Stack(
                 fit: StackFit.expand,
                 children: [
+                  // Gradient fallback always rendered first
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: gradients[index % gradients.length],
+                      ),
+                    ),
+                  ),
+                  // Network image overlaid on top (transparent if fails)
                   Image.network(
                     _onboardingData[index]['image']!,
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return const SizedBox.shrink(); // gradient shows through while loading
+                    },
                   ),
                   // Gradient overlay to ensure text readability
                   Container(

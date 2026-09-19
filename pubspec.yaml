@@ -29,7 +29,7 @@ dependencies:
 
   # Camera & Image Handling
   image_picker: ^1.1.2
-  image_cropper: ^9.1.0
+  image_cropper: ^12.2.1
 
   # Network
   connectivity_plus: ^6.0.3
@@ -60,6 +60,7 @@ dependencies:
   firebase_core: ^4.15.0
   firebase_crashlytics: ^5.4.0
   riverpod_annotation: ^2.6.1
+  image: ^4.10.1
 
 dev_dependencies:
   flutter_test:
@@ -76,3 +77,4 @@ flutter:
   assets:
     - assets/animations/
     - assets/images/
+    - assets/models/

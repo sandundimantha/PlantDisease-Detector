@@ -6,59 +6,83 @@ import 'package:geocoding/geocoding.dart';
 class LocationService {
   /// Request location permissions and get current position.
   Future<Position?> getCurrentPosition() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return null;
       }
-    }
-    
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied.');
-    } 
 
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return null;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return null;
+      }
+
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Location timeout'),
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Convert coordinates to a readable address.
   Future<String> getAddressFromCoordinates(double lat, double lon) async {
+    // Try native geocoding first
     try {
-      List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(lat, lon);
+      final placemarks = await Geocoding()
+          .placemarkFromCoordinates(lat, lon)
+          .timeout(const Duration(seconds: 8));
       if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        String city = place.locality ?? place.subAdministrativeArea ?? 'Unknown Location';
-        String country = place.country ?? '';
-        return country.isNotEmpty ? '$city, $country' : city;
+        final place = placemarks[0];
+        final city = place.locality ??
+            place.subAdministrativeArea ??
+            place.administrativeArea ??
+            '';
+        final country = place.country ?? '';
+        if (city.isNotEmpty) {
+          return country.isNotEmpty ? '$city, $country' : city;
+        }
       }
-    } catch (e) {
-      // Fallback to OSM Nominatim API if native geocoding fails (e.g., on Web)
-      try {
-        final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lon');
-        final response = await http.get(url, headers: {
-          'User-Agent': 'PlantDiseaseDetectorApp/1.0',
-        });
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          final address = data['address'];
-          if (address != null) {
-            String city = address['city'] ?? address['town'] ?? address['village'] ?? address['county'] ?? address['state_district'] ?? 'Unknown Location';
-            String country = address['country'] ?? '';
+    } catch (_) {}
+
+    // Fallback: OSM Nominatim API
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lon',
+      );
+      final response = await http.get(url, headers: {
+        'User-Agent': 'PlantDiseaseDetectorApp/1.0',
+      }).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['address'];
+        if (address != null) {
+          final city = address['city'] ??
+              address['town'] ??
+              address['village'] ??
+              address['county'] ??
+              address['state_district'] ??
+              '';
+          final country = address['country'] ?? '';
+          if (city.isNotEmpty) {
             return country.isNotEmpty ? '$city, $country' : city;
           }
         }
-      } catch (_) {}
-      
-      // If all fails, show coordinates
-      return '${lat.toStringAsFixed(3)}, ${lon.toStringAsFixed(3)}';
-    }
+      }
+    } catch (_) {}
+
+    // Last resort: show coordinates
     return '${lat.toStringAsFixed(3)}, ${lon.toStringAsFixed(3)}';
   }
 }

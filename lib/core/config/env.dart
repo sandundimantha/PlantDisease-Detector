@@ -8,8 +8,8 @@
 // In production, load these from a .env file using flutter_dotenv.
 // ─────────────────────────────────────────────────────────────────────────────
 class Env {
-  static const String supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+  static const String supabaseUrl = 'https://zoqameluujemvtpfbrmm.supabase.co';
+  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvcWFtZWx1dWplbXZ0cGZicm1tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0OTQxNzIsImV4cCI6MjEwNTA3MDE3Mn0.i-zPCIfhKMLCKJXcGzGYsOxJJ0AH7Sd0oxueIPtVWZE';
   static const String inferenceUrl = 'https://YOUR_INFERENCE_SERVICE.onrender.com';
 }
 

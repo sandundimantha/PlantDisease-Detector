@@ -12,6 +12,7 @@ import 'package:plant_disease_detector/models/agri_officer.dart';
 import 'package:plant_disease_detector/core/providers/database_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/confidence_gate.dart';
 import 'package:plant_disease_detector/core/database/app_database.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:drift/drift.dart' as drift;
 import 'dart:convert';
 import 'dart:io';
@@ -83,12 +84,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     // Save locally
     await db.into(db.cachedDiagnoses).insert(
       CachedDiagnosesCompanion.insert(
-        id: _scan.id,
+        id: _scan.id.toString(),
         userId: 'local_user', // Mock user id for now
-        imagePath: drift.Value(_scan.imagePath),
+        imagePath: drift.Value(_scan.imageUrl),
         diseaseId: drift.Value(_scan.diseaseName),
         confidence: drift.Value(_scan.confidenceScore),
-        clientUuid: _scan.id,
+        clientUuid: _scan.id.toString(),
         status: drift.Value(confidenceResult == ConfidenceResult.escalate ? 'escalated' : 'auto'),
       ),
     );
@@ -96,12 +97,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     // Add to outbox for sync
     await db.into(db.outbox).insert(
       OutboxCompanion.insert(
-        clientUuid: _scan.id,
+        clientUuid: _scan.id.toString(),
         payload: jsonEncode({
           'id': _scan.id,
           'disease': _scan.diseaseName,
           'confidence': _scan.confidenceScore,
-          'image': _scan.imagePath,
+          'image': _scan.imageUrl,
         }),
         type: 'diagnosis',
       ),
@@ -422,21 +423,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 children: [
                   Hero(
                     tag: 'scan_image_${_scan.id}',
-                    child: ClipRRect(
+                    child: SmartImage(
+                      src: _scan.imageUrl,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
                       borderRadius: BorderRadius.circular(10),
-                      child: _scan.imagePath.startsWith('assets/')
-                          ? Image.asset(
-                              _scan.imagePath,
-                              width: 40,
-                              height: 40,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(_scan.imagePath),
-                              width: 40,
-                              height: 40,
-                              fit: BoxFit.cover,
-                            ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -789,11 +781,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                   ],
                 ),
                 child: Row(
-                    Builder(
-                      builder: (context) {
-                        final officer = getNearestOfficer(locationState.address);
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Builder(
+                        builder: (context) {
+                          final officer = getNearestOfficer(locationState.address);
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(Icons.phone_rounded, color: Colors.white, size: 18),
                             const SizedBox(width: 10),
@@ -809,8 +802,9 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                             ),
                           ],
                         );
-                      }
-                    ),
+                        }
+                      ),
+                    ],
                   ),
               ),
             ),

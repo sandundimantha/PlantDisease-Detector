@@ -100,10 +100,15 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
               onTap: (_, __) => setState(() => _selectedOutbreak = null), // Dismiss card on map tap
             ),
             children: [
-              // Standard Light Map Tiles (OpenStreetMap)
+              // Standard Light Map Tiles (OpenStreetMap) with fallback
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.plant_disease_detector',
+                userAgentPackageName: 'com.plantdetector.plant_disease_detector',
+                fallbackUrl: 'https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+                tileBuilder: (context, tileWidget, tile) => tileWidget,
+                errorTileCallback: (tile, error, stackTrace) {
+                  // silently ignore tile errors — map background shows
+                },
               ),
               
               // Disease Outbreak Markers

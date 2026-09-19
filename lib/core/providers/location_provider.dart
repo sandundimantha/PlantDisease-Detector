@@ -56,10 +56,19 @@ class LocationNotifier extends StateNotifier<LocationState> {
           isLoading: false,
         );
       } else {
-        state = state.copyWith(isLoading: false, error: 'Could not get position');
+        // Location unavailable — use friendly fallback
+        state = state.copyWith(
+          isLoading: false,
+          address: 'Sri Lanka',
+          error: 'Location unavailable',
+        );
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString(), address: 'Location Error');
+      state = state.copyWith(
+        isLoading: false,
+        address: 'Sri Lanka',
+        error: e.toString(),
+      );
     }
   }
 }

@@ -55,7 +55,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/scanning',
-      builder: (context, state) => const ScanningScreen(),
+      builder: (context, state) {
+        final imagePath = state.extra as String? ?? '';
+        return ScanningScreen(imagePath: imagePath);
+      },
     ),
     GoRoute(
       path: '/diagnostic_result',

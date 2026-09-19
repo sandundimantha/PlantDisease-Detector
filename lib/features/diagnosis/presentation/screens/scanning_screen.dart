@@ -69,20 +69,30 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
       ScanRecord scan;
       if (result != null) {
         scan = ScanRecord(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          imagePath: widget.imagePath,
+          id: DateTime.now().millisecondsSinceEpoch,
+          imageUrl: widget.imagePath,
           diseaseName: result['label'] as String,
           confidenceScore: result['confidence'] as double,
-          date: DateTime.now(),
+          scannedAt: DateTime.now(),
+          latinName: 'Unknown',
+          cropType: 'Unknown',
+          severity: 'none',
+          fieldLocation: 'Unknown',
+          treatable: false,
         );
       } else {
         // Fallback if model fails
         scan = ScanRecord(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          imagePath: widget.imagePath,
+          id: DateTime.now().millisecondsSinceEpoch,
+          imageUrl: widget.imagePath,
           diseaseName: 'Unknown',
           confidenceScore: 0.0,
-          date: DateTime.now(),
+          scannedAt: DateTime.now(),
+          latinName: 'Unknown',
+          cropType: 'Unknown',
+          severity: 'none',
+          fieldLocation: 'Unknown',
+          treatable: false,
         );
       }
 

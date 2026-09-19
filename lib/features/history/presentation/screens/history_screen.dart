@@ -4,6 +4,7 @@ import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
 import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HistoryScreen — Matches Figma HistoryScreen.tsx
@@ -223,7 +224,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image
               SizedBox(
                 width: 80,
                 child: ClipRRect(
@@ -231,7 +231,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(scan.imageUrl, fit: BoxFit.cover),
+                      SmartImage(src: scan.imageUrl, fit: BoxFit.cover),
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
