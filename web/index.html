@@ -23,6 +23,13 @@
   <!-- This script installs service_worker.js to provide PWA functionality to
        application. For more information, see:
        https://developers.google.com/web/fundamentals/primers/service-workers -->
+  <script>
+    // Force HTML renderer to avoid downloading CanvasKit from Google CDN
+    // This fixes "Failed to fetch canvaskit.js" errors on restricted networks
+    window.flutterConfiguration = {
+      renderer: "html"
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

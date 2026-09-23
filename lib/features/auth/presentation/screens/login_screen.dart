@@ -99,133 +99,154 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           // Main Content
           SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Header text
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 80,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Header
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 80,
+                  ),
+                  Text(
+                    'Welcome Back',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: AppColors.textSecondary,
                     ),
-                    Text(
-                      'Welcome Back',
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Glass Form Container
+                  Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 48),
-
-                    // Glass Form Container
-                    Container(
-                      padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Role Selection Toggle
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Role Selection Toggle
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(child: _buildRoleButton('Farmer')),
-                                Expanded(child: _buildRoleButton('Officer')),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Email label
-                          Text('Email', style: AppTextStyles.titleSmall),
-                          const SizedBox(height: 8),
-                          // Email Field
-                          _buildTextField(
-                            controller: _emailController,
-                            hint: 'Enter your email',
-                            icon: Icons.mail_outline_rounded,
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Password label & forgot password
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: Row(
                             children: [
-                              Text('Password', style: AppTextStyles.titleSmall),
-                              TextButton(
-                                onPressed: () {},
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  'forgot password?',
-                                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary),
-                                ),
+                              Expanded(child: _buildRoleButton('Farmer')),
+                              Expanded(child: _buildRoleButton('Officer')),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Email label
+                        Text('Email', style: AppTextStyles.titleSmall),
+                        const SizedBox(height: 8),
+                        // Email Field
+                        _buildTextField(
+                          controller: _emailController,
+                          hint: 'Enter your email',
+                          icon: Icons.mail_outline_rounded,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Password label & forgot password
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Password', style: AppTextStyles.titleSmall),
+                            TextButton(
+                              onPressed: () {},
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'forgot password?',
+                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Password Field
+                        _buildTextField(
+                          controller: _passwordController,
+                          hint: 'Enter your password',
+                          icon: Icons.lock_outline_rounded,
+                          isPassword: true,
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Login Button
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: AppGradients.primary,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          // Password Field
-                          _buildTextField(
-                            controller: _passwordController,
-                            hint: 'Enter your password',
-                            icon: Icons.lock_outline_rounded,
-                            isPassword: true,
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Login Button
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: AppGradients.primary,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _onLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _onLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(vertical: 18),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 24, height: 24,
-                                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                  : Text('LOGIN AS ${_selectedRole.toUpperCase()}', 
-                                      style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
-                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 24, height: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                                : Text('LOGIN AS ${_selectedRole.toUpperCase()}', 
+                                    style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Sign Up Link
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.go('/signup'),
+                        child: Text(
+                          'Sign Up',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           ),

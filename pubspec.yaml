@@ -62,10 +62,6 @@ dependencies:
   riverpod_annotation: ^2.6.1
   image: ^4.10.1
 
-dependency_overrides:
-  cupertino_ui: ^1.1.1
-  material_ui: ^1.4.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
