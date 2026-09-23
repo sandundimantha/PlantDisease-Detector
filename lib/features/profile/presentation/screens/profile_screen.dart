@@ -1,419 +1,251 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
-import 'package:plant_disease_detector/features/profile/presentation/screens/settings_screen.dart';
-import 'package:plant_disease_detector/features/profile/presentation/screens/edit_profile_screen.dart';
-import 'package:plant_disease_detector/core/providers/location_provider.dart';
-import 'package:plant_disease_detector/core/providers/user_provider.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
+import 'dart:ui';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ProfileScreen — Matches Figma ProfileScreen.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final List<_Achievement> _achievements = const [
-    _Achievement(icon: "🌾", label: "50 Scans", earned: true),
-    _Achievement(icon: "🔬", label: "Disease Expert", earned: true),
-    _Achievement(icon: "⭐", label: "Top Farmer", earned: true),
-    _Achievement(icon: "🏆", label: "100 Scans", earned: false),
-    _Achievement(icon: "🌿", label: "Zero Disease", earned: false),
-    _Achievement(icon: "📊", label: "Data Pro", earned: false),
-  ];
-
-  final List<_Setting> _settings = [
-    _Setting(icon: "🔔", label: "Notifications", sub: "Disease alerts & tips", toggle: true, on: true),
-    _Setting(icon: "📍", label: "Location", sub: "Auto-detect field GPS", toggle: true, on: true),
-    _Setting(icon: "🌐", label: "Language", sub: "English", toggle: false),
-    _Setting(icon: "📱", label: "Offline Mode", sub: "Scan without internet", toggle: true, on: false),
-    _Setting(icon: "📞", label: "Emergency Contact", sub: "0771 234 567", toggle: false),
-    _Setting(icon: "❓", label: "Help & Support", sub: "FAQs and tutorials", toggle: false),
-  ];
-
-  @override
   Widget build(BuildContext context) {
-    final locationState = ref.watch(locationProvider);
-    
-    // Update the location setting dynamically based on real data
-    _settings[1] = _Setting(
-      icon: "📍", 
-      label: "Location", 
-      sub: locationState.isLoading ? "Locating..." : locationState.address, 
-      toggle: true, 
-      on: _settings[1].on,
-    );
-
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Profile', style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5, fontSize: 24)),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
-                      ]),
-                      child: const Icon(Icons.settings_outlined, color: Color(0xFF9AA5B4), size: 20),
+      body: Stack(
+        children: [
+          // Background blobs
+          Positioned(
+            top: -50,
+            right: -50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.15),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 250,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.secondary.withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+              child: Container(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+          ),
+
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(context),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: Column(
+                      children: [
+                        _buildProfileCard(),
+                        const SizedBox(height: 32),
+                        _buildSettingsMenu(context),
+                        const SizedBox(height: 32),
+                        _buildLogoutButton(context),
+                        const SizedBox(height: 32),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProfileCard(ref),
-                    _buildAchievements(),
-                    _buildFarmDetails(ref),
-                    _buildSettings(),
-                    
-                    // Sign out
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      child: GestureDetector(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(color: const Color(0xFFFFF5F2), borderRadius: BorderRadius.circular(16)),
-                          alignment: Alignment.center,
-                          child: const Text('Sign Out', style: TextStyle(color: Color(0xFFE07A5F), fontSize: 14, fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileCard(WidgetRef ref) {
-    final userData = ref.watch(userProvider);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFE07A5F), Color(0xFFC96A4F)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFFE07A5F).withOpacity(0.35), blurRadius: 24, offset: const Offset(0, 12)),
-        ],
-      ),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfileScreen()));
-        },
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              top: -50,
-              right: -50,
-              child: Container(
-                width: 144,
-                height: 144,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.15)),
-              ),
-            ),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white.withOpacity(0.4), width: 3),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(13),
-                        child: userData.imagePath != null
-                            ? ((userData.imagePath!.startsWith('http') || kIsWeb)
-                                ? Image.network(userData.imagePath!, fit: BoxFit.cover)
-                                : Image.file(File(userData.imagePath!), fit: BoxFit.cover))
-                            : Image.network(
-                                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=144&h=144&fit=crop&auto=format',
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(userData.fullName, style: AppTextStyles.headlineMedium.copyWith(color: Colors.white, fontSize: 20)),
-                          const SizedBox(height: 2),
-                          Text('Premium Farmer · Zone 4', style: AppTextStyles.bodySmall.copyWith(color: Colors.white.withOpacity(0.75))),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), shape: BoxShape.circle),
-                                child: const Icon(Icons.star_rounded, color: Colors.white, size: 10),
-                              ),
-                              const SizedBox(width: 4),
-                              Text('Premium Member since 2023', style: AppTextStyles.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 10)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(child: _buildProfileStat('64', 'Total Scans')),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildProfileStat('8.5', 'Acres Managed')),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildProfileStat('4.8', 'Accuracy Score')),
-                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileStat(String val, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(16)),
-      child: Column(
-        children: [
-          Text(val, style: AppTextStyles.headlineMedium.copyWith(color: Colors.white, fontSize: 18)),
-          Text(label, style: AppTextStyles.bodySmall.copyWith(color: Colors.white.withOpacity(0.75), fontSize: 9, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAchievements() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Achievements', style: AppTextStyles.titleSmall),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.95),
-            itemCount: _achievements.length,
-            itemBuilder: (context, i) {
-              final a = _achievements[i];
-              return Opacity(
-                opacity: a.earned ? 1.0 : 0.5,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: a.earned ? Colors.white : const Color(0xFFF5F3F0),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      if (a.earned) BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(a.icon, style: const TextStyle(fontSize: 24)),
-                      const SizedBox(height: 6),
-                      Text(
-                        a.label,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodySmall.copyWith(color: a.earned ? AppColors.textPrimary : const Color(0xFF9AA5B4), fontWeight: FontWeight.w600, fontSize: 11),
-                      ),
-                      if (a.earned) ...[
-                        const SizedBox(height: 6),
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(color: Color(0xFF81B29A), shape: BoxShape.circle),
-                          child: const Icon(Icons.check_rounded, color: Colors.white, size: 10),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFarmDetails(WidgetRef ref) {
-    final userData = ref.watch(userProvider);
+  Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Text('Farm Details', style: AppTextStyles.titleSmall),
-            ),
-            const Divider(color: Color(0x0F2D3748), height: 1),
-            _buildDetailRow('Farm Name', userData.farmName),
-            const Divider(color: Color(0x0F2D3748), height: 1),
-            _buildDetailRow('Location', userData.district),
-            const Divider(color: Color(0x0F2D3748), height: 1),
-            _buildDetailRow('Main Crops', userData.primaryCrops.join(', ')),
-            const Divider(color: Color(0x0F2D3748), height: 1),
-            _buildDetailRow('Soil Type', 'Red-Yellow Podzolic'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String val) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodySmall),
-          Text(val, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            onPressed: () {
+              if (context.canPop()) context.pop();
+            },
+          ),
+          Text('Profile', style: AppTextStyles.headlineMedium.copyWith(fontSize: 22)),
+          const SizedBox(width: 48), // Balance for centering title
         ],
       ),
     );
   }
 
-  Widget _buildSettings() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+  Widget _buildProfileCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Settings', style: AppTextStyles.titleSmall),
-          const SizedBox(height: 12),
+          // Circular Avatar
           Container(
+            width: 120,
+            height: 120,
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-            child: Column(
-              children: List.generate(_settings.length, (i) {
-                final s = _settings[i];
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                      child: Row(
-                        children: [
-                          Text(s.icon, style: const TextStyle(fontSize: 20)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(s.label, style: AppTextStyles.titleSmall.copyWith(fontSize: 14)),
-                                Text(s.sub, style: AppTextStyles.bodySmall.copyWith(fontSize: 12)),
-                              ],
-                            ),
-                          ),
-                          if (s.toggle)
-                            GestureDetector(
-                              onTap: () => setState(() => s.on = !s.on),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                width: 44,
-                                height: 26,
-                                decoration: BoxDecoration(
-                                  color: s.on ? const Color(0xFFE07A5F) : const Color(0xFFEDEAE5),
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    AnimatedPositioned(
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                      top: 4,
-                                      left: s.on ? 22 : 4,
-                                      child: Container(
-                                        width: 18,
-                                        height: 18,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 4, offset: const Offset(0, 1))],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          else
-                            const Icon(Icons.chevron_right_rounded, color: Color(0xFFC8D0DA), size: 20),
-                        ],
-                      ),
-                    ),
-                    if (i < _settings.length - 1) const Divider(color: Color(0x0F2D3748), height: 1),
-                  ],
-                );
-              }),
+            child: const CircleAvatar(
+              backgroundImage: NetworkImage('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'),
             ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Name
+          Text('Sarah Jenkins', style: AppTextStyles.headlineLarge.copyWith(fontSize: 28)),
+          const SizedBox(height: 8),
+          
+          // Role Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.verified_rounded, color: AppColors.secondary, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  'Plant Pathologist',
+                  style: AppTextStyles.titleSmall.copyWith(color: AppColors.secondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          Text('Agriculture Officer • Zone 4', style: AppTextStyles.bodyMedium),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsMenu(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildMenuItem(
+            icon: Icons.person_outline_rounded,
+            title: 'Edit Profile',
+            subtitle: 'Update your personal details',
+            onTap: () {},
+          ),
+          Divider(height: 1, color: AppColors.textSecondary.withValues(alpha: 0.1)),
+          _buildMenuItem(
+            icon: Icons.notifications_none_rounded,
+            title: 'Notification Settings',
+            subtitle: 'Manage alerts and messages',
+            onTap: () {},
+          ),
+          Divider(height: 1, color: AppColors.textSecondary.withValues(alpha: 0.1)),
+          _buildMenuItem(
+            icon: Icons.shield_outlined,
+            title: 'Privacy & Security',
+            subtitle: 'Password and security settings',
+            onTap: () {},
           ),
         ],
       ),
     );
   }
-}
 
-class _Achievement {
-  final String icon, label;
-  final bool earned;
-  const _Achievement({required this.icon, required this.label, required this.earned});
-}
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: AppColors.primary),
+      ),
+      title: Text(title, style: AppTextStyles.titleSmall),
+      subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
+      trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+      onTap: onTap,
+    );
+  }
 
-class _Setting {
-  final String icon, label, sub;
-  final bool toggle;
-  bool on;
-  _Setting({required this.icon, required this.label, required this.sub, required this.toggle, this.on = false});
+  Widget _buildLogoutButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton.icon(
+        onPressed: () {
+          // Mock logout
+          context.go('/'); // Assuming '/' is the login route
+        },
+        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+        label: Text(
+          'LOGOUT',
+          style: AppTextStyles.titleMedium.copyWith(color: Colors.redAccent, letterSpacing: 1.2),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+    );
+  }
 }

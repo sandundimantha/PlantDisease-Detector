@@ -9,7 +9,7 @@ class AppLocalizationsTa extends AppLocalizations {
   AppLocalizationsTa([String locale = 'ta']) : super(locale);
 
   @override
-  String get appTitle => 'CropGuard LK';
+  String get appTitle => 'Lumina';
 
   @override
   String get chooseLanguage => 'உங்கள் மொழியை தேர்ந்தெடுக்கவும்';

@@ -16,6 +16,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String _selectedRole = 'Farmer'; // Mock role selection
 
   @override
   void dispose() {
@@ -27,10 +28,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _onLogin() async {
     if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network
+    
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1)); 
+    
     if (mounted) {
       setState(() => _isLoading = false);
-      context.go('/main');
+      // Role-Based Routing Mock
+      if (_selectedRole == 'Officer') {
+        // Navigate to Officer Dashboard (mock route, ensure router handles this)
+        context.go('/officer_dashboard'); // Assuming this route will be added to GoRouter
+      } else {
+        // Navigate to Farmer Home
+        context.go('/main');
+      }
     }
   }
 
@@ -95,11 +106,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Header text
+                    Image.asset(
+                      'assets/images/logo.png',
+                      height: 80,
+                    ),
                     Text(
-                      'LOGIN / SIGNUP',
-                      style: AppTextStyles.headlineLarge.copyWith(
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w800,
+                      'Welcome Back',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 48),
@@ -122,6 +136,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // Role Selection Toggle
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(child: _buildRoleButton('Farmer')),
+                                Expanded(child: _buildRoleButton('Officer')),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
                           // Email label
                           Text('Email', style: AppTextStyles.titleSmall),
                           const SizedBox(height: 8),
@@ -187,62 +217,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ? const SizedBox(
                                       width: 24, height: 24,
                                       child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                  : Text('LOGIN', style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+                                  : Text('LOGIN AS ${_selectedRole.toUpperCase()}', 
+                                      style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
                             ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // OR Divider
-                          Row(
-                            children: [
-                              Expanded(child: Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.2))),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text('OR', style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary.withValues(alpha: 0.6))),
-                              ),
-                              Expanded(child: Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.2))),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Social Login Label
-                          Text(
-                            'Social Login',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Social Buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildSocialCircle(Icons.facebook_rounded, const Color(0xFF1877F2), () => context.go('/main')),
-                              const SizedBox(width: 24),
-                              _buildSocialCircle(Icons.g_mobiledata_rounded, Colors.red, () => context.go('/main'), iconSize: 44),
-                              const SizedBox(width: 24),
-                              _buildSocialCircle(Icons.apple_rounded, Colors.black, () => context.go('/main')),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Sign up text
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text("Don't have an account? ", style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.normal)),
-                              GestureDetector(
-                                onTap: () {},
-                                child: Text(
-                                  'Sign Up',
-                                  style: AppTextStyles.titleSmall.copyWith(
-                                    color: AppColors.primary,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: AppColors.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ),
@@ -252,30 +229,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-
-          // Back button
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-                  ),
-                  onPressed: () {
-                    if (context.canPop()) context.pop();
-                  },
-                ),
-              ),
-            ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRoleButton(String role) {
+    final isSelected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]
+              : [],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          role,
+          style: AppTextStyles.titleSmall.copyWith(
+            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
@@ -311,32 +291,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           hintStyle: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
           contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialCircle(IconData icon, Color color, VoidCallback onTap, {double iconSize = 28}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.9),
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Icon(icon, color: color, size: iconSize),
         ),
       ),
     );

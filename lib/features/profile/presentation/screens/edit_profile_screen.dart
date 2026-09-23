@@ -166,9 +166,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             final fileExt = finalImagePath.split('.').last;
             final fileName = '${user.id}_avatar.${fileExt}';
             
-            // For web support, we need bytes. But since file picking is complex, we just use File.
-            // If it's flutter web, this part might need adjustements, but we assume mobile.
-            if (!kIsWeb) {
+            // For web support, we need bytes.
+            if (kIsWeb) {
+               final bytes = await _imageFile!.readAsBytes();
+               await client.storage.from('avatars').uploadBinary(
+                 fileName, 
+                 bytes, 
+                 fileOptions: const FileOptions(upsert: true)
+               );
+               finalImagePath = client.storage.from('avatars').getPublicUrl(fileName);
+            } else {
                await client.storage.from('avatars').upload(
                  fileName, 
                  File(finalImagePath), 

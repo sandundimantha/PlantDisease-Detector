@@ -9,7 +9,7 @@ class AppLocalizationsSi extends AppLocalizations {
   AppLocalizationsSi([String locale = 'si']) : super(locale);
 
   @override
-  String get appTitle => 'CropGuard LK';
+  String get appTitle => 'Lumina';
 
   @override
   String get chooseLanguage => 'ඔබේ භාෂාව තෝරන්න';

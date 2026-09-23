@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// App title
   ///
   /// In en, this message translates to:
-  /// **'CropGuard LK'**
+  /// **'Lumina'**
   String get appTitle;
 
   /// No description provided for @chooseLanguage.

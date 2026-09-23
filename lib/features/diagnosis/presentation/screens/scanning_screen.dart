@@ -3,6 +3,7 @@ import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
 
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/providers/tflite_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/confidence_gate.dart';
@@ -227,14 +228,23 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
               child: Stack(
                 children: [
                   if (widget.imagePath.isNotEmpty)
-                    Image.file(
-                      File(widget.imagePath),
-                      width: 128,
-                      height: 128,
-                      fit: BoxFit.cover,
-                      color: Colors.black.withOpacity(0.05),
-                      colorBlendMode: BlendMode.darken,
-                    )
+                    (kIsWeb || widget.imagePath.startsWith('http') || widget.imagePath.startsWith('blob:'))
+                        ? Image.network(
+                            widget.imagePath,
+                            width: 128,
+                            height: 128,
+                            fit: BoxFit.cover,
+                            color: Colors.black.withOpacity(0.05),
+                            colorBlendMode: BlendMode.darken,
+                          )
+                        : Image.file(
+                            File(widget.imagePath),
+                            width: 128,
+                            height: 128,
+                            fit: BoxFit.cover,
+                            color: Colors.black.withOpacity(0.05),
+                            colorBlendMode: BlendMode.darken,
+                          )
                   else
                     Image.asset(
                       'assets/images/leaf_sample.png',

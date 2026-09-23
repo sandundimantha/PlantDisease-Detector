@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// A smart image widget that automatically detects whether the [src] is a
 /// network URL or a local file path, and renders accordingly.
@@ -23,7 +24,7 @@ class SmartImage extends StatelessWidget {
   });
 
   bool get _isUrl =>
-      src.startsWith('http://') || src.startsWith('https://');
+      src.startsWith('http://') || src.startsWith('https://') || src.startsWith('blob:');
 
   Widget _defaultError() {
     return Container(
@@ -46,7 +47,7 @@ class SmartImage extends StatelessWidget {
 
     if (src.isEmpty) {
       image = errorWidget ?? _defaultError();
-    } else if (_isUrl) {
+    } else if (_isUrl || kIsWeb) {
       image = Image.network(
         src,
         width: width,

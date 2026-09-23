@@ -15,6 +15,7 @@ import 'package:plant_disease_detector/features/diagnosis/presentation/screens/c
 import 'package:plant_disease_detector/features/weather/presentation/screens/weather_forecast_screen.dart';
 import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
 import 'package:plant_disease_detector/features/community/presentation/screens/community_feed_screen.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HomeScreen — Dribbble Premium Redesign
@@ -433,9 +434,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size / 2),
         child: userData.imagePath != null
-            ? ((userData.imagePath!.startsWith('http') || kIsWeb)
-                ? Image.network(userData.imagePath!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildInitialsAvatar(userData.fullName, size))
-                : Image.file(File(userData.imagePath!), fit: BoxFit.cover))
+            ? SmartImage(src: userData.imagePath!, fit: BoxFit.cover, errorWidget: _buildInitialsAvatar(userData.fullName, size))
             : _buildInitialsAvatar(userData.fullName, size),
       ),
     );
