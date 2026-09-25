@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/core/theme/app_theme.dart';
 
-/// A smart image widget that automatically detects whether the [src] is a
-/// network URL or a local file path, and renders accordingly.
-/// Falls back to a styled placeholder if loading fails.
+/// A smart image widget that automatically detects whether the [src] is an
+/// asset path, network URL, or local file path, and renders accordingly.
+/// Gracefully falls back to a clean, styled placeholder if loading fails.
 class SmartImage extends StatelessWidget {
   final String src;
   final double? width;
@@ -25,16 +26,28 @@ class SmartImage extends StatelessWidget {
   bool get _isUrl =>
       src.startsWith('http://') || src.startsWith('https://');
 
+  bool get _isAsset =>
+      src.startsWith('assets/') || src.startsWith('packages/');
+
   Widget _defaultError() {
-    return Container(
+    return Image.asset(
+      'assets/images/hero_leaf.jpg',
       width: width,
       height: height,
-      color: const Color(0xFFF0EDE8),
-      child: Center(
-        child: Icon(
-          Icons.eco_rounded,
-          color: const Color(0xFF81B29A),
-          size: (width != null && width! < 60) ? 20 : 36,
+      fit: fit,
+      errorBuilder: (_, __, ___) => Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.imagePlaceholder,
+          borderRadius: borderRadius,
+        ),
+        child: Center(
+          child: Icon(
+            Icons.grass_rounded,
+            color: AppColors.imageIcon,
+            size: (width != null && width! < 60) ? 20 : 32,
+          ),
         ),
       ),
     );
@@ -46,6 +59,15 @@ class SmartImage extends StatelessWidget {
 
     if (src.isEmpty) {
       image = errorWidget ?? _defaultError();
+    } else if (_isAsset) {
+      image = Image.asset(
+        src,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ?? _defaultError(),
+      );
     } else if (_isUrl) {
       image = Image.network(
         src,
@@ -57,14 +79,14 @@ class SmartImage extends StatelessWidget {
           return Container(
             width: width,
             height: height,
-            color: const Color(0xFFF0EDE8),
+            color: AppColors.imageLoadingBg,
             child: const Center(
               child: SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFFE07A5F),
+                  color: AppColors.imageLoadingSpinner,
                 ),
               ),
             ),
@@ -91,3 +113,4 @@ class SmartImage extends StatelessWidget {
     return image;
   }
 }
+

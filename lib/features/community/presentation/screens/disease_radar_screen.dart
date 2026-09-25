@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
 import 'package:plant_disease_detector/models/outbreak_report.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -58,7 +59,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
           distanceKm: 0.0,
           timeAgo: 'Just now',
           severity: 0.5,
-          color: const Color(0xFFE07A5F), // Warning red
+          color: AppColors.outbreakHigh, // Warning red
           latitude: location.latitude,
           longitude: location.longitude,
         ),
@@ -71,7 +72,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('🌿 Outbreak reported! Agri Officer notified.'),
-        backgroundColor: const Color(0xFF81B29A),
+        backgroundColor: AppColors.outbreakLow,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -88,7 +89,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
         : const LatLng(7.8731, 80.7718); // Dambulla, SL as fallback center
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0F1E),
+      backgroundColor: AppColors.radarDarkBg,
       body: Stack(
         children: [
           // ── The Interactive Map ──────────────────────────────────────────────
@@ -225,12 +226,12 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Disease Radar',
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                                      Text(
+                                        context.tr(en: 'Disease Radar', si: 'රෝග රේඩාර්', ta: 'நோய் ரேடார்'),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
                                       ),
                                       Text(
-                                        locationState.isLoading ? 'Locating...' : locationState.address,
+                                        locationState.isLoading ? context.tr(en: 'Locating...', si: 'ස්ථානය සොයමින්...', ta: 'இருப்பிடம் அறியப்படுகிறது...') : locationState.address,
                                         style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -240,11 +241,11 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE07A5F).withValues(alpha: 0.25),
+                                    color: AppColors.outbreakHigh.withValues(alpha: 0.25),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: const Color(0xFFE07A5F).withValues(alpha: 0.5)),
+                                    border: Border.all(color: AppColors.outbreakHigh.withValues(alpha: 0.5)),
                                   ),
-                                  child: const Text('LIVE', style: TextStyle(color: Color(0xFFE07A5F), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
+                                  child: const Text('LIVE', style: TextStyle(color: AppColors.outbreakHigh, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1)),
                                 ),
                               ],
                             ),
@@ -274,9 +275,9 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE07A5F).withValues(alpha: 0.2),
+                          color: AppColors.outbreakHigh.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE07A5F).withValues(alpha: 0.5), width: 1.5),
+                          border: Border.all(color: AppColors.outbreakHigh.withValues(alpha: 0.5), width: 1.5),
                         ),
                         child: Row(
                           children: [
@@ -284,7 +285,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE07A5F).withValues(alpha: 0.2),
+                                color: AppColors.outbreakHigh.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: const Center(child: Text('⚠️', style: TextStyle(fontSize: 16))),
@@ -294,12 +295,12 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Outbreak Alert Nearby!',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                                  Text(
+                                    context.tr(en: 'Outbreak Alert Nearby!', si: 'ආසන්නයේ රෝග පැතිරීමක්!', ta: 'அருகில் நோய் பரவல் எச்சரிக்கை!'),
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
                                   ),
                                   Text(
-                                    '${_liveOutbreaks.first.diseaseName} detected within ${_liveOutbreaks.first.distanceKm}km. Take precautions.',
+                                    '${context.trDisease(_liveOutbreaks.first.diseaseName)} ${_liveOutbreaks.first.distanceKm}km. ${context.tr(en: 'Take precautions.', si: 'පූර්වාරක්ෂක පියවර ගන්න.', ta: 'முன்னெச்சரிக்கை எடுக்கவும்.')}',
                                     style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11),
                                   ),
                                 ],
@@ -322,7 +323,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
               bottom: _selectedOutbreak != null ? 300 : 120,
               child: FloatingActionButton(
                 heroTag: 'center_map',
-                backgroundColor: const Color(0xFF1A2340),
+                backgroundColor: AppColors.radarChipBg,
                 mini: true,
                 onPressed: () {
                   _mapController.move(userLocation, 12.0);
@@ -349,13 +350,13 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('SEVERITY', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1)),
+                      Text(context.tr(en: 'SEVERITY', si: 'තීව්‍රතාව', ta: 'தீவிரம்'), style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1)),
                       const SizedBox(height: 8),
-                      _buildLegendItem(const Color(0xFFE07A5F), 'High'),
+                      _buildLegendItem(AppColors.outbreakHigh, context.trSeverity('High')),
                       const SizedBox(height: 4),
-                      _buildLegendItem(const Color(0xFFF2A34A), 'Medium'),
+                      _buildLegendItem(AppColors.outbreakMedium, context.trSeverity('Medium')),
                       const SizedBox(height: 4),
-                      _buildLegendItem(const Color(0xFF81B29A), 'Low'),
+                      _buildLegendItem(AppColors.outbreakLow, context.trSeverity('Low')),
                     ],
                   ),
                 ),
@@ -407,12 +408,12 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   gradient: _reported
-                      ? const LinearGradient(colors: [Color(0xFF81B29A), Color(0xFF5A9E7C)])
-                      : const LinearGradient(colors: [Color(0xFFE07A5F), Color(0xFFC96A4F)]),
+                      ? AppGradients.savedOrganic
+                      : AppGradients.savedChemical,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: ((_reported) ? const Color(0xFF81B29A) : const Color(0xFFE07A5F)).withValues(alpha: 0.4),
+                      color: ((_reported) ? AppColors.outbreakLow : AppColors.outbreakHigh).withValues(alpha: 0.4),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -424,7 +425,9 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                     Icon(_reported ? Icons.check_circle_rounded : Icons.add_alert_rounded, color: Colors.white, size: 20),
                     const SizedBox(width: 10),
                     Text(
-                      _reported ? 'Outbreak Reported!' : 'Report a Disease Outbreak',
+                      _reported
+                          ? context.tr(en: 'Outbreak Reported!', si: 'රෝග පැතිරීම වාර්තා විය!', ta: 'நோய் பரவல் புகாரளிக்கப்பட்டது!')
+                          : context.tr(en: 'Report a Disease Outbreak', si: 'රෝග පැතිරීමක් වාර්තා කරන්න', ta: 'நோய் பரவலைப் புகாரளிக்கவும்'),
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
                     ),
                   ],
@@ -444,7 +447,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF0A0F1E).withValues(alpha: 0.85),
+            color: AppColors.radarDarkBg.withValues(alpha: 0.85),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.15), width: 1)),
           ),
@@ -483,8 +486,8 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(outbreak.diseaseName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                        Text('${outbreak.cropType} · ${outbreak.timeAgo}', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+                        Text(context.trDisease(outbreak.diseaseName), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                        Text('${context.trCrop(outbreak.cropType)} · ${outbreak.timeAgo}', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
                       ],
                     ),
                   ),
@@ -497,11 +500,11 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
               const SizedBox(height: 20),
               Row(
                 children: [
-                  _buildStatChip('📍', '${outbreak.distanceKm} km', 'Distance'),
+                  _buildStatChip('📍', '${outbreak.distanceKm} km', context.tr(en: 'Distance', si: 'දුර', ta: 'தொலைவு')),
                   const SizedBox(width: 12),
-                  _buildStatChip('👥', '${outbreak.reportCount}', 'Reports'),
+                  _buildStatChip('👥', '${outbreak.reportCount}', context.tr(en: 'Reports', si: 'වාර්තා', ta: 'அறிக்கைகள்')),
                   const SizedBox(width: 12),
-                  _buildStatChip('🔥', '${(outbreak.severity * 100).round()}%', 'Severity'),
+                  _buildStatChip('🔥', '${(outbreak.severity * 100).round()}%', context.tr(en: 'Severity', si: 'තීව්‍රතාව', ta: 'தீவிரம்')),
                 ],
               ),
               const SizedBox(height: 16),
@@ -518,7 +521,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Recommended: Apply copper-based fungicide. Inspect your ${outbreak.cropType.toLowerCase()} crop immediately.',
+                        '${context.tr(en: 'Recommended: Apply copper-based fungicide. Inspect your', si: 'නිර්දේශය: කොපර් දිලීර නාශක යොදන්න. ඔබේ', ta: 'பரிந்துரை: காப்பர் பூஞ்சைக்கொல்லியைப் பயன்படுத்துங்கள். உங்கள்')} ${context.trCrop(outbreak.cropType)} ${context.tr(en: 'crop immediately.', si: 'වගාව වහාම පරීක්ෂා කරන්න.', ta: 'பயிரை உடனடியாக பரிசோதிக்கவும்.')}',
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12, height: 1.4),
                       ),
                     ),

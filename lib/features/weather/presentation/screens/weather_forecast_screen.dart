@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
 import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
 import 'dart:ui';
@@ -22,7 +23,7 @@ class WeatherForecastScreen extends ConsumerWidget {
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF4A90E2), Color(0xFF87CEFA)], // Sunny/Clear sky colors
+                  colors: [AppColors.skyBlue, AppColors.skyLight], // Sunny/Clear sky colors
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -58,7 +59,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                       const Icon(Icons.location_on_rounded, color: Colors.white, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        locationState.isLoading ? 'LOCATING...' : locationState.address.toUpperCase(),
+                        locationState.isLoading ? context.tr(en: 'LOCATING...', si: 'ස්ථානය සොයමින්...', ta: 'இருப்பிடம் அறியப்படுகிறது...') : locationState.address.toUpperCase(),
                         style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.2),
                       ),
                       const Spacer(),
@@ -91,13 +92,13 @@ class WeatherForecastScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          weatherState.isLoading ? 'LOADING...' : 'CURRENTLY, ${weatherState.weather?.condition.toUpperCase() ?? "SUNNY"}',
+                          weatherState.isLoading ? context.tr(en: 'LOADING...', si: 'පූරණය වෙමින්...', ta: 'ஏற்றுகிறது...') : '${context.tr(en: 'CURRENTLY', si: 'දැනට', ta: 'தற்போது')}, ${weatherState.weather?.condition.toUpperCase() ?? "SUNNY"}',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 2),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Feels like 26°C  |  H: 28°  |  L: 19°',
+                          '${context.tr(en: 'Feels like', si: 'දැනෙන උෂ්ණත්වය', ta: 'உணர்வது')} 26°C  |  H: 28°  |  L: 19°',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLarge.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                         ),
@@ -124,7 +125,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('HOURLY FORECAST', style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary, letterSpacing: 1.5)),
+                                Text(context.tr(en: 'HOURLY FORECAST', si: 'පැයක කාලගුණ අනාවැකිය', ta: 'மணிநேர முன்னறிவிப்பு'), style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary, letterSpacing: 1.5)),
                                 const SizedBox(height: 16),
                                 
                                 // Hourly List
@@ -144,7 +145,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                 ),
                                 
                                 const SizedBox(height: 32),
-                                Text('7-DAY FORECAST', style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary, letterSpacing: 1.5)),
+                                Text(context.tr(en: '7-DAY FORECAST', si: 'දින 7ක අනාවැකිය', ta: '7 நாள் முன்னறிவிப்பு'), style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary, letterSpacing: 1.5)),
                                 const SizedBox(height: 16),
                                 
                                 // 7-Day List

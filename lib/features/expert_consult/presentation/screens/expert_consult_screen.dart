@@ -87,8 +87,8 @@ class _ExpertConsultScreenState extends State<ExpertConsultScreen> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               children: [
-                _buildExpertCard('Dr. Sarah Jenkins', 'Agronomist', 4.8, 'https://images.unsplash.com/photo-1594824476967-4f1201946c59?q=80&w=200&auto=format&fit=crop'),
-                _buildExpertCard('Prof. Alan Smith', 'Plant Pathologist', 5.0, 'https://images.unsplash.com/photo-1537368910025-702850356589?q=80&w=200&auto=format&fit=crop'),
+                _buildExpertCard('Dr. Sarah Jenkins', 'Agronomist', 4.8, 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop'),
+                _buildExpertCard('Prof. Alan Smith', 'Plant Pathologist', 5.0, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop'),
                 _buildExpertCard('Dr. Emily Chen', 'Soil Scientist', 4.9, 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop'),
                 _buildExpertCard('Mr. John Doe', 'Pest Control Spec.', 4.5, 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop'),
                 const SizedBox(height: 40),

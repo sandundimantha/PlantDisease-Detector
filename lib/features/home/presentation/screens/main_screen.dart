@@ -6,6 +6,9 @@ import 'package:plant_disease_detector/features/history/presentation/screens/his
 import 'package:plant_disease_detector/features/farm_log/presentation/screens/farm_screen.dart';
 import 'package:plant_disease_detector/features/profile/presentation/screens/profile_screen.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
+import 'package:plant_disease_detector/l10n/app_localizations.dart';
+
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MainScreen — Handles Bottom Navigation (Glassmorphism)
@@ -60,11 +63,11 @@ class _MainScreenState extends State<MainScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavItem(0, Icons.home_rounded, 'Home'),
-                      _buildNavItem(1, Icons.grid_view_rounded, 'Farm'),
+                      _buildNavItem(0, Icons.home_rounded, context.tr(en: 'Home', si: 'මුල් පිටුව', ta: 'முகப்பு')),
+                      _buildNavItem(1, Icons.grid_view_rounded, context.tr(en: 'Farm', si: 'ගොවිපළ', ta: 'பண்ணை')),
                       const SizedBox(width: 56), // Space for FAB
-                      _buildNavItem(2, Icons.history_rounded, 'History'),
-                      _buildNavItem(3, Icons.person_rounded, 'Profile'),
+                      _buildNavItem(2, Icons.history_rounded, context.tr(en: 'History', si: 'ඉතිහාසය', ta: 'வரலாறு')),
+                      _buildNavItem(3, Icons.person_rounded, context.tr(en: 'Profile', si: 'පැතිකඩ', ta: 'சுயவிவரம்')),
                     ],
                   ),
                 ),
@@ -72,9 +75,9 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
           
-          // Floating Action Button
+          // Floating Action Button (Pulsing Emerald & Copper Centerpiece)
           Positioned(
-            bottom: 44, // 24 + (72 / 2) - (64 / 2) + offset slightly for visual balance
+            bottom: 40,
             left: 0,
             right: 0,
             child: Center(
@@ -86,28 +89,44 @@ class _MainScreenState extends State<MainScreen> {
                   );
                 },
                 child: Container(
-                  width: 64,
-                  height: 64,
+                  width: 66,
+                  height: 66,
                   decoration: BoxDecoration(
-                    gradient: AppGradients.primary,
-                    shape: BoxShape.circle,
+                    gradient: AppGradients.scanButton,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.copper, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4),
-                        blurRadius: 16,
+                        color: AppColors.primary.withOpacity(0.5),
+                        blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
                       BoxShadow(
-                        color: Colors.white,
-                        blurRadius: 0,
-                        spreadRadius: 4,
+                        color: AppColors.copper.withOpacity(0.3),
+                        blurRadius: 10,
+                        spreadRadius: 1,
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.center_focus_strong_rounded,
-                    color: Colors.white,
-                    size: 28,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.qr_code_scanner_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        context.tr(en: 'SCAN', si: 'ස්කෑන්', ta: 'ஸ்கேன்'),
+                        style: const TextStyle(
+                          color: AppColors.copperLight,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -129,7 +148,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primary : const Color(0xFF9AA5B4),
+              color: isSelected ? AppColors.copper : AppColors.navInactive,
               size: 26,
             ),
             const SizedBox(height: 4),
@@ -140,7 +159,7 @@ class _MainScreenState extends State<MainScreen> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? AppColors.primary : const Color(0xFF9AA5B4),
+                color: isSelected ? AppColors.copper : AppColors.navInactive,
               ),
             ),
           ],

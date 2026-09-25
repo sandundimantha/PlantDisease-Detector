@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 
 class CommunityFeedScreen extends StatefulWidget {
   const CommunityFeedScreen({super.key});
@@ -26,7 +28,7 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: Text('Community Forum', style: AppTextStyles.titleMedium),
+        title: Text(context.tr(en: 'Community Forum', si: 'ගොවි සංසදය', ta: 'விவசாயிகள் மன்றம்'), style: AppTextStyles.titleMedium),
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -52,7 +54,7 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
                   child: TextField(
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
-                      hintText: 'Search discussions...',
+                      hintText: context.tr(en: 'Search discussions...', si: 'සාකච්ඡා සොයන්න...', ta: 'விவாதங்களைத் தேடுங்கள்...'),
                       hintStyle: AppTextStyles.bodyMedium,
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 16),
@@ -72,6 +74,11 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
                   separatorBuilder: (_, __) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     final isSelected = _selectedFilterIndex == index;
+                    final filterTitles = [
+                      context.tr(en: 'Trending', si: 'ජනප්‍රිය', ta: 'பிரபலமானது'),
+                      context.tr(en: 'My Crops', si: 'මගේ බෝග', ta: 'என் பயிர்கள்'),
+                      context.tr(en: 'Q&A', si: 'ප්‍රශ්නෝත්තර', ta: 'கேள்வி & பதில்'),
+                    ];
                     return GestureDetector(
                       onTap: () => setState(() => _selectedFilterIndex = index),
                       child: Container(
@@ -99,7 +106,7 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              _filters[index]['title'],
+                              filterTitles[index],
                               style: AppTextStyles.titleSmall.copyWith(
                                 color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -231,20 +238,12 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
               ),
               if (contentImageUrl != null) ...[
                 const SizedBox(width: 16),
-                ClipRRect(
+                SmartImage(
+                  src: contentImageUrl,
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.cover,
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    contentImageUrl,
-                    width: 70,
-                    height: 70,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: 70,
-                      height: 70,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_not_supported_rounded, color: Colors.grey),
-                    ),
-                  ),
                 ),
               ]
             ],
@@ -252,9 +251,9 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildInteractionButton(Icons.arrow_upward_rounded, '$upvotes Upvotes'),
+              _buildInteractionButton(Icons.arrow_upward_rounded, '$upvotes ${context.tr(en: 'Upvotes', si: 'මනාප', ta: 'வாக்குகள்')}'),
               const SizedBox(width: 24),
-              _buildInteractionButton(Icons.chat_bubble_outline_rounded, '$comments Comments'),
+              _buildInteractionButton(Icons.chat_bubble_outline_rounded, '$comments ${context.tr(en: 'Comments', si: 'අදහස්', ta: 'கருத்துகள்')}'),
             ],
           ),
         ],

@@ -69,7 +69,7 @@ class CropGuardApp extends ConsumerWidget {
 
       builder: (context, child) {
         return Container(
-          color: const Color(0xFF131524), // Dark bg for web outer area
+          color: AppColors.webOuterBg,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 450),

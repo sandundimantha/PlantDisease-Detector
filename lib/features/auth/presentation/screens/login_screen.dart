@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -96,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     // Header text
                     Text(
-                      'LOGIN / SIGNUP',
+                      context.tr(en: 'LOGIN / SIGNUP', si: 'ඇතුල්වීම / ලියාපදිංචිය', ta: 'உள்நுழைவு / பதிவு'),
                       style: AppTextStyles.headlineLarge.copyWith(
                         letterSpacing: 2,
                         fontWeight: FontWeight.w800,
@@ -123,12 +124,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Email label
-                          Text('Email', style: AppTextStyles.titleSmall),
+                          Text(context.tr(en: 'Email', si: 'විද්‍යුත් තැපෑල', ta: 'மின்னஞ்சல்'), style: AppTextStyles.titleSmall),
                           const SizedBox(height: 8),
                           // Email Field
                           _buildTextField(
                             controller: _emailController,
-                            hint: 'Enter your email',
+                            hint: context.tr(en: 'Enter your email', si: 'ඔබගේ විද්‍යුත් තැපෑල ඇතුළත් කරන්න', ta: 'உங்கள் மின்னஞ்சலை உள்ளிடவும்'),
                             icon: Icons.mail_outline_rounded,
                           ),
                           const SizedBox(height: 20),
@@ -137,7 +138,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Password', style: AppTextStyles.titleSmall),
+                              Text(context.tr(en: 'Password', si: 'මුරපදය', ta: 'கடவுச்சொல்'), style: AppTextStyles.titleSmall),
                               TextButton(
                                 onPressed: () {},
                                 style: TextButton.styleFrom(
@@ -146,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: Text(
-                                  'forgot password?',
+                                  context.tr(en: 'forgot password?', si: 'මුරපදය අමතකද?', ta: 'கடவுச்சொல் மறந்துவிட்டதா?'),
                                   style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary),
                                 ),
                               ),
@@ -156,7 +157,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           // Password Field
                           _buildTextField(
                             controller: _passwordController,
-                            hint: 'Enter your password',
+                            hint: context.tr(en: 'Enter your password', si: 'ඔබගේ මුරපදය ඇතුළත් කරන්න', ta: 'உங்கள் கடவுச்சொல்லை உள்ளிடவும்'),
                             icon: Icons.lock_outline_rounded,
                             isPassword: true,
                           ),
@@ -187,7 +188,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ? const SizedBox(
                                       width: 24, height: 24,
                                       child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                  : Text('LOGIN', style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+                                  : Text(
+                                      context.tr(en: 'LOGIN', si: 'ඇතුල් වන්න', ta: 'உள்நுழைக'),
+                                      style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -198,7 +202,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Expanded(child: Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.2))),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text('OR', style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary.withValues(alpha: 0.6))),
+                                child: Text(context.tr(en: 'OR', si: 'හෝ', ta: 'அல்லது'), style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary.withValues(alpha: 0.6))),
                               ),
                               Expanded(child: Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.2))),
                             ],
@@ -207,7 +211,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                           // Social Login Label
                           Text(
-                            'Social Login',
+                            context.tr(en: 'Social Login', si: 'සමාජ මාධ්‍ය හරහා ඇතුල් වන්න', ta: 'சமூக ஊடக உள்நுழைவு'),
                             textAlign: TextAlign.center,
                             style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
@@ -217,7 +221,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildSocialCircle(Icons.facebook_rounded, const Color(0xFF1877F2), () => context.go('/main')),
+                              _buildSocialCircle(Icons.facebook_rounded, AppColors.facebook, () => context.go('/main')),
                               const SizedBox(width: 24),
                               _buildSocialCircle(Icons.g_mobiledata_rounded, Colors.red, () => context.go('/main'), iconSize: 44),
                               const SizedBox(width: 24),
@@ -230,11 +234,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text("Don't have an account? ", style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.normal)),
+                              Text(
+                                context.tr(en: "Don't have an account? ", si: 'ගිණුමක් නැද්ද? ', ta: 'கணக்கு இல்லையா? '),
+                                style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.normal),
+                              ),
                               GestureDetector(
                                 onTap: () {},
                                 child: Text(
-                                  'Sign Up',
+                                  context.tr(en: 'Sign Up', si: 'ලියාපදිංචි වන්න', ta: 'பதிவு செய்க'),
                                   style: AppTextStyles.titleSmall.copyWith(
                                     color: AppColors.primary,
                                     decoration: TextDecoration.underline,

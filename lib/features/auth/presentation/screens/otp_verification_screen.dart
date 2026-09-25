@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/features/auth/presentation/screens/signup_screen.dart';
-import 'package:plant_disease_detector/features/home/presentation/screens/home_screen.dart'; // Will use if already signed up
 
 class OtpVerificationScreen extends StatelessWidget {
   const OtpVerificationScreen({super.key});

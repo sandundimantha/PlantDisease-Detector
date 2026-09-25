@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/scanning_screen.dart';
+import 'package:plant_disease_detector/features/diagnosis/presentation/screens/photo_guide_screen.dart';
 import 'package:plant_disease_detector/core/providers/camera_provider.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 class CameraCaptureScreen extends ConsumerStatefulWidget {
   const CameraCaptureScreen({super.key});
@@ -26,6 +28,13 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
   final Random _random = Random();
   final List<Rect> _aiBoxes = [];
   bool _flashOn = false;
+  int _flashModeIndex = 0; // 0: Auto, 1: On, 2: Off
+  static const List<String> _flashLabels = ['Auto', 'On', 'Off'];
+  static const List<IconData> _flashIcons = [
+    Icons.flash_auto_rounded,
+    Icons.flash_on_rounded,
+    Icons.flash_off_rounded,
+  ];
 
   @override
   void initState() {
@@ -97,6 +106,27 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
         }
       } catch (e) {
         debugPrint('Error taking picture: $e');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ScanningScreen(imagePath: ''),
+            ),
+          );
+        }
+      }
+    } else {
+      // Mock / Emulator fallback
+      setState(() => _flashOn = true);
+      await Future.delayed(const Duration(milliseconds: 100));
+      setState(() => _flashOn = false);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ScanningScreen(imagePath: ''),
+          ),
+        );
       }
     }
   }
@@ -119,9 +149,15 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
 
   void _toggleFlash() {
     HapticFeedback.selectionClick();
+    setState(() {
+      _flashModeIndex = (_flashModeIndex + 1) % _flashLabels.length;
+    });
     final controller = ref.read(cameraProvider).controller;
     if (controller != null) {
-      // Toggle flash logic here
+      FlashMode mode = FlashMode.auto;
+      if (_flashModeIndex == 1) mode = FlashMode.always;
+      if (_flashModeIndex == 2) mode = FlashMode.off;
+      controller.setFlashMode(mode).catchError((_) {});
     }
   }
 
@@ -152,7 +188,7 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // AI Instruction Pill
+                // AI Instruction Pill & Lighting Status (Wireframe 3)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: BackdropFilter(
@@ -160,18 +196,45 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4),
+                        color: Colors.black.withValues(alpha: 0.45),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.document_scanner_rounded, color: AppColors.secondary, size: 16),
+                          const Icon(Icons.center_focus_strong_rounded, color: AppColors.copperLight, size: 16),
                           const SizedBox(width: 8),
                           Text(
-                            'Point at the affected area',
-                            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w500),
+                            context.tr(
+                              en: 'Center 1 leaf in frame',
+                              si: 'එක් කොළයක් මැදට ගන්න',
+                              ta: '1 இலையை நடுவில் வைக்கவும்',
+                            ),
+                            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.severityDefault.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: AppColors.severityDefault, size: 10),
+                                const SizedBox(width: 3),
+                                Text(
+                                  context.tr(
+                                    en: 'Good Light',
+                                    si: 'හොඳ ආලෝකය',
+                                    ta: 'நல்ல வெளிச்சம்',
+                                  ),
+                                  style: const TextStyle(color: AppColors.severityDefault, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -220,6 +283,7 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                         Navigator.pop(context);
                       },
                     ),
+                    // Usability UI-01: Clear text label for flash button
                     GestureDetector(
                       onTap: _toggleFlash,
                       child: ClipRRect(
@@ -229,25 +293,69 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: Colors.black.withValues(alpha: 0.35),
                               borderRadius: BorderRadius.circular(30),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.flash_auto_rounded, color: Colors.amber, size: 20),
-                                const SizedBox(width: 8),
-                                Text('AUTO', style: AppTextStyles.titleSmall.copyWith(color: Colors.white, letterSpacing: 1.2)),
+                                Icon(_flashIcons[_flashModeIndex], color: AppColors.starActive, size: 18),
+                                const SizedBox(width: 6),
+                                Builder(
+                                  builder: (context) {
+                                    final flashModeName = switch (_flashModeIndex) {
+                                      0 => context.tr(en: 'Auto', si: 'ස්වයංක්‍රීය', ta: 'தானியங்கி'),
+                                      1 => context.tr(en: 'On', si: 'ක්‍රියාත්මක', ta: 'இயக்கு'),
+                                      2 => context.tr(en: 'Off', si: 'අක්‍රිය', ta: 'அணை'),
+                                      _ => _flashLabels[_flashModeIndex],
+                                    };
+                                    return Text(
+                                      '${context.tr(en: 'Flash: ', si: 'ෆ්ලෑෂ්: ', ta: 'ஃபிளாஷ்: ')}$flashModeName',
+                                      style: AppTextStyles.titleSmall.copyWith(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                    );
+                                  }
+                                ),
                               ],
                             ),
                           ),
                         ),
                       ),
                     ),
-                    _buildTopGlassButton(
-                      icon: Icons.grid_view_rounded, 
-                      onTap: () => HapticFeedback.selectionClick(),
+                    // Wireframe 3: [ GUIDE ? ] button triggering PhotoGuideScreen
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PhotoGuideScreen()),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(color: AppColors.copper.withValues(alpha: 0.6)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.help_outline_rounded, color: AppColors.copperLight, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  context.tr(en: 'GUIDE ?', si: 'මඟපෙන්වීම ?', ta: 'வழிகாட்டி ?'),
+                                  style: AppTextStyles.titleSmall.copyWith(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -308,7 +416,12 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                                   boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)] : [],
                                 ),
                                 child: Text(
-                                  _modes[index],
+                                  switch (index) {
+                                    0 => context.tr(en: 'Leaf Spot', si: 'පත්‍ර ලප', ta: 'இலைப்புள்ளி'),
+                                    1 => context.tr(en: 'Pest', si: 'පළිබෝධ', ta: 'பூச்சி'),
+                                    2 => context.tr(en: 'Soil', si: 'පස', ta: 'மண்'),
+                                    _ => _modes[index],
+                                  },
                                   style: TextStyle(
                                     color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.7),
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -344,7 +457,10 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                                   child: const Icon(Icons.photo_library_rounded, color: Colors.white, size: 24),
                                 ),
                                 const SizedBox(height: 8),
-                                Text('Gallery', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w600)),
+                                Text(
+                                  context.tr(en: 'Gallery', si: 'ගැලරිය', ta: 'கேலரி'),
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
                               ],
                             ),
                           ),
@@ -389,7 +505,10 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                                   child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 26),
                                 ),
                                 const SizedBox(height: 8),
-                                Text('Advice', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w600)),
+                                Text(
+                                  context.tr(en: 'Advice', si: 'උපදෙස්', ta: 'ஆலோசனை'),
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
                               ],
                             ),
                           ),

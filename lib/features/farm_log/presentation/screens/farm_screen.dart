@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
 import 'package:plant_disease_detector/features/farm_log/presentation/screens/yield_tracker_screen.dart';
+import 'package:plant_disease_detector/features/farm_log/presentation/screens/add_farm_log_screen.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FarmScreen — Matches Figma FarmScreen.tsx
@@ -24,7 +27,7 @@ class _FarmScreenState extends State<FarmScreen> {
       area: "2.4 acres",
       health: 62,
       status: "At Risk",
-      statusColor: Color(0xFFE07A5F),
+      statusColor: AppColors.severityHigh,
       img: "https://images.unsplash.com/photo-1508175688576-0c076b47b5b5?w=300&h=200&fit=crop&auto=format",
     ),
     _FieldBlock(
@@ -34,7 +37,7 @@ class _FarmScreenState extends State<FarmScreen> {
       area: "1.8 acres",
       health: 91,
       status: "Healthy",
-      statusColor: Color(0xFF81B29A),
+      statusColor: AppColors.severityDefault,
       img: "https://images.unsplash.com/photo-1557139582-4206cd15c69a?w=300&h=200&fit=crop&auto=format",
     ),
     _FieldBlock(
@@ -44,7 +47,7 @@ class _FarmScreenState extends State<FarmScreen> {
       area: "3.1 acres",
       health: 78,
       status: "Monitor",
-      statusColor: Color(0xFFF5A623),
+      statusColor: AppColors.severityMedium,
       img: "https://images.unsplash.com/photo-1524553496250-1a722745ae00?w=300&h=200&fit=crop&auto=format",
     ),
     _FieldBlock(
@@ -54,16 +57,16 @@ class _FarmScreenState extends State<FarmScreen> {
       area: "1.2 acres",
       health: 55,
       status: "At Risk",
-      statusColor: Color(0xFFE07A5F),
+      statusColor: AppColors.severityHigh,
       img: "https://images.unsplash.com/photo-1508175688576-0c076b47b5b5?w=300&h=200&fit=crop&auto=format",
     ),
   ];
 
   final List<_FarmTask> _tasks = [
-    _FarmTask(label: "Spray Field A with fungicide", due: "Today", priority: "High", color: const Color(0xFFE07A5F)),
-    _FarmTask(label: "Irrigate Field B rows 1–6", due: "Yesterday", priority: "Done", color: const Color(0xFF81B29A), done: true),
-    _FarmTask(label: "Soil test Field C", due: "Sep 15", priority: "Medium", color: const Color(0xFFF5A623)),
-    _FarmTask(label: "Harvest check Field B", due: "Sep 16", priority: "Low", color: const Color(0xFFA8B4C0)),
+    _FarmTask(label: "Spray Field A with fungicide", due: "Today", priority: "High", color: AppColors.severityHigh),
+    _FarmTask(label: "Irrigate Field B rows 1–6", due: "Yesterday", priority: "Done", color: AppColors.severityDefault, done: true),
+    _FarmTask(label: "Soil test Field C", due: "Sep 15", priority: "Medium", color: AppColors.severityMedium),
+    _FarmTask(label: "Harvest check Field B", due: "Sep 16", priority: "Low", color: AppColors.severityLow),
   ];
 
   void _onScan() {
@@ -90,9 +93,19 @@ class _FarmScreenState extends State<FarmScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('My Farm', style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5, fontSize: 24)),
+                        Text(
+                          context.tr(en: 'My Farm', si: 'මගේ ගොවිපල', ta: 'என் பண்ணை'),
+                          style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5, fontSize: 24),
+                        ),
                         const SizedBox(height: 2),
-                        Text('8.5 total acres · 4 blocks', style: AppTextStyles.bodySmall.copyWith(color: const Color(0xFF9AA5B4))),
+                        Text(
+                          context.tr(
+                            en: '8.5 total acres · 4 blocks',
+                            si: 'අක්කර 8.5 · කොටස් 4ක්',
+                            ta: '8.5 மொத்த ஏக்கர் · 4 தொகுதிகள்',
+                          ),
+                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.settingsIcon),
+                        ),
                       ],
                     ),
                   ),
@@ -101,15 +114,15 @@ class _FarmScreenState extends State<FarmScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFFE07A5F), Color(0xFFC96A4F)]),
+                        gradient: AppGradients.profileCard,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: const Color(0xFFE07A5F).withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6)),
+                          BoxShadow(color: AppColors.severityHigh.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6)),
                         ],
                       ),
-                      child: const Text(
-                        '+ Scan Field',
-                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      child: Text(
+                        context.tr(en: '+ Scan Field', si: '+ ක්ෂේත්‍රය ස්කෑන්', ta: '+ பயிர் ஸ்கேன்'),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -129,14 +142,54 @@ class _FarmScreenState extends State<FarmScreen> {
                     const SizedBox(height: 20),
 
                     // Field Blocks
-                    Text('Field Blocks', style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary)),
+                    Text(
+                      context.tr(en: 'Field Blocks', si: 'ක්ෂේත්‍ර කොටස්', ta: 'பண்ணை தொகுதிகள்'),
+                      style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary),
+                    ),
                     const SizedBox(height: 12),
                     ..._fields.map((f) => _buildFieldCard(f)),
 
                     const SizedBox(height: 20),
 
                     // Tasks
-                    Text("Today's Tasks", style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.tr(en: "Today's Tasks", si: 'අද දවසේ කාර්යයන්', ta: 'இன்றைய பணிகள்'),
+                          style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AddFarmLogScreen()),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.add_rounded, size: 14, color: AppColors.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  context.tr(en: 'Add Log', si: 'සටහනක් එක්කරන්න', ta: 'பதிவு சேர்க்க'),
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                     ..._tasks.map((t) => _buildTaskCard(t)),
                   ],
@@ -168,12 +221,19 @@ class _FarmScreenState extends State<FarmScreen> {
               children: [
                 Row(
                   children: [
-                    Text('Overall Farm Health & Yield', style: AppTextStyles.titleSmall),
+                    Text(
+                      context.tr(
+                        en: 'Overall Farm Health & Yield',
+                        si: 'ගොවිපල සමස්ත සෞඛ්‍යය හා අස්වැන්න',
+                        ta: 'ஒட்டுமொத்த பண்ணை நலம் & விளைச்சல்',
+                      ),
+                      style: AppTextStyles.titleSmall,
+                    ),
                     const SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textSecondary),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textSecondary),
                   ],
                 ),
-                Text('72%', style: AppTextStyles.titleSmall.copyWith(color: const Color(0xFF81B29A), fontWeight: FontWeight.bold)),
+                Text('72%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.severityDefault, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
@@ -187,11 +247,11 @@ class _FarmScreenState extends State<FarmScreen> {
                       flex: 72,
                       child: Container(
                         decoration: const BoxDecoration(
-                          gradient: LinearGradient(colors: [Color(0xFFA8D5BE), Color(0xFF81B29A)]),
+                          gradient: LinearGradient(colors: [AppColors.healthBarLight, AppColors.severityDefault]),
                         ),
                       ),
                     ),
-                    Expanded(flex: 28, child: Container(color: const Color(0xFFF0EDE8))),
+                    Expanded(flex: 28, child: Container(color: AppColors.imageLoadingBg)),
                   ],
                 ),
               ),
@@ -200,9 +260,9 @@ class _FarmScreenState extends State<FarmScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildHealthStat('Healthy', '2', const Color(0xFF81B29A)),
-                _buildHealthStat('Monitor', '1', const Color(0xFFF5A623)),
-                _buildHealthStat('At Risk', '2', const Color(0xFFE07A5F)),
+                _buildHealthStat(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), '2', AppColors.severityDefault),
+                _buildHealthStat(context.tr(en: 'Monitor', si: 'නිරීක්ෂණය', ta: 'கண்காணிப்பு'), '1', AppColors.severityMedium),
+                _buildHealthStat(context.tr(en: 'At Risk', si: 'අවදානමේ', ta: 'ஆபத்தில்'), '2', AppColors.severityHigh),
               ],
             ),
           ],
@@ -243,9 +303,12 @@ class _FarmScreenState extends State<FarmScreen> {
                   height: 80,
                   child: Stack(
                     children: [
-                      ClipRRect(
+                      SmartImage(
+                        src: field.img,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
                         borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
-                        child: Image.network(field.img, width: double.infinity, height: double.infinity, fit: BoxFit.cover),
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -304,7 +367,7 @@ class _FarmScreenState extends State<FarmScreen> {
                                   child: Row(
                                     children: [
                                       Expanded(flex: field.health, child: Container(color: field.statusColor)),
-                                      Expanded(flex: 100 - field.health, child: Container(color: const Color(0xFFF0EDE8))),
+                                      Expanded(flex: 100 - field.health, child: Container(color: AppColors.imageLoadingBg)),
                                     ],
                                   ),
                                 ),
@@ -323,7 +386,7 @@ class _FarmScreenState extends State<FarmScreen> {
             if (isExpanded)
               Container(
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0x0F2D3748))),
+                  border: Border(top: BorderSide(color: AppColors.dividerSubtle)),
                 ),
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 child: Column(
@@ -344,7 +407,7 @@ class _FarmScreenState extends State<FarmScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [Color(0xFFE07A5F), Color(0xFFC96A4F)]),
+                          gradient: AppGradients.profileCard,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         alignment: Alignment.center,
@@ -366,7 +429,7 @@ class _FarmScreenState extends State<FarmScreen> {
   Widget _buildFieldDetail(String label, String val) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: const Color(0xFFF5F3F0), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: AppColors.achievementInactive, borderRadius: BorderRadius.circular(12)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -398,7 +461,7 @@ class _FarmScreenState extends State<FarmScreen> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: task.done ? const Color(0xFF81B29A) : task.color.withOpacity(0.1),
+                  color: task.done ? AppColors.severityDefault : task.color.withOpacity(0.1),
                   border: task.done ? null : Border.all(color: task.color, width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                 ),

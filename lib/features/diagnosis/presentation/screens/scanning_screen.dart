@@ -5,7 +5,6 @@ import 'package:plant_disease_detector/features/diagnosis/presentation/screens/d
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/providers/tflite_provider.dart';
-import 'package:plant_disease_detector/features/diagnosis/domain/confidence_gate.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -198,14 +197,14 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
             height: 148,
             child: ShaderMask(
               shaderCallback: (bounds) => const SweepGradient(
-                colors: [Color(0xFFF2A98A), Color(0xFFE07A5F)],
+                colors: [AppColors.avatarGradEnd, AppColors.avatarGradStart],
                 stops: [0.0, 1.0],
                 transform: GradientRotation(-3.14159 / 2),
               ).createShader(bounds),
               child: CircularProgressIndicator(
                 value: _progressAnim.value,
                 strokeWidth: 5,
-                backgroundColor: const Color(0xFFF0EDE8),
+                backgroundColor: AppColors.imageLoadingBg,
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 strokeCap: StrokeCap.round,
               ),
@@ -313,7 +312,7 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
             height: 5,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFEDEAE5),
+              color: AppColors.tabInactiveBg,
               borderRadius: BorderRadius.circular(50),
             ),
             alignment: Alignment.centerLeft,
@@ -323,7 +322,7 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(50),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFF2A98A), Color(0xFFE07A5F)],
+                    colors: [AppColors.avatarGradEnd, AppColors.avatarGradStart],
                   ),
                 ),
               ),
@@ -346,7 +345,7 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
           width: isCurrent ? 20 : 6,
           height: 6,
           decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : const Color(0xFFEDEAE5),
+            color: isActive ? AppColors.primary : AppColors.tabInactiveBg,
             borderRadius: BorderRadius.circular(50),
           ),
         );

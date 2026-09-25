@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/models/agri_officer.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,21 +62,15 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: Image.network(
-                    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&fit=crop&auto=format',
+                  child: SmartImage(
+                    src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&fit=crop&auto=format',
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A3A2A)),
                   ),
                 ),
                 Positioned.fill(
                   child: Container(
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x80000000), Color(0xFF0D1F15)],
-                        stops: [0.0, 1.0],
-                      ),
+                      gradient: AppGradients.officerOverlay,
                     ),
                   ),
                 ),
@@ -117,7 +113,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
                             const Icon(Icons.location_on_rounded, color: Colors.white, size: 14),
                             const SizedBox(width: 6),
                             Text(
-                              '${officer.distanceKm} km away',
+                              '${officer.distanceKm} ${context.tr(en: 'km away', si: 'කි.මී. දුරින්', ta: 'கி.மீ தொலைவில்')}',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
                             ),
                           ],
@@ -169,10 +165,13 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
                                 Container(
                                   width: 8,
                                   height: 8,
-                                  decoration: const BoxDecoration(color: Color(0xFF81B29A), shape: BoxShape.circle),
+                                  decoration: const BoxDecoration(color: AppColors.callAction, shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 6),
-                                Text('Available Now', style: TextStyle(color: Colors.greenAccent.shade100, fontSize: 11, fontWeight: FontWeight.w600)),
+                                Text(
+                                  context.tr(en: 'Available Now', si: 'දැන් සම්බන්ධ විය හැක', ta: 'இப்போது தொடர்பு கொள்ளலாம்'),
+                                  style: TextStyle(color: Colors.greenAccent.shade100, fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
                               ],
                             ),
                           ],
@@ -190,7 +189,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
                     position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(_slideAnim),
                     child: Container(
                       decoration: const BoxDecoration(
-                        color: Color(0xFFF8F5F0),
+                        color: AppColors.officerCardBg,
                         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                       ),
                       child: SingleChildScrollView(
@@ -201,11 +200,11 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
                             // Quick Actions
                             Row(
                               children: [
-                                _buildActionButton(Icons.phone_rounded, 'Call', const Color(0xFF81B29A)),
+                                _buildActionButton(Icons.phone_rounded, context.tr(en: 'Call', si: 'ඇමතුම්', ta: 'அழைப்பு'), AppColors.callAction),
                                 const SizedBox(width: 12),
-                                _buildActionButton(Icons.chat_bubble_rounded, 'WhatsApp', const Color(0xFF25D366)),
+                                _buildActionButton(Icons.chat_bubble_rounded, 'WhatsApp', AppColors.whatsapp),
                                 const SizedBox(width: 12),
-                                _buildActionButton(Icons.email_rounded, 'Email', AppColors.primary),
+                                _buildActionButton(Icons.email_rounded, context.tr(en: 'Email', si: 'විද්‍යුත් තැපෑල', ta: 'மின்னஞ்சல்'), AppColors.primary),
                               ],
                             ),
 
@@ -217,7 +216,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
                             const SizedBox(height: 20),
 
                             // Specializations
-                            Text('Specializations', style: AppTextStyles.titleSmall),
+                            Text(context.tr(en: 'Specializations', si: 'විශේෂඥ ක්ෂේත්‍ර', ta: 'நிபுணத்துவம்'), style: AppTextStyles.titleSmall),
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 8,
@@ -308,7 +307,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
                                     const Icon(Icons.phone_rounded, color: Colors.white, size: 20),
                                     const SizedBox(width: 10),
                                     Text(
-                                      'Call ${officer.name.split(' ').first} Now',
+                                      '${context.tr(en: 'Call', si: 'අමතන්න', ta: 'அழைக்கவும்')} ${officer.name.split(' ').first} ${context.tr(en: 'Now', si: 'දැන්', ta: 'இப்போது')}',
                                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
                                     ),
                                   ],
@@ -362,13 +361,13 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen>
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.location_city_rounded, 'Service Center', officer.center),
-          const Divider(height: 24, color: Color(0x0F2D3748)),
-          _buildInfoRow(Icons.location_on_rounded, 'Zone', officer.zone),
-          const Divider(height: 24, color: Color(0x0F2D3748)),
-          _buildInfoRow(Icons.schedule_rounded, 'Availability', officer.availability),
-          const Divider(height: 24, color: Color(0x0F2D3748)),
-          _buildInfoRow(Icons.phone_rounded, 'Phone', officer.phone),
+          _buildInfoRow(Icons.location_city_rounded, context.tr(en: 'Service Center', si: 'සේවා මධ්‍යස්ථානය', ta: 'சேவை மையம்'), officer.center),
+          const Divider(height: 24, color: AppColors.dividerSubtle),
+          _buildInfoRow(Icons.location_on_rounded, context.tr(en: 'Zone', si: 'කලාපය', ta: 'வலயம்'), officer.zone),
+          const Divider(height: 24, color: AppColors.dividerSubtle),
+          _buildInfoRow(Icons.schedule_rounded, context.tr(en: 'Availability', si: 'ලබාගත හැකි වේලාව', ta: 'இருக்கும் நேரம்'), officer.availability),
+          const Divider(height: 24, color: AppColors.dividerSubtle),
+          _buildInfoRow(Icons.phone_rounded, context.tr(en: 'Phone', si: 'දුරකථනය', ta: 'தொலைபேசி'), officer.phone),
         ],
       ),
     );
