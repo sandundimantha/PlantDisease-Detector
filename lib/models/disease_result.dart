@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/core/theme/app_theme.dart';
 
 /// Disease model for holding AI diagnosis result data.
 class DiseaseResult {
@@ -196,10 +197,10 @@ class ScanRecord {
 
   Color get severityColor {
     switch (severity) {
-      case 'high':   return const Color(0xFFE07A5F);
-      case 'medium': return const Color(0xFFF5A623);
-      case 'low':    return const Color(0xFFA8B4C0);
-      default:       return const Color(0xFF81B29A);
+      case 'high':   return AppColors.severityHigh;
+      case 'medium': return AppColors.severityMedium;
+      case 'low':    return AppColors.severityLow;
+      default:       return AppColors.severityDefault;
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class YieldTrackerScreen extends StatefulWidget {
@@ -23,7 +24,7 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: Text('Yield Tracker', style: AppTextStyles.titleMedium),
+        title: Text(context.tr(en: 'Yield Tracker', si: 'අස්වැන්න ලුහුබැඳීම', ta: 'விளைச்சல் கண்காணிப்பாளர்'), style: AppTextStyles.titleMedium),
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
@@ -34,7 +35,7 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Date Range Header
-              Text('Date Range', style: AppTextStyles.titleMedium),
+              Text(context.tr(en: 'Date Range', si: 'දින පරාසය', ta: 'தேதி வரம்பு'), style: AppTextStyles.titleMedium),
               const SizedBox(height: 12),
               
               // Custom Scrollable Tabs
@@ -46,6 +47,12 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final isSelected = _selectedTabIndex == index;
+                    final tabLabels = [
+                      context.tr(en: 'All Time', si: 'සියලු කාල', ta: 'எல்லா நேரமும்'),
+                      context.tr(en: 'This Year', si: 'මෙම වසරේ', ta: 'இந்த ஆண்டு'),
+                      context.tr(en: 'This Month', si: 'මෙම මාසයේ', ta: 'இந்த மாதம்'),
+                      context.tr(en: 'Custom', si: 'වෙනත්', ta: 'தனிப்பயன்'),
+                    ];
                     return GestureDetector(
                       onTap: () => setState(() => _selectedTabIndex = index),
                       child: Container(
@@ -65,7 +72,7 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
                           border: isSelected ? null : Border.all(color: Colors.grey.shade300),
                         ),
                         child: Text(
-                          _tabs[index],
+                          tabLabels[index],
                           style: AppTextStyles.titleSmall.copyWith(
                             color: isSelected ? Colors.white : AppColors.textPrimary,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
@@ -95,7 +102,7 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Yield Over Time (kg)', style: AppTextStyles.titleMedium),
+                    Text(context.tr(en: 'Yield Over Time (kg)', si: 'කාලය අනුව අස්වැන්න (kg)', ta: 'காலப்போக்கில் விளைச்சல் (kg)'), style: AppTextStyles.titleMedium),
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 200,
@@ -162,23 +169,23 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
               // Summary Cards
               Row(
                 children: [
-                  Expanded(child: _buildSummaryCard(Icons.shopping_bag_outlined, 'Total Harvest', '2,450 kg')),
+                  Expanded(child: _buildSummaryCard(Icons.shopping_bag_outlined, context.tr(en: 'Total Harvest', si: 'මුළු අස්වැන්න', ta: 'மொத்த அறுவடை'), '2,450 kg')),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildSummaryCard(Icons.emoji_events_outlined, 'Average Yield/Crop', '310 kg')),
+                  Expanded(child: _buildSummaryCard(Icons.emoji_events_outlined, context.tr(en: 'Average Yield/Crop', si: 'සාමාන්‍ය අස්වැන්න', ta: 'சராசரி விளைச்சல்'), '310 kg')),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildSummaryCard(Icons.grass_rounded, 'Best Crop', 'Wheat - 820 kg')),
+                  Expanded(child: _buildSummaryCard(Icons.grass_rounded, context.tr(en: 'Best Crop', si: 'හොඳම බෝගය', ta: 'சிறந்த பயிர்'), 'Wheat - 820 kg')),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildSummaryCard(Icons.calendar_today_outlined, 'Last Entry', 'Jun 12 - 180 kg')),
+                  Expanded(child: _buildSummaryCard(Icons.calendar_today_outlined, context.tr(en: 'Last Entry', si: 'අවසන් සටහන', ta: 'கடைசி பதிவு'), 'Jun 12 - 180 kg')),
                 ],
               ),
               const SizedBox(height: 32),
 
               // Yield Entries List
-              Text('Yield Entries', style: AppTextStyles.titleMedium),
+              Text(context.tr(en: 'Yield Entries', si: 'අස්වනු සටහන්', ta: 'விளைச்சல் பதிவுகள்'), style: AppTextStyles.titleMedium),
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
@@ -283,10 +290,10 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text('Date', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
-          Expanded(flex: 3, child: Text('Crop Name', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('Field ID', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('Yield', textAlign: TextAlign.right, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(context.tr(en: 'Date', si: 'දිනය', ta: 'தேதி'), style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
+          Expanded(flex: 3, child: Text(context.tr(en: 'Crop Name', si: 'බෝගය', ta: 'பயிர்'), style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(context.tr(en: 'Field ID', si: 'ක්ෂේත්‍රය', ta: 'நிலம்'), style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(context.tr(en: 'Yield', si: 'අස්වැන්න', ta: 'விளைச்சல்'), textAlign: TextAlign.right, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold))),
         ],
       ),
     );
@@ -298,7 +305,7 @@ class _YieldTrackerScreenState extends State<YieldTrackerScreen> {
       child: Row(
         children: [
           Expanded(flex: 2, child: Text(date, style: AppTextStyles.bodyMedium)),
-          Expanded(flex: 3, child: Text(crop, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600))),
+          Expanded(flex: 3, child: Text(context.trCrop(crop), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600))),
           Expanded(flex: 2, child: Text(field, style: AppTextStyles.bodyMedium)),
           Expanded(flex: 2, child: Text(yieldVal, textAlign: TextAlign.right, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: AppColors.primary))),
         ],

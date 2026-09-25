@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -96,26 +97,30 @@ class _SignupScreenState extends State<SignupScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Join CropGuard',
+                        context.tr(en: 'Join CropGuard', si: 'CropGuard වෙත එක්වන්න', ta: 'CropGuard இல் இணையுங்கள்'),
                         style: AppTextStyles.headlineMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Complete your profile to get personalized advice.',
+                        context.tr(
+                          en: 'Complete your profile to get personalized advice.',
+                          si: 'පුද්ගලාරෝපිත උපදෙස් ලබාගැනීමට ඔබගේ තොරතුරු සම්පූර්ණ කරන්න.',
+                          ta: 'தனிப்பயனாக்கப்பட்ட ஆலோசனையைப் பெற உங்கள் சுயவிவரத்தை முடிக்கவும்.',
+                        ),
                         style: AppTextStyles.bodyLarge,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
                       
                       // Full Name Field
-                      Text('Full Name', style: AppTextStyles.titleSmall),
+                      Text(context.tr(en: 'Full Name', si: 'සම්පූර්ණ නම', ta: 'முழு பெயர்'), style: AppTextStyles.titleSmall),
                       const SizedBox(height: 8),
                       _buildTextField(hint: 'e.g. Sunil Perera', icon: Icons.person_outline_rounded),
                       const SizedBox(height: 20),
                       
                       // District Dropdown
-                      Text('District', style: AppTextStyles.titleSmall),
+                      Text(context.tr(en: 'District', si: 'දිස්ත්‍රික්කය', ta: 'மாவட்டம்'), style: AppTextStyles.titleSmall),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -162,7 +167,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           elevation: 0,
                         ),
                         child: Text(
-                          'Complete Registration',
+                          context.tr(en: 'Complete Registration', si: 'ලියාපදිංචිය සම්පූර්ණ කරන්න', ta: 'பதிவை முடிக்கவும்'),
                           style: AppTextStyles.titleMedium.copyWith(color: Colors.white, fontSize: 16),
                         ),
                       ),
@@ -173,7 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           Expanded(child: Container(height: 1, color: AppColors.divider)),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR', style: AppTextStyles.bodySmall),
+                            child: Text(context.tr(en: 'OR', si: 'හෝ', ta: 'அல்லது'), style: AppTextStyles.bodySmall),
                           ),
                           Expanded(child: Container(height: 1, color: AppColors.divider)),
                         ],
@@ -184,7 +189,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildSmallSocialButton(Icons.g_mobiledata_rounded, Colors.white, Colors.black87),
-                          _buildSmallSocialButton(Icons.facebook_rounded, const Color(0xFF1877F2), Colors.white),
+                          _buildSmallSocialButton(Icons.facebook_rounded, AppColors.facebook, Colors.white),
                           _buildSmallSocialButton(Icons.apple_rounded, Colors.black, Colors.white),
                         ],
                       ),

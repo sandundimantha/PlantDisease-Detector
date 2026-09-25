@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:plant_disease_detector/features/treatment/data/disease_model.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'dart:ui';
 
 class DiseaseDetailScreen extends StatelessWidget {
@@ -42,7 +44,7 @@ class DiseaseDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    disease.name,
+                    context.trDisease(disease.name),
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -57,8 +59,8 @@ class DiseaseDetailScreen extends StatelessWidget {
                 children: [
                   Hero(
                     tag: 'disease_img_${disease.id}',
-                    child: Image.network(
-                      disease.imageUrl,
+                    child: SmartImage(
+                      src: disease.imageUrl.isEmpty ? 'assets/images/scan_tomato.jpg' : disease.imageUrl,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -91,33 +93,33 @@ class DiseaseDetailScreen extends StatelessWidget {
                   // Quick Stats Row
                   Row(
                     children: [
-                      _buildQuickBadge(Icons.grass_rounded, disease.cropName, AppColors.primary),
+                      _buildQuickBadge(Icons.grass_rounded, context.trCrop(disease.cropName), AppColors.primary),
                       const SizedBox(width: 12),
-                      _buildQuickBadge(Icons.warning_amber_rounded, disease.severityLabel, disease.severityColor),
+                      _buildQuickBadge(Icons.warning_amber_rounded, context.trSeverity(disease.severityLabel), disease.severityColor),
                     ],
                   ),
                   const SizedBox(height: 24),
 
                   // Description
-                  Text('Overview', style: AppTextStyles.titleMedium),
+                  Text(context.tr(en: 'Overview', si: 'දළ විශ්ලේෂණය', ta: 'கண்ணோட்டம்'), style: AppTextStyles.titleMedium),
                   const SizedBox(height: 8),
                   Text(disease.description, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.5)),
                   const SizedBox(height: 32),
 
                   // Symptoms
-                  _buildSectionHeader('Symptoms', Icons.coronavirus_outlined, Colors.red.shade400),
+                  _buildSectionHeader(context.tr(en: 'Symptoms', si: 'රෝග ලක්ෂණ', ta: 'அறிகுறிகள்'), Icons.coronavirus_outlined, Colors.red.shade400),
                   const SizedBox(height: 12),
-                  ...disease.symptoms.map((s) => _buildBulletPoint(s)).toList(),
+                  ...disease.symptoms.map((s) => _buildBulletPoint(context.trSymptom(s))).toList(),
                   const SizedBox(height: 32),
 
                   // Causes
-                  _buildSectionHeader('Causes & Spread', Icons.air_rounded, Colors.blue.shade400),
+                  _buildSectionHeader(context.tr(en: 'Causes & Spread', si: 'හේතු සහ ව්‍යාප්තිය', ta: 'காரணங்கள் & பரவல்'), Icons.air_rounded, Colors.blue.shade400),
                   const SizedBox(height: 12),
-                  ...disease.causes.map((c) => _buildBulletPoint(c)).toList(),
+                  ...disease.causes.map((c) => _buildBulletPoint(context.trSymptom(c))).toList(),
                   const SizedBox(height: 32),
 
                   // Treatments (Timeline format)
-                  _buildSectionHeader('Treatment Plan', Icons.medical_services_outlined, AppColors.primary),
+                  _buildSectionHeader(context.tr(en: 'Treatment Plan', si: 'ප්‍රතිකාර සැලැස්ම', ta: 'சிகிச்சை திட்டம்'), Icons.medical_services_outlined, AppColors.primary),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(20),
@@ -128,7 +130,7 @@ class DiseaseDetailScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: List.generate(disease.treatments.length, (index) {
-                        return _buildTreatmentStep(index + 1, disease.treatments[index], isLast: index == disease.treatments.length - 1);
+                        return _buildTreatmentStep(index + 1, context.trTreatment(disease.treatments[index]), isLast: index == disease.treatments.length - 1);
                       }),
                     ),
                   ),

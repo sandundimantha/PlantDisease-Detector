@@ -38,7 +38,7 @@ class Disease {
   Color get severityColor {
     switch (severity) {
       case DiseaseSeverity.low:
-        return const Color(0xFF81B29A); // Green
+        return AppColors.severityDefault; // Green
       case DiseaseSeverity.medium:
         return AppColors.warning; // Orange
       case DiseaseSeverity.high:

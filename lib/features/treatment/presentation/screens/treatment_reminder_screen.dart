@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 class TreatmentReminderScreen extends StatefulWidget {
-  const TreatmentReminderScreen({super.key});
+  final String treatmentTitle;
+  final String diseaseName;
+
+  const TreatmentReminderScreen({
+    super.key,
+    this.treatmentTitle = 'Copper Fungicide Spray',
+    this.diseaseName = 'Early Blight (Tomato)',
+  });
 
   @override
   State<TreatmentReminderScreen> createState() => _TreatmentReminderScreenState();
@@ -18,10 +26,12 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Set Reminder', style: AppTextStyles.titleMedium),
+        title: Text(context.tr(en: 'Schedule Reminder', si: 'මතක් කිරීමක් සකසන්න', ta: 'நினைவூட்டலை திட்டமிடுங்கள்'), style: AppTextStyles.titleMedium),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SafeArea(
         child: Column(
@@ -37,13 +47,23 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+                        border: Border.all(color: AppColors.cardBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: const Icon(Icons.medication_liquid_rounded, color: AppColors.primary),
                           ),
                           const SizedBox(width: 16),
@@ -51,8 +71,8 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Fungicide Spray', style: AppTextStyles.titleSmall),
-                                Text('For Early Blight (Tomato)', style: AppTextStyles.bodySmall),
+                                Text(widget.treatmentTitle, style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
+                                Text('${context.tr(en: 'For', si: 'සඳහා', ta: 'க்காக')}: ${context.trDisease(widget.diseaseName)}', style: AppTextStyles.bodySmall),
                               ],
                             ),
                           ),
@@ -61,7 +81,7 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
                     ),
                     const SizedBox(height: 32),
 
-                    Text('Frequency', style: AppTextStyles.titleSmall),
+                    Text(context.tr(en: 'Frequency', si: 'වාර ගණන', ta: 'அதிர்வெண்'), style: AppTextStyles.titleSmall),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -85,7 +105,7 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    Text('Time of Day', style: AppTextStyles.titleSmall),
+                    Text(context.tr(en: 'Time of Day', si: 'දිනයේ වේලාව', ta: 'நேரம்'), style: AppTextStyles.titleSmall),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
@@ -116,7 +136,10 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Reminder set successfully!'), backgroundColor: AppColors.secondary),
+                    SnackBar(
+                      content: Text(context.tr(en: 'Treatment reminder scheduled successfully!', si: 'ප්‍රතිකාර මතක් කිරීම සාර්ථකව සැකසිණි!', ta: 'சிகிச்சை நினைவூட்டல் வெற்றிகரமாக திட்டமிடப்பட்டது!')),
+                      backgroundColor: AppColors.primary,
+                    ),
                   );
                   Navigator.pop(context);
                 },
@@ -126,7 +149,7 @@ class _TreatmentReminderScreenState extends State<TreatmentReminderScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: Text('Save Reminder', style: AppTextStyles.titleMedium.copyWith(color: Colors.white)),
+                child: Text(context.tr(en: 'Save Reminder', si: 'මතක් කිරීම සුරකින්න', ta: 'நினைவூட்டலை சேமிக்கவும்'), style: AppTextStyles.titleMedium.copyWith(color: Colors.white)),
               ),
             ),
           ],

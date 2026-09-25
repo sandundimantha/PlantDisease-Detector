@@ -33,7 +33,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   // Dropdown state
   String _selectedDistrict = 'Colombo';
-  final List<String> _districts = ['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Anuradhapura'];
+  final List<String> _districts = [
+    'Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya',
+    'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar',
+    'Vavuniya', 'Mullaitivu', 'Batticaloa', 'Ampara', 'Trincomalee',
+    'Kurunegala', 'Puttalam', 'Anuradhapura', 'Polonnaruwa', 'Badulla',
+    'Monaragala', 'Ratnapura', 'Kegalle'
+  ];
 
   // Chips State
   final List<String> _availableCrops = ['Rice', 'Tomato', 'Chili', 'Coconut', 'Potato', 'Tea', 'Rubber', 'Cinnamon'];
@@ -61,7 +67,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _farmNameController.text = userData.farmName;
     _farmSizeController.text = userData.farmSize;
     _bioController.text = userData.bio;
-    _selectedDistrict = userData.district;
+    if (userData.district.isNotEmpty && !_districts.contains(userData.district)) {
+      _districts.insert(0, userData.district);
+    }
+    _selectedDistrict = _districts.contains(userData.district) ? userData.district : _districts.first;
     _selectedCrops.clear();
     _selectedCrops.addAll(userData.primaryCrops);
     if (userData.imagePath != null) {
@@ -447,7 +456,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           Expanded(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: _selectedDistrict,
+                value: _districts.contains(_selectedDistrict) ? _selectedDistrict : (_districts.isNotEmpty ? _districts.first : null),
                 isExpanded: true,
                 icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
                 style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500, color: AppColors.textPrimary),

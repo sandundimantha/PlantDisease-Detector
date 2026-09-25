@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:plant_disease_detector/features/tips/presentation/screens/tip_detail_screen.dart';
 
 class TipsFeedScreen extends StatelessWidget {
@@ -42,13 +43,11 @@ class TipsFeedScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
+            SmartImage(
+              src: 'https://images.unsplash.com/photo-1628183189955-467f53a25301?w=400&h=200&fit=crop',
+              height: 160,
+              fit: BoxFit.cover,
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-              child: Image.network(
-                'https://images.unsplash.com/photo-1628183189955-467f53a25301?w=400&h=200&fit=crop',
-                height: 160,
-                fit: BoxFit.cover,
-              ),
             ),
             Padding(
               padding: const EdgeInsets.all(20),

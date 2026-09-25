@@ -39,7 +39,11 @@ class _LanguageSelectionScreenState
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           onPressed: () {
-            if (context.canPop()) context.pop();
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/onboarding');
+            }
           },
         ),
       ),
@@ -50,15 +54,30 @@ class _LanguageSelectionScreenState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Choose your language\nභාෂාව තෝරන්න',
-                style: AppTextStyles.headlineMedium.copyWith(height: 1.4),
+                _selectedCode == 'si'
+                    ? 'ඔබේ භාෂාව තෝරන්න'
+                    : (_selectedCode == 'ta'
+                        ? 'உங்கள் மொழியை தேர்ந்தெடுக்கவும்'
+                        : 'Choose your language'),
+                style: AppTextStyles.headlineMedium.copyWith(
+                  height: 1.3,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
-                'You can always change this later in settings.',
-                style: AppTextStyles.bodyLarge,
+                _selectedCode == 'si'
+                    ? 'ඔබට මෙය සැකසුම් වලින් පසුව වෙනස් කළ හැකිය.'
+                    : (_selectedCode == 'ta'
+                        ? 'இதை பின்னர் அமைப்புகளில் மாற்றலாம்.'
+                        : 'Select your preferred language. You can change this anytime.'),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 36),
               ..._languages.map((lang) =>
                   _buildLanguageCard(lang['code']!, lang['name']!, lang['localName']!)),
               const Spacer(),
@@ -69,7 +88,11 @@ class _LanguageSelectionScreenState
                       .read(localeProvider.notifier)
                       .setLocale(Locale(_selectedCode));
                   if (mounted) {
-                    context.go('/onboarding');
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/onboarding');
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -78,10 +101,25 @@ class _LanguageSelectionScreenState
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                   minimumSize: const Size(double.infinity, 56),
+                  elevation: 2,
                 ),
-                child: Text('Continue',
-                    style: AppTextStyles.titleMedium
-                        .copyWith(color: Colors.white)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _selectedCode == 'si'
+                          ? 'ඉදිරියට යන්න'
+                          : (_selectedCode == 'ta' ? 'தொடரவும்' : 'Continue'),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                  ],
+                ),
               ),
             ],
           ),
@@ -94,56 +132,96 @@ class _LanguageSelectionScreenState
     final bool isSelected = _selectedCode == code;
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedCode = code),
+      onTap: () async {
+        setState(() => _selectedCode = code);
+        await ref.read(localeProvider.notifier).setLocale(Locale(code));
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.white,
+          color: isSelected ? AppColors.surface : Colors.white,
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
+            color: isSelected ? AppColors.copper : AppColors.cardBorder,
+            width: isSelected ? 2.5 : 1.2,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
-            if (!isSelected)
+            if (isSelected)
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
+                color: AppColors.copper.withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              )
+            else
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  localName,
-                  style: AppTextStyles.titleMedium.copyWith(
-                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                    fontSize: 18,
-                  ),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.cardSurface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                code.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
                 ),
-                if (name != localName) ...[
-                  const SizedBox(height: 4),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    localName,
+                    style: TextStyle(
+                      fontFamily: 'NotoSansSinhala',
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     name,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.8)
-                          : AppColors.textSecondary,
+                      color: isSelected ? AppColors.copper : AppColors.textSecondary,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-            if (isSelected)
-              const Icon(Icons.check_circle_rounded, color: AppColors.primary)
-            else
-              const Icon(Icons.circle_outlined, color: AppColors.textSecondary),
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? AppColors.copper : AppColors.textSecondary.withValues(alpha: 0.5),
+                  width: 2,
+                ),
+                color: isSelected ? AppColors.copper : Colors.transparent,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  : null,
+            ),
           ],
         ),
       ),

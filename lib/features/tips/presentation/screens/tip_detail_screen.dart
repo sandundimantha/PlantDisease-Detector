@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 
 class TipDetailScreen extends StatelessWidget {
   const TipDetailScreen({super.key});
@@ -22,8 +23,8 @@ class TipDetailScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: Image.network(
-                'https://images.unsplash.com/photo-1628183189955-467f53a25301?w=800&h=400&fit=crop',
+              background: SmartImage(
+                src: 'https://images.unsplash.com/photo-1628183189955-467f53a25301?w=800&h=400&fit=crop',
                 fit: BoxFit.cover,
               ),
             ),

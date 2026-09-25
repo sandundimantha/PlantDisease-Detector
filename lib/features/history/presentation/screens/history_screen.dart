@@ -5,6 +5,7 @@ import 'package:plant_disease_detector/models/disease_result.dart';
 import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HistoryScreen — Matches Figma HistoryScreen.tsx
@@ -52,13 +53,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Scan History',
+                    context.tr(en: 'Scan History', si: 'පරීක්ෂණ ඉතිහාසය', ta: 'ஸ்கேன் வரலாறு'),
                     style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5, fontSize: 24),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${all.length} total scans',
-                    style: AppTextStyles.bodySmall.copyWith(color: const Color(0xFF9AA5B4)),
+                    context.tr(
+                      en: '${all.length} total scans',
+                      si: 'සම්පූර්ණ පරීක්ෂණ ${all.length}ක්',
+                      ta: 'மொத்தம் ${all.length} ஸ்கேன்கள்',
+                    ),
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.settingsIcon),
                   ),
                 ],
               ),
@@ -71,7 +76,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               child: Row(
                 children: _filters.map((f) {
                   final isActive = _activeFilter == f;
-                  final label = f == "None" ? "Healthy" : f;
+                  final rawLabel = f == "None" ? "Healthy" : f;
+                  final label = switch (rawLabel) {
+                    "All" => context.tr(en: 'All', si: 'සියල්ල', ta: 'அனைத்தும்'),
+                    "High" => context.tr(en: 'High', si: 'ඉහළ', ta: 'அதிகம்'),
+                    "Medium" => context.tr(en: 'Medium', si: 'මධ්‍යම', ta: 'நடுத்தரம்'),
+                    "Low" => context.tr(en: 'Low', si: 'අඩු', ta: 'குறைவு'),
+                    "Healthy" => context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'),
+                    _ => rawLabel,
+                  };
                   return GestureDetector(
                     onTap: () => setState(() => _activeFilter = f),
                     child: AnimatedContainer(
@@ -93,7 +106,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: isActive ? Colors.white : const Color(0xFF9AA5B4),
+                          color: isActive ? Colors.white : AppColors.settingsIcon,
                         ),
                       ),
                     ),
@@ -115,7 +128,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           const Text('🌿', style: TextStyle(fontSize: 40)),
                           const SizedBox(height: 12),
                           Text(
-                            'No scans matching this filter',
+                            context.tr(
+                              en: 'No scans matching this filter',
+                              si: 'මෙම පෙරහනට අදාළ පරීක්ෂණ නොමැත',
+                              ta: 'இந்த வடிப்பானுக்கு ஸ்கேன்கள் எதுவும் இல்லை',
+                            ),
                             style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ],
@@ -155,8 +172,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Disease Rate', style: AppTextStyles.titleSmall),
-              Text('This month', style: AppTextStyles.bodySmall.copyWith(fontSize: 12)),
+              Text(context.tr(en: 'Disease Rate', si: 'රෝග ප්‍රතිශතය', ta: 'நோய் விகிதம்'), style: AppTextStyles.titleSmall),
+              Text(context.tr(en: 'This month', si: 'මෙම මාසයේ', ta: 'இந்த மாதம்'), style: AppTextStyles.bodySmall.copyWith(fontSize: 12)),
             ],
           ),
           const SizedBox(height: 12),
@@ -166,10 +183,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               height: 8,
               child: Row(
                 children: [
-                  Expanded(flex: 17, child: Container(color: const Color(0xFFE07A5F))),
-                  Expanded(flex: 33, child: Container(color: const Color(0xFFF5A623))),
-                  Expanded(flex: 17, child: Container(color: const Color(0xFFA8B4C0))),
-                  Expanded(flex: 33, child: Container(color: const Color(0xFF81B29A))),
+                  Expanded(flex: 17, child: Container(color: AppColors.severityHigh)),
+                  Expanded(flex: 33, child: Container(color: AppColors.severityMedium)),
+                  Expanded(flex: 17, child: Container(color: AppColors.severityLow)),
+                  Expanded(flex: 33, child: Container(color: AppColors.severityDefault)),
                 ],
               ),
             ),
@@ -178,10 +195,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatLegend('High', const Color(0xFFE07A5F), '17%'),
-              _buildStatLegend('Medium', const Color(0xFFF5A623), '33%'),
-              _buildStatLegend('Low', const Color(0xFFA8B4C0), '17%'),
-              _buildStatLegend('Healthy', const Color(0xFF81B29A), '33%'),
+              _buildStatLegend(context.tr(en: 'High', si: 'ඉහළ', ta: 'அதிகம்'), AppColors.severityHigh, '17%'),
+              _buildStatLegend(context.tr(en: 'Medium', si: 'මධ්‍යම', ta: 'நடுத்தரம்'), AppColors.severityMedium, '33%'),
+              _buildStatLegend(context.tr(en: 'Low', si: 'අඩු', ta: 'குறைவு'), AppColors.severityLow, '17%'),
+              _buildStatLegend(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), AppColors.severityDefault, '33%'),
             ],
           )
         ],
@@ -259,9 +276,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(scan.diseaseName, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.titleSmall.copyWith(fontSize: 14)),
+                                Text(
+                                  context.trDisease(scan.diseaseName),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.titleSmall.copyWith(fontSize: 14),
+                                ),
                                 const SizedBox(height: 2),
-                                Text(scan.latinName, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic, fontSize: 11)),
+                                Text(
+                                  scan.latinName == 'No pathogen detected'
+                                      ? context.trSymptom(scan.latinName)
+                                      : scan.latinName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic, fontSize: 11),
+                                ),
                               ],
                             ),
                           ),
@@ -272,7 +301,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               borderRadius: BorderRadius.circular(50),
                             ),
                             child: Text(
-                              scan.severityLabel,
+                              context.trSeverity(scan.severityLabel),
                               style: TextStyle(color: scan.severityColor, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -282,7 +311,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(child: Text('${scan.dateLabel} · 10:42 AM', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.bodySmall.copyWith(fontSize: 11))),
+                          Expanded(
+                            child: Text(
+                              '${context.trDate(scan.dateLabel)} · 10:42 AM',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
+                            ),
+                          ),
                           const SizedBox(width: 8),
                           Row(
                             children: [
@@ -292,7 +328,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                 width: 48,
                                 height: 6,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF0EDE8),
+                                  color: AppColors.imageLoadingBg,
                                   borderRadius: BorderRadius.circular(50),
                                 ),
                                 child: ClipRRect(
@@ -318,7 +354,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               const Padding(
                 padding: EdgeInsets.only(right: 16),
                 child: Center(
-                  child: Icon(Icons.chevron_right_rounded, color: Color(0xFFC8D0DA), size: 20),
+                  child: Icon(Icons.chevron_right_rounded, color: AppColors.settingsChevron, size: 20),
                 ),
               ),
             ],

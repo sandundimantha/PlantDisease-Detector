@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/core/theme/app_theme.dart';
 
 class OutbreakReport {
   final String id;
@@ -35,7 +36,7 @@ final List<OutbreakReport> mockOutbreaks = [
     distanceKm: 2.3,
     timeAgo: '2h ago',
     severity: 0.9,
-    color: const Color(0xFFE07A5F),
+    color: AppColors.outbreakHigh,
     latitude: 7.954,
     longitude: 80.75, // Around Dambulla area
   ),
@@ -47,7 +48,7 @@ final List<OutbreakReport> mockOutbreaks = [
     distanceKm: 5.8,
     timeAgo: '5h ago',
     severity: 0.6,
-    color: const Color(0xFFF2A34A),
+    color: AppColors.outbreakMedium,
     latitude: 8.01,
     longitude: 80.68,
   ),
@@ -59,7 +60,7 @@ final List<OutbreakReport> mockOutbreaks = [
     distanceKm: 9.1,
     timeAgo: '1d ago',
     severity: 0.4,
-    color: const Color(0xFF81B29A),
+    color: AppColors.outbreakLow,
     latitude: 7.89,
     longitude: 80.78,
   ),
@@ -71,7 +72,7 @@ final List<OutbreakReport> mockOutbreaks = [
     distanceKm: 12.4,
     timeAgo: '3h ago',
     severity: 0.75,
-    color: const Color(0xFFE07A5F),
+    color: AppColors.outbreakHigh,
     latitude: 8.05,
     longitude: 80.80,
   ),
@@ -83,7 +84,7 @@ final List<OutbreakReport> mockOutbreaks = [
     distanceKm: 15.2,
     timeAgo: '2d ago',
     severity: 0.5,
-    color: const Color(0xFFF2A34A),
+    color: AppColors.outbreakMedium,
     latitude: 7.80,
     longitude: 80.65,
   ),

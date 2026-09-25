@@ -13,9 +13,10 @@ import 'package:plant_disease_detector/core/providers/database_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/confidence_gate.dart';
 import 'package:plant_disease_detector/core/database/app_database.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:plant_disease_detector/l10n/app_localizations.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:drift/drift.dart' as drift;
 import 'dart:convert';
-import 'dart:io';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DiagnosticResultScreen — Matches Figma ResultsScreen.tsx
@@ -112,13 +113,171 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     ref.read(outboxProcessorProvider).processOutbox();
 
     if (confidenceResult == ConfidenceResult.escalate && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Low confidence score. Please consult an officer.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) _showEscalateModal();
+      });
     }
+  }
+
+  void _showEscalateModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.tabInactiveBg,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.severityHigh.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.warning_amber_rounded, color: AppColors.severityHigh, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Uncertain AI Diagnosis (<40%)', style: AppTextStyles.titleMedium.copyWith(fontSize: 16)),
+                      const SizedBox(height: 2),
+                      Text('Model requires human officer verification', style: AppTextStyles.bodySmall),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'The AI model could not identify the disease with high confidence. We recommend connecting with your assigned Agricultural Extension Officer for expert advice.',
+              style: AppTextStyles.bodyMedium.copyWith(height: 1.4),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NearestOfficerScreen()),
+                );
+              },
+              icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
+              label: const Text('Contact Assigned Officer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Continue Viewing Result', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVoiceHelp() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.tabInactiveBg,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.copperLight.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.mic_rounded, color: AppColors.copper, size: 36),
+            ),
+            const SizedBox(height: 16),
+            Text('Audio Guidance Active', style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
+            const SizedBox(height: 8),
+            Text(
+              'Reading diagnosis aloud for ${_scan.diseaseName}. "Fungal infection detected with ${_scan.severityLabel} severity. Immediate action: Prune infected lower leaves and spray copper fungicide."',
+              style: AppTextStyles.bodyMedium.copyWith(height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Playing Sinhala / English voice explanation...')),
+                      );
+                    },
+                    icon: const Icon(Icons.volume_up_rounded, color: Colors.white),
+                    label: const Text('Replay Voice', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Close Audio'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -189,13 +348,13 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             onTap: _onBack,
           ),
           Text(
-            'Diagnosis Result',
+            AppLocalizations.of(context)?.diagnosisResult ?? 'Diagnosis Result',
             style: AppTextStyles.titleMedium.copyWith(fontSize: 16),
           ),
           _buildSquareButton(
             icon: _isSaved ? Icons.bookmark_rounded : Icons.ios_share_rounded,
-            iconColor: _isSaved ? AppColors.primary : const Color(0xFF9AA5B4),
-            bgColor: _isSaved ? const Color(0xFFFFF5F2) : Colors.white,
+            iconColor: _isSaved ? AppColors.primary : AppColors.settingsIcon,
+            bgColor: _isSaved ? AppColors.signOutBg : AppColors.surface,
             onTap: () => setState(() => _showShareModal = true),
           ),
         ],
@@ -243,17 +402,17 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFFFF5F2)],
+          colors: [AppColors.surface, AppColors.signOutBg],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D3748).withValues(alpha: 0.10),
+            color: AppColors.overlayDark.withValues(alpha: 0.10),
             blurRadius: 32,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: const Color(0xFF2D3748).withValues(alpha: 0.05),
+            color: AppColors.overlayDark.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -295,7 +454,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                           height: 115,
                           child: ShaderMask(
                             shaderCallback: (bounds) => const SweepGradient(
-                              colors: [Color(0xFFF2A98A), Color(0xFFE07A5F)],
+                              colors: [AppColors.avatarGradEnd, AppColors.avatarGradStart],
                               stops: [0.0, 1.0],
                               transform: GradientRotation(-3.14159 / 2),
                             ).createShader(bounds),
@@ -305,11 +464,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                                 return CircularProgressIndicator(
                                   value: _confAnim.value,
                                   strokeWidth: 7,
-                                  backgroundColor: const Color(0xFFF0EDE8),
+                                  backgroundColor: AppColors.imageLoadingBg,
                                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                                   strokeCap: StrokeCap.round,
                                 );
-                              }
+                              },
+                            ),
                             ),
                           ),
                         ),
@@ -326,7 +486,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                               }
                             ),
                             Text(
-                              'Confidence',
+                              context.tr(en: 'Confidence', si: 'විශ්වාසනීයත්වය', ta: 'நம்பகத்தன்மை'),
                               style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
                             ),
                           ],
@@ -352,11 +512,11 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'DETECTED',
-                              style: TextStyle(
+                              context.tr(en: 'DETECTED', si: 'හඳුනාගත් රෝගය', ta: 'கண்டறியப்பட்டது'),
+                              style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF9AA5B4),
+                                color: AppColors.settingsIcon,
                                 letterSpacing: 1.2,
                               ),
                             ),
@@ -364,7 +524,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _scan.diseaseName,
+                          context.trDisease(_scan.diseaseName),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.headlineMedium.copyWith(
@@ -375,7 +535,9 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _scan.latinName,
+                          _scan.latinName == 'No pathogen detected'
+                              ? context.tr(en: 'No pathogen detected', si: 'රෝග කාරක හමු නොවීය', ta: 'நோய்க்கிருமி எதுவும் இல்லை')
+                              : _scan.latinName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.bodySmall.copyWith(
@@ -395,7 +557,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                                 borderRadius: BorderRadius.circular(50),
                               ),
                               child: Text(
-                                '● ${_scan.severityLabel} Severity',
+                                '● ${context.trSeverity(_scan.severityLabel)}',
                                 style: TextStyle(
                                   color: _scan.severityColor,
                                   fontSize: 10,
@@ -407,13 +569,13 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF81B29A).withValues(alpha: 0.12),
+                                  color: AppColors.severityDefault.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(50),
                                 ),
-                                child: const Text(
-                                  'Treatable',
-                                  style: TextStyle(
-                                    color: Color(0xFF5A9E7C),
+                                child: Text(
+                                  context.tr(en: 'Treatable', si: 'සුව කළ හැක', ta: 'குணப்படுத்தக்கூடியது'),
+                                  style: const TextStyle(
+                                    color: AppColors.emeraldDeep,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -427,7 +589,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              const Divider(color: Color(0x0F2D3748), height: 1),
+              const Divider(color: AppColors.dividerSubtle, height: 1),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -447,7 +609,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${_scan.dateLabel}, 10:42 AM',
+                          '${context.trDate(_scan.dateLabel)}, 10:42 AM',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.bodySmall.copyWith(
@@ -466,18 +628,49 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0EDE8),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'AI v2.4',
-                      style: TextStyle(
-                        color: Color(0xFF9AA5B4),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          title: const Row(
+                            children: [
+                              Icon(Icons.verified_rounded, color: AppColors.severityDefault),
+                              SizedBox(width: 8),
+                              Text('AI Verification v2.4', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          content: const Text(
+                            'CropGuard uses a dual-engine architecture: on-device lightweight TFLite inference + localized Sri Lankan wet-zone climate models for high accuracy.',
+                            style: TextStyle(fontSize: 13, height: 1.4),
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+                          ],
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.imageLoadingBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.verified_user_rounded, size: 12, color: AppColors.settingsIcon),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.tr(en: 'AI Verified (v2.4)', si: 'AI මඟින් තහවුරු කළා', ta: 'AI சரிபார்க்கப்பட்டது'),
+                            style: const TextStyle(
+                              color: AppColors.settingsIcon,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -497,7 +690,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: const Color(0xFFEDEAE5),
+          color: AppColors.tabInactiveBg,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -516,11 +709,11 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                   ),
                   child: Center(
                     child: Text(
-                      'Symptoms',
+                      AppLocalizations.of(context)?.symptoms ?? 'Symptoms',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: _isSymptomsTab ? AppColors.textPrimary : const Color(0xFF9AA5B4),
+                        color: _isSymptomsTab ? AppColors.textPrimary : AppColors.settingsIcon,
                       ),
                     ),
                   ),
@@ -541,11 +734,11 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                   ),
                   child: Center(
                     child: Text(
-                      'Treatment Plan',
+                      AppLocalizations.of(context)?.treatmentPlan ?? 'Treatment Plan',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: !_isSymptomsTab ? AppColors.textPrimary : const Color(0xFF9AA5B4),
+                        color: !_isSymptomsTab ? AppColors.textPrimary : AppColors.settingsIcon,
                       ),
                     ),
                   ),
@@ -598,8 +791,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'View Detailed Treatment Plan',
-                  style: TextStyle(
+                  context.tr(
+                    en: 'View Detailed Treatment Plan',
+                    si: 'සම්පූර්ණ ප්‍රතිකාර සැලැස්ම බලන්න',
+                    ta: 'விரிவான சிகிச்சை திட்டத்தைக் காண்க',
+                  ),
+                  style: const TextStyle(
                     color: AppColors.secondary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -649,7 +846,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              text,
+              context.trSymptom(text),
               style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500),
             ),
           ),
@@ -674,7 +871,10 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Affected Area Estimate', style: AppTextStyles.titleSmall),
+              Text(
+                context.tr(en: 'Affected Area Estimate', si: 'බලපෑමට ලක්වූ ප්‍රදේශයේ ඇස්තමේන්තුව', ta: 'பாதிக்கப்பட்ட பகுதி மதிப்பீடு'),
+                style: AppTextStyles.titleSmall,
+              ),
               Text('~35%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
             ],
           ),
@@ -683,7 +883,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             height: 6,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF0EDE8),
+              color: AppColors.imageLoadingBg,
               borderRadius: BorderRadius.circular(50),
             ),
             alignment: Alignment.centerLeft,
@@ -693,7 +893,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(50),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFF2A98A), Color(0xFFE07A5F)],
+                    colors: [AppColors.avatarGradEnd, AppColors.avatarGradStart],
                   ),
                 ),
               ),
@@ -701,7 +901,11 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Based on visible leaf surface analysis',
+            context.tr(
+              en: 'Based on visible leaf surface analysis',
+              si: 'දෘශ්‍යමාන පත්‍ර පෘෂ්ඨ විශ්ලේෂණය මත පදනම්ව',
+              ta: 'தெரியும் இலை மேற்பரப்பு பகுப்பாய்வின் அடிப்படையில்',
+            ),
             style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
           ),
         ],
@@ -746,9 +950,9 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data['title']!, style: AppTextStyles.titleSmall),
+                Text(context.trTreatment(data['title']!), style: AppTextStyles.titleSmall),
                 const SizedBox(height: 4),
-                Text(data['desc']!, style: AppTextStyles.bodySmall),
+                Text(context.trTreatment(data['desc']!), style: AppTextStyles.bodySmall),
               ],
             ),
           ),
@@ -793,40 +997,60 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 child: Builder(
                   builder: (context) {
                     final officer = getNearestOfficer(locationState.address);
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.phone_rounded, color: Colors.white, size: 18),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: Text(
-                            locationState.isLoading
-                                ? 'Call Nearest Officer'
-                                : 'Officer ${officer.name.split(' ').first} · ${officer.distanceKm}km',
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+                    final officerLabel = locationState.isLoading
+                        ? context.tr(en: 'Call Nearest Officer', si: 'ළඟම නිලධාරියා අමතන්න', ta: 'அருகிலுள்ள அதிகாரியை அழைக்கவும்')
+                        : context.tr(
+                            en: 'Officer ${officer.name.split(' ').first} · ${officer.distanceKm}km',
+                            si: 'නිලධාරී ${officer.name.split(' ').first} · ${officer.distanceKm}km',
+                            ta: 'அதிகாரி ${officer.name.split(' ').first} · ${officer.distanceKm}km',
+                          );
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.phone_rounded, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              officerLabel,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
-                  }
+                  },
                 ),
               ),
             ),
           ),
           const SizedBox(width: 10),
+          // Wireframe 5: [ (Mic) Voice Help ] Button
           GestureDetector(
-            onTap: () => setState(() => _showContactModal = true),
+            onTap: _showVoiceHelp,
             child: Container(
-              width: 56,
               height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.copperLight.withValues(alpha: 0.4)),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
               ),
-              child: const Icon(Icons.headset_mic_rounded, color: AppColors.primary, size: 22),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.mic_rounded, color: AppColors.copper, size: 20),
+                  const SizedBox(width: 6),
+                  Text(
+                    context.tr(en: 'Voice Help', si: 'හඬ සහාය', ta: 'குரல் உதவி'),
+                    style: const TextStyle(color: AppColors.copper, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -842,11 +1066,11 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A3A2A), Color(0xFF0D2518)],
+          colors: [AppColors.imagePlaceholder, AppColors.darkResultBg],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF81B29A).withValues(alpha: 0.25), blurRadius: 20, offset: const Offset(0, 6)),
+          BoxShadow(color: AppColors.severityDefault.withValues(alpha: 0.25), blurRadius: 20, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(
@@ -858,7 +1082,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF81B29A).withValues(alpha: 0.2),
+                  color: AppColors.severityDefault.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(child: Text('🧠', style: TextStyle(fontSize: 18))),
@@ -868,9 +1092,14 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Climate-Aware AI Context', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
                     Text(
-                      locationState.isLoading ? 'Analyzing location...' : locationState.address,
+                      context.tr(en: 'Climate-Aware AI Context', si: 'දේශගුණ-හිතකාමී AI විශ්ලේෂණය', ta: 'காலநிலை விழிப்புணர்வு AI பகுப்பாய்வு'),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    Text(
+                      locationState.isLoading
+                          ? context.tr(en: 'Analyzing location...', si: 'ස්ථානය විශ්ලේෂණය කරමින්...', ta: 'இருப்பிடம் பகுப்பாய்வு செய்யப்படுகிறது...')
+                          : locationState.address,
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -880,11 +1109,14 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF81B29A).withValues(alpha: 0.25),
+                  color: AppColors.severityDefault.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: const Color(0xFF81B29A).withValues(alpha: 0.4)),
+                  border: Border.all(color: AppColors.severityDefault.withValues(alpha: 0.4)),
                 ),
-                child: const Text('WET ZONE', style: TextStyle(color: Color(0xFF81B29A), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
+                child: Text(
+                  context.tr(en: 'WET ZONE', si: 'තෙත් කලාපය', ta: 'ஈர மண்டலம்'),
+                  style: const TextStyle(color: AppColors.severityDefault, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8),
+                ),
               ),
             ],
           ),
@@ -906,7 +1138,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                       children: [
                         TextSpan(
                           text: '+12% probability boost — ',
-                          style: TextStyle(color: const Color(0xFFE07A5F), fontWeight: FontWeight.w700),
+                          style: TextStyle(color: AppColors.severityHigh, fontWeight: FontWeight.w700),
                         ),
                         const TextSpan(text: 'Fungal diseases are highly active in high-humidity wet zones. Your location history confirms elevated risk.'),
                       ],
@@ -984,15 +1216,15 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF81B29A).withValues(alpha: 0.1),
+                    color: AppColors.severityDefault.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: const Text('LIVE', style: TextStyle(color: Color(0xFF81B29A), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
+                  child: const Text('LIVE', style: TextStyle(color: AppColors.severityDefault, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0x0F2D3748)),
+          const Divider(height: 1, color: AppColors.dividerSubtle),
           ...market.prices.map((p) => _buildPriceRow(p)).toList(),
           const SizedBox(height: 8),
         ],
@@ -1016,7 +1248,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFE07A5F).withValues(alpha: 0.12),
+                color: AppColors.severityHigh.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(50),
               ),
               child: const Text('BEST', style: TextStyle(color: AppColors.primary, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
@@ -1029,7 +1261,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: (isUp ? const Color(0xFF81B29A) : const Color(0xFFE07A5F)).withValues(alpha: 0.12),
+              color: (isUp ? AppColors.severityDefault : AppColors.severityHigh).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(50),
             ),
             child: Row(
@@ -1038,12 +1270,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 Icon(
                   isUp ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
                   size: 10,
-                  color: isUp ? const Color(0xFF5A9E7C) : AppColors.primary,
+                  color: isUp ? AppColors.emeraldDeep : AppColors.primary,
                 ),
                 Text(
                   '${price.changePercent.abs().toStringAsFixed(1)}%',
                   style: TextStyle(
-                    color: isUp ? const Color(0xFF5A9E7C) : AppColors.primary,
+                    color: isUp ? AppColors.emeraldDeep : AppColors.primary,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1061,7 +1293,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     return GestureDetector(
       onTap: () => setState(() => _showContactModal = false),
       child: Container(
-        color: const Color(0xFF2D3748).withValues(alpha: 0.4),
+        color: AppColors.overlayDark.withValues(alpha: 0.4),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
           child: Column(
@@ -1084,7 +1316,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                           width: 40,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEDEAE5),
+                            color: AppColors.tabInactiveBg,
                             borderRadius: BorderRadius.circular(50),
                           ),
                         ),
@@ -1101,7 +1333,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFAFAF8),
+                          color: AppColors.cardSurface,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
@@ -1128,8 +1360,8 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      ...List.generate(4, (_) => const Icon(Icons.star_rounded, color: Color(0xFFF5A623), size: 14)),
-                                      const Icon(Icons.star_rounded, color: Color(0xFFEDEAE5), size: 14),
+                                      ...List.generate(4, (_) => const Icon(Icons.star_rounded, color: AppColors.starActive, size: 14)),
+                                      const Icon(Icons.star_rounded, color: AppColors.tabInactiveBg, size: 14),
                                       const SizedBox(width: 4),
                                       Text('4.8', style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
                                     ],
@@ -1141,7 +1373,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF81B29A).withValues(alpha: 0.15),
+                                color: AppColors.severityDefault.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Center(
@@ -1149,7 +1381,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                                   width: 8,
                                   height: 8,
                                   decoration: const BoxDecoration(
-                                    color: Color(0xFF5A9E7C),
+                                    color: AppColors.emeraldDeep,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -1192,7 +1424,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
         height: 48,
         decoration: BoxDecoration(
           gradient: isPrimary ? AppGradients.primary : null,
-          color: isPrimary ? null : const Color(0xFFF5F3F0),
+          color: isPrimary ? null : AppColors.achievementInactive,
           borderRadius: BorderRadius.circular(16),
           boxShadow: isPrimary
               ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))]
@@ -1221,7 +1453,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     return GestureDetector(
       onTap: () => setState(() => _showShareModal = false),
       child: Container(
-        color: const Color(0xFF2D3748).withValues(alpha: 0.4),
+        color: AppColors.overlayDark.withValues(alpha: 0.4),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
           child: Column(
@@ -1244,19 +1476,24 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                           width: 40,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEDEAE5),
+                            color: AppColors.tabInactiveBg,
                             borderRadius: BorderRadius.circular(50),
                           ),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text('Save & Share', style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
+                      Text('Save & Share Diagnosis', style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Usability UI-04: Attach diagnosis report directly to WhatsApp or SMS for extension officers.',
+                        style: AppTextStyles.bodySmall,
+                      ),
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildShareIconBtn('Save PDF', Icons.picture_as_pdf_rounded),
-                          _buildShareIconBtn('Share', Icons.share_rounded),
+                          _buildShareIconBtn('SMS Report', Icons.sms_rounded),
                           _buildShareIconBtn('WhatsApp', Icons.chat_rounded),
                           _buildShareIconBtn('Email', Icons.email_rounded),
                         ],
@@ -1284,7 +1521,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F3F0),
+              color: AppColors.achievementInactive,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),

@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:ui';
+import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/core/providers/location_provider.dart';
+import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
+import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
+import 'package:plant_disease_detector/features/weather/presentation/screens/weather_forecast_screen.dart';
+import 'package:plant_disease_detector/features/treatment/presentation/screens/disease_catalogue_screen.dart';
+import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
+import 'package:plant_disease_detector/features/community/presentation/screens/community_feed_screen.dart';
+import 'package:plant_disease_detector/core/providers/user_provider.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:plant_disease_detector/l10n/app_localizations.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-import 'package:plant_disease_detector/core/theme/app_theme.dart';
-import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
-import 'package:plant_disease_detector/core/providers/location_provider.dart';
-import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
-import 'package:plant_disease_detector/core/providers/user_provider.dart';
-
-import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
-import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
-import 'package:plant_disease_detector/features/weather/presentation/screens/weather_forecast_screen.dart';
-import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
-import 'package:plant_disease_detector/features/community/presentation/screens/community_feed_screen.dart';
-import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
-
 // ─────────────────────────────────────────────────────────────────────────────
-// HomeScreen — Dribbble Premium Redesign
+// HomeScreen — Matches Figma HomeScreen.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-
+// Helper: builds a colored circle with the user's initials as a profile avatar fallback
 Widget _buildInitialsAvatar(String fullName, double size) {
   final parts = fullName.trim().split(' ');
   final initials = parts.length >= 2
@@ -29,21 +27,20 @@ Widget _buildInitialsAvatar(String fullName, double size) {
   return Container(
     width: size,
     height: size,
-    decoration: BoxDecoration(
+    decoration: const BoxDecoration(
       shape: BoxShape.circle,
-      gradient: const LinearGradient(
-        colors: [Color(0xFFE07A5F), Color(0xFFF2A98A)],
+      gradient: LinearGradient(
+        colors: [AppColors.avatarGradStart, AppColors.avatarGradEnd],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      border: Border.all(color: Colors.white, width: 2),
     ),
     child: Center(
       child: Text(
         initials,
         style: TextStyle(
           color: Colors.white,
-          fontSize: size * 0.4,
+          fontSize: size * 0.35,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -51,124 +48,120 @@ Widget _buildInitialsAvatar(String fullName, double size) {
   );
 }
 
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    
-    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final userData = ref.watch(userProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
     final locationState = ref.watch(locationProvider);
     final weatherState = ref.watch(weatherProvider);
-    final scanHistory = ref.watch(scanHistoryProvider);
-
+    final userData = ref.watch(userProvider);
+    
+    // Dynamic greeting based on time of day
+    final hour = DateTime.now().hour;
+    final l10n = AppLocalizations.of(context);
+    String greeting = l10n?.goodEvening ?? 'Good Evening,';
+    if (hour < 12) {
+      greeting = l10n?.goodMorning ?? 'Good Morning,';
+    } else if (hour < 17) {
+      greeting = l10n?.goodAfternoon ?? 'Good Afternoon,';
+    }
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Clean off-white background
-      body: Stack(
-        children: [
-          // Background Top Emerald Shape
-          Container(
-            height: 320,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF0F2618), Color(0xFF143623)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-            ),
-          ),
-
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 1. Premium Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 110),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Deep Emerald Top Hero Header
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: AppGradients.emeraldHeader,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top App Title & Profile Avatar Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'CropGuard: AI Disease Identification',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 10,
-                                color: Colors.white.withOpacity(0.7),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            _buildUserAvatar(userData, 32),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
                         Text(
-                          'Good Morning, ${userData.fullName.split(' ').first}!',
+                          context.tr(
+                            en: 'CropGuard: AI Disease Identification',
+                            si: 'CropGuard: AI බෝග රෝග හඳුනාගැනීම',
+                            ta: 'CropGuard: AI பயிர் நோய் கண்டறிதல்',
+                          ),
                           style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 24,
-                            color: Color(0xFFF2CC8F), // Copper/Sand tint for name
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
+                            color: AppColors.emeraldMist,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.copper, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.copper.withOpacity(0.3),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(22),
+                            child: userData.imagePath != null
+                                ? ((userData.imagePath!.startsWith('http') || kIsWeb)
+                                    ? Image.network(
+                                        userData.imagePath!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _buildInitialsAvatar(userData.fullName, 44),
+                                      )
+                                    : Image.file(File(userData.imagePath!), fit: BoxFit.cover))
+                                : _buildInitialsAvatar(userData.fullName, 44),
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 2. Dynamic Weather Widget
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherForecastScreen())),
+                    const SizedBox(height: 12),
+                    // Greeting
+                    Text(
+                      '$greeting ${userData.fullName.split(' ').first}!',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Glassmorphic Weather & Location Card with Copper Accents
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const WeatherForecastScreen()));
+                      },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: Colors.white.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFF2CC8F).withOpacity(0.3), width: 1),
+                          border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.2),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
                           ],
                         ),
                         child: Row(
@@ -176,35 +169,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                           children: [
                             Row(
                               children: [
-                                // Weather Icon
                                 Container(
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFE07A5F), Color(0xFFF2CC8F)],
-                                      begin: Alignment.bottomLeft,
-                                      end: Alignment.topRight,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(color: const Color(0xFFE07A5F).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
-                                    ],
+                                    gradient: AppGradients.copper,
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Icon(Icons.cloud_queue_rounded, color: Colors.white, size: 24),
+                                  child: const Center(
+                                    child: Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 24),
+                                  ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: 14),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      locationState.isLoading ? 'Locating...' : (locationState.address.split(',').first.isNotEmpty ? locationState.address.split(',').first : 'Unknown'),
-                                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                                      locationState.isLoading ? 'Locating...' : (locationState.address.split(',').first),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                     ),
-                                    const SizedBox(height: 2),
                                     Text(
-                                      '10:07 AM', // Mock time as in design, or dynamic
-                                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12, fontFamily: 'Poppins'),
+                                      '${DateTime.now().hour % 12 == 0 ? 12 : DateTime.now().hour % 12}:${DateTime.now().minute.toString().padLeft(2, '0')} ${DateTime.now().hour >= 12 ? 'PM' : 'AM'}',
+                                      style: const TextStyle(
+                                        color: AppColors.emeraldMist,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -214,18 +207,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  weatherState.isLoading ? '--' : '${weatherState.weather?.temperature.round() ?? 24}°C',
+                                  weatherState.isLoading ? '--' : '${weatherState.weather?.temperature.toStringAsFixed(0) ?? 24}°C',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 22,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
                                 Text(
-                                  weatherState.isLoading ? '--' : 'Sunny',
-                                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12, fontFamily: 'Poppins'),
+                                  context.tr(en: 'Sunny', si: 'හිරු එළිය', ta: 'வெயில்'),
+                                  style: const TextStyle(
+                                    color: AppColors.copperLight,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -233,189 +228,367 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                         ),
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // 3. Middle Section: Recent Activities
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Manage your farm's health.",
-                          style: TextStyle(fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF333333)),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "RECENT ACTIVITIES",
-                          style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF8B6C5C), letterSpacing: 1.2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  SizedBox(
-                    height: 220,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        _buildRecentActivityImageTile(
-                          'Tomato\nEarly Blight',
-                          '88% Confirmed',
-                          0.88,
-                          'https://images.unsplash.com/photo-1592841200221-a6898f307baa?q=80&w=600&auto=format&fit=crop',
-                        ),
-                        _buildRecentActivityChartTile(
-                          'TOMATO\nDISEASE',
-                          '88% Confirmed\nSep 15',
-                          0.88,
-                        ),
-                        if (scanHistory.isNotEmpty)
-                          _buildRecentActivityImageTile(
-                            scanHistory.first.diseaseName.replaceAll(' ', '\n'),
-                            scanHistory.first.dateLabel,
-                            0.94,
-                            scanHistory.first.imageUrl,
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  // View All
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'View All >',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFFC96A4F)),
-                      ),
-                    ),
-                  ),
-
-                  // 4. Quick Actions & Centerpiece
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _buildQuickActionTile(
-                          context,
-                          'Expert\nInsights',
-                          Icons.lightbulb_rounded, // Matches the copper bulb
-                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
-                        ),
-                        
-                        // CENTERPIECE: Scan Field Button (Squarish with rounded corners)
-                        GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CameraCaptureScreen())),
-                          child: AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Container(
-                                width: 90,
-                                height: 90,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24), // Squarish
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF143623), Color(0xFF0F2618)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF143623).withOpacity(0.4 * _pulseAnimation.value),
-                                      blurRadius: 20 * _pulseAnimation.value,
-                                      spreadRadius: 4 * _pulseAnimation.value,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
-                                  border: Border.all(
-                                    color: const Color(0xFF81B29A).withOpacity(0.5),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: const Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.document_scanner_rounded, color: Colors.white, size: 28),
-                                    SizedBox(height: 6),
-                                    Text(
-                                      'Scan\nField',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Poppins',
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                          ),
-                        ),
-
-                        _buildQuickActionTile(
-                          context,
-                          'Community\nHub',
-                          Icons.people_alt_rounded,
-                          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Promo / Upgrade Banner
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4)),
-                        ],
-                        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF9EAE1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFC96A4F), size: 28),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Upgrade to CropGuard Pro', style: TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF2D3748))),
-                                const SizedBox(height: 2),
-                                const Text('Get unlimited AI scans & expert advice.', style: TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF7A869A))),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+
+              const SizedBox(height: 20),
+
+              // Farm Subheading & Section Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n != null && l10n.localeName == 'si'
+                          ? "ඔබේ ගොවිපළේ සෞඛ්‍යය කළමනාකරණය කරන්න."
+                          : (l10n != null && l10n.localeName == 'ta'
+                              ? "உங்கள் பண்ணையின் ஆரோக்கியத்தை நிர்வகிக்கவும்."
+                              : "Manage your farm's health."),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          (l10n?.recentScans ?? 'Recent Scans').toUpperCase(),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseCatalogueScreen())),
+                          child: Text(
+                            '${l10n?.seeAll ?? 'View All'} >',
+                            style: const TextStyle(
+                              color: AppColors.copper,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Horizontal Glassmorphic Recent Activity Tiles with Copper Data Viz Rings
+              SizedBox(
+                height: 180,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  children: [
+                    _buildActivityTile(
+                      cropImage: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?q=80&w=400&auto=format&fit=crop',
+                      diseaseName: context.trDisease('Tomato Early Blight'),
+                      confidence: context.tr(en: '88% Confirmed', si: '88% තහවුරු කළා', ta: '88% உறுதிப்படுத்தப்பட்டது'),
+                      date: context.tr(en: 'Today', si: 'අද', ta: 'இன்று'),
+                      score: 0.88,
+                    ),
+                    const SizedBox(width: 14),
+                    _buildActivityTileWithRing(
+                      diseaseName: context.tr(en: 'TOMATO DISEASE', si: 'තක්කාලි රෝගය', ta: 'தக்காளி நோய்'),
+                      confidence: context.tr(en: '88% Confirmed', si: '88% තහවුරු කළා', ta: '88% உறுதிப்படுத்தப்பட்டது'),
+                      date: 'Sep 15',
+                      score: 0.88,
+                      isSelected: true,
+                    ),
+                    const SizedBox(width: 14),
+                    _buildActivityTile(
+                      cropImage: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?q=80&w=400&auto=format&fit=crop',
+                      diseaseName: context.tr(en: 'Monstera Disease', si: 'මොන්ස්ටෙරා රෝගය', ta: 'மான்ஸ்டெரா நோய்'),
+                      confidence: context.tr(en: '88% Confirmed', si: '88% තහවුරු කළා', ta: '88% உறுதிப்படுத்தப்பட்டது'),
+                      date: 'Sep 10',
+                      score: 0.88,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Centerpiece Control Bar (Expert Insights | Scan Field | Community Hub)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.border, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Expert Insights
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: AppColors.copperLight.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.copper, size: 22),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n != null && l10n.localeName == 'si'
+                                  ? 'විශේෂඥ\nඋපදෙස්'
+                                  : (l10n != null && l10n.localeName == 'ta'
+                                      ? 'நிபுணர்\nஉதவி'
+                                      : 'Expert\nInsights'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Centerpiece Scan Button
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CameraCaptureScreen())),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.scanButton,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.copper, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.4),
+                                blurRadius: 14,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.crop_free_rounded, color: Colors.white, size: 24),
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n != null && l10n.localeName == 'si'
+                                        ? 'ස්කෑන්'
+                                        : (l10n != null && l10n.localeName == 'ta' ? 'ஸ்கேன்' : 'Scan'),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  Text(
+                                    l10n != null && l10n.localeName == 'si'
+                                        ? 'ක්ෂේත්‍රය'
+                                        : (l10n != null && l10n.localeName == 'ta' ? 'பயிர்' : 'Field'),
+                                    style: const TextStyle(
+                                      color: AppColors.copperLight,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Community Hub
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLight.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.people_outline_rounded, color: AppColors.primaryLight, size: 22),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n != null && l10n.localeName == 'si'
+                                  ? 'ගොවි\nප්‍රජාව'
+                                  : (l10n != null && l10n.localeName == 'ta'
+                                      ? 'விவசாயி\nசமூகம்'
+                                      : 'Community\nHub'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Upgrade to CropGuard Pro Banner with Metallic Copper Accent
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.proUpgradeBanner,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.copperLight.withOpacity(0.4), width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: AppGradients.copper,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr(
+                                en: 'Upgrade to CropGuard Pro',
+                                si: 'CropGuard Pro වෙත යාවත්කාලීන වන්න',
+                                ta: 'CropGuard Pro-க்கு மேம்படுத்தவும்',
+                              ),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              context.tr(
+                                en: 'Unlimited AI scans & priority officer support',
+                                si: 'අසීමිත AI ස්කෑන් සහ කෘෂිකර්ම නිලධාරී ප්‍රමුඛ සහාය',
+                                ta: 'வரம்பற்ற AI ஸ்கேன்கள் & முன்னுரிமை அதிகாரி உதவி',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.copper, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityTile({
+    required String cropImage,
+    required String diseaseName,
+    required String confidence,
+    required String date,
+    required double score,
+  }) {
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              height: 75,
+              width: double.infinity,
+              child: SmartImage(src: cropImage, fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            diseaseName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            confidence,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: AppColors.copper,
             ),
           ),
         ],
@@ -423,190 +596,94 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildUserAvatar(dynamic userData, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFF2CC8F), width: 1.5), // Copper border
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(size / 2),
-        child: userData.imagePath != null
-            ? SmartImage(src: userData.imagePath!, fit: BoxFit.cover, errorWidget: _buildInitialsAvatar(userData.fullName, size))
-            : _buildInitialsAvatar(userData.fullName, size),
-      ),
-    );
-  }
-
-  Widget _buildRecentActivityImageTile(String title, String subtitle, double progress, String imageUrl) {
+  Widget _buildActivityTileWithRing({
+    required String diseaseName,
+    required String confidence,
+    required String date,
+    required double score,
+    bool isSelected = false,
+  }) {
     return Container(
       width: 140,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isSelected ? AppColors.selectedTileBg : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Box
-            Container(
-              height: 110,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey[200])),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2D3748), height: 1.2),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFFC96A4F), fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  // Progress Bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: const Color(0xFFF0F0F0),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC96A4F)),
-                      minHeight: 4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        border: Border.all(
+          color: isSelected ? AppColors.copper : AppColors.border,
+          width: isSelected ? 2 : 1.2,
         ),
-      ),
-    );
-  }
-
-  Widget _buildRecentActivityChartTile(String title, String subtitle, double progress) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: isSelected ? AppColors.copper.withOpacity(0.15) : Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
-        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Dark Green Box with Chart
-            Container(
-              height: 110,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF143623), Color(0xFF0F2618)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(
-                child: SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CircularProgressIndicator(
-                        value: progress,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 75,
+            width: double.infinity,
+            child: Center(
+              child: SizedBox(
+                width: 54,
+                height: 54,
+                child: Stack(
+                  children: [
+                    SizedBox.expand(
+                      child: CircularProgressIndicator(
+                        value: score,
                         strokeWidth: 6,
-                        backgroundColor: Colors.white.withOpacity(0.1),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE07A5F)), // Copper
-                        strokeCap: StrokeCap.round,
+                        backgroundColor: AppColors.copper.withOpacity(0.2),
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.copper),
                       ),
-                    ],
-                  ),
+                    ),
+                    Center(
+                      child: Text(
+                        '${(score * 100).toInt()}%',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.copperDark,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2D3748), height: 1.2),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 10, color: Color(0xFF7A869A), height: 1.2),
-                  ),
-                ],
-              ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            diseaseName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: AppColors.textPrimary,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionTile(BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 70,
-        color: Colors.transparent, // expand tap area
-        child: Column(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Icon(icon, color: const Color(0xFFC96A4F), size: 24),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            confidence,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: AppColors.copper,
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontFamily: 'Poppins', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2D3748), height: 1.2),
+          ),
+          Text(
+            date,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.textMuted,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
