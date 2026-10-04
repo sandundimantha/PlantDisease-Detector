@@ -150,13 +150,18 @@ class ConsultationRepository {
   // ── Assign officer to consultation ────────────────────────────────────────
   // Throws so the UI can report failure. RLS blocks return 0 rows rather than
   // an error, so the affected rows are checked explicitly.
+  // Only an unassigned pending case can be taken, so a stale inbox cannot
+  // reopen a cancelled case or take over another officer's case.
   Future<void> assignOfficer(String consultationId, String officerId) async {
-    final rows = await _client.from('consultations').update({
-      'officer_id': officerId,
-      'status': 'open',
-    }).eq('id', consultationId).select('id');
+    final rows = await _client
+        .from('consultations')
+        .update({'officer_id': officerId, 'status': 'open'})
+        .eq('id', consultationId)
+        .eq('status', 'pending')
+        .isFilter('officer_id', null)
+        .select('id');
     if ((rows as List).isEmpty) {
-      throw Exception('Case could not be accepted (no permission or already removed).');
+      throw Exception('This case was already accepted by another officer or cancelled by the farmer.');
     }
   }
 

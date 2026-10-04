@@ -15,10 +15,20 @@ const _terracotta = Color(0xFFD9734E);
 // ─────────────────────────────────────────────────────────────────────────────
 // ScheduledVisitsSection — AO Dashboard field-visit planner.
 // CRUD: Create (Quick Action) · Read (live list) · Update (accept request,
-//       reschedule, mark completed) · Delete (swipe / menu to cancel)
+//       reschedule, mark completed) · Delete (swipe / menu to cancel; visits
+//       involving a farmer are marked cancelled so the farmer sees it)
 // ─────────────────────────────────────────────────────────────────────────────
-class ScheduledVisitsSection extends ConsumerWidget {
+class ScheduledVisitsSection extends ConsumerStatefulWidget {
   const ScheduledVisitsSection({super.key});
+
+  @override
+  ConsumerState<ScheduledVisitsSection> createState() => _ScheduledVisitsSectionState();
+}
+
+class _ScheduledVisitsSectionState extends ConsumerState<ScheduledVisitsSection> {
+  // Hidden as soon as the cancel succeeds, so a swiped-away Dismissible is not
+  // rebuilt from the previous stream data while the list refetches.
+  final Set<String> _cancelledIds = {};
 
   String? get _me => Supabase.instance.client.auth.currentUser?.id;
 
@@ -81,7 +91,9 @@ class ScheduledVisitsSection extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Cancel this visit?'),
-        content: Text('The visit to ${v.farmerName} will be removed from your schedule.'),
+        content: Text(v.farmerId != null
+            ? 'The visit to ${v.farmerName} will be cancelled and the farmer will see it as cancelled.'
+            : 'The visit to ${v.farmerName} will be removed from your schedule.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep visit')),
           FilledButton(
@@ -93,12 +105,14 @@ class ScheduledVisitsSection extends ConsumerWidget {
       ),
     );
     if (confirmed != true || !context.mounted) return false;
-    return _run(context, ref, () => ref.read(visitRepositoryProvider).deleteVisit(v.id),
+    final ok = await _run(context, ref, () => ref.read(visitRepositoryProvider).cancelVisit(v),
         'Visit cancelled.');
+    if (ok && mounted) setState(() => _cancelledIds.add(v.id));
+    return ok;
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final visitsAsync = ref.watch(officerVisitsProvider);
 
     return Column(
@@ -139,7 +153,8 @@ class ScheduledVisitsSection extends ConsumerWidget {
               child: const Text('Retry'),
             ),
           ),
-          data: (visits) {
+          data: (all) {
+            final visits = all.where((v) => !_cancelledIds.contains(v.id)).toList();
             if (visits.isEmpty) {
               return _messageCard(
                 Icons.event_available_rounded,

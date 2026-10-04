@@ -193,8 +193,8 @@ class _OfficerHomeTab extends ConsumerWidget {
       final onDuty = ref.read(onDutyProvider).valueOrNull ?? true;
       messenger.showSnackBar(SnackBar(
         content: Text(onDuty
-            ? 'You are Online — new cases can be assigned to you.'
-            : 'You are Offline — your status has been saved.'),
+            ? 'You are Online — farmers now see you as On Duty.'
+            : 'You are Offline — farmers now see you as Off Duty.'),
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF0F766E),
       ));
@@ -683,7 +683,7 @@ class _OfficerHomeTab extends ConsumerWidget {
           error: (_, __) => const SizedBox(height: 170,
             child: Center(child: Text('Failed to load alerts'))),
           data: (consultations) {
-            final urgent = consultations.where((c) => c.isUrgent && !c.isClosed).toList();
+            final urgent = consultations.where((c) => c.needsUrgentAttention).toList();
             if (urgent.isEmpty) {
               return Container(
                 height: 170,

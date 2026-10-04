@@ -37,7 +37,7 @@ class _ExpertConsultScreenState extends ConsumerState<ExpertConsultScreen> {
       case 'All':
         return officers;
       case 'On Duty':
-        return officers.where((o) => o.availability.toLowerCase() == 'on duty').toList();
+        return officers.where((o) => o.isOnDuty).toList();
       default:
         return officers.where((o) => o.specializations.contains(_selectedFilter)).toList();
     }
@@ -243,7 +243,7 @@ class _ExpertConsultScreenState extends ConsumerState<ExpertConsultScreen> {
   }
 
   Widget _buildOfficerCard(AgriOfficer officer) {
-    final onDuty = officer.availability.toLowerCase() == 'on duty';
+    final onDuty = officer.isOnDuty;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -261,7 +261,7 @@ class _ExpertConsultScreenState extends ConsumerState<ExpertConsultScreen> {
                 radius: 32,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 child: Text(
-                  officer.name.replaceFirst('Ofcr. ', '').substring(0, 1),
+                  officer.initial,
                   style: AppTextStyles.headlineMedium.copyWith(color: AppColors.primary),
                 ),
               ),

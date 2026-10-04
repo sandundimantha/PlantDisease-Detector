@@ -133,6 +133,22 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
     ref.invalidate(officerStatsProvider);
   }
 
+  // ── Update: close the case; only report success if the row changed ────────
+  Future<void> _resolveCase() async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(chatProvider(_consultation!.id).notifier).markResolved();
+      _refreshCaseLists();
+      messenger.showSnackBar(const SnackBar(content: Text('✅ Case marked as resolved!')));
+      if (mounted && context.canPop()) context.pop();
+    } catch (e) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Case could not be resolved. Check your connection and try again.'),
+        backgroundColor: Color(0xFFEF4444),
+      ));
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -186,16 +202,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
               title: const Text('Mark as Resolved'),
               onTap: () async {
                 Navigator.pop(context);
-                if (_consultation != null) {
-                  await ref.read(chatProvider(_consultation!.id).notifier).markResolved();
-                  _refreshCaseLists();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Case marked as resolved!')),
-                    );
-                    context.pop();
-                  }
-                }
+                if (_consultation != null) await _resolveCase();
               },
             ),
           ],
@@ -699,16 +706,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () async {
-                  await ref.read(chatProvider(_consultation!.id).notifier)
-                      .markResolved();
-                  _refreshCaseLists();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('✅ Case marked as resolved!')));
-                    context.pop();
-                  }
-                },
+                onPressed: _resolveCase,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

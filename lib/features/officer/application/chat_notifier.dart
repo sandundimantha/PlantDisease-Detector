@@ -133,18 +133,23 @@ class ChatNotifier extends FamilyAsyncNotifier<List<ConsultationMessage>, String
     }
   }
 
-  /// Mark consultation as resolved
+  /// Mark consultation as resolved. Throws if nothing was updated so the
+  /// screen does not report success for a case that is still open.
   Future<void> markResolved() async {
-    try {
-      await Supabase.instance.client
-          .from('consultations')
-          .update({
-            'status': 'resolved',
-            'resolved_at': DateTime.now().toUtc().toIso8601String(),
-          })
-          .eq('id', _consultationId);
-    } catch (e) {
-      debugPrint('ChatNotifier.markResolved error: $e');
+    final client = Supabase.instance.client;
+    final rows = await client
+        .from('consultations')
+        .update({
+          // RLS only lets the assigned officer close a case; resolving an
+          // unaccepted case assigns it to the officer who answered it.
+          'officer_id': client.auth.currentUser?.id,
+          'status': 'resolved',
+          'resolved_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', _consultationId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw Exception('Case could not be resolved.');
     }
   }
 }

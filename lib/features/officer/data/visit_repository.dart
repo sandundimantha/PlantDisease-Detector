@@ -82,6 +82,19 @@ class VisitRepository {
     _ensureRows(rows, 'Visit could not be cancelled.');
   }
 
+  // ── Officer cancels a visit ───────────────────────────────────────────────
+  // A visit a farmer requested or is linked to is kept as 'cancelled' so the
+  // farmer's list shows the cancellation; a private plan is deleted outright.
+  Future<void> cancelVisit(OfficerVisit visit) async {
+    if (visit.farmerId == null) return deleteVisit(visit.id);
+    final rows = await _client
+        .from('officer_visits')
+        .update({'status': 'cancelled', 'updated_at': _now})
+        .eq('id', visit.id)
+        .select('id');
+    _ensureRows(rows, 'Visit could not be cancelled.');
+  }
+
   // ── Create: farmer asks an officer to visit (Officer Location Map) ───────
   // officer_id stays null until an officer accepts it on the AO Dashboard.
   Future<void> requestVisit({
@@ -137,17 +150,34 @@ final visitRepositoryProvider = Provider<VisitRepository>((ref) {
   return VisitRepository(Supabase.instance.client);
 });
 
-/// Visits on this officer's schedule plus open farmer requests, live.
+/// Visits on this officer's schedule plus open farmer requests addressed to
+/// them (or to a directory officer with no account), live.
 /// Order: farmer requests first, then by date; completed visits last.
-final officerVisitsProvider = StreamProvider.autoDispose<List<OfficerVisit>>((ref) {
-  final me = Supabase.instance.client.auth.currentUser?.id;
-  return Supabase.instance.client
+final officerVisitsProvider = StreamProvider.autoDispose<List<OfficerVisit>>((ref) async* {
+  final client = Supabase.instance.client;
+  final me = client.auth.currentUser?.id;
+
+  // Directory entry id -> linked officer account (null = anyone may take it).
+  final owners = <String, String?>{
+    for (final row in await client.from('agri_officers').select('id, profile_id'))
+      row['id'] as String: row['profile_id'] as String?,
+  };
+  bool addressedToMe(OfficerVisit v) {
+    final target = v.agriOfficerId;
+    if (target == null) return true;
+    final owner = owners[target];
+    return owner == null || owner == me;
+  }
+
+  yield* client
       .from('officer_visits')
       .stream(primaryKey: ['id'])
       .map((rows) {
         final visits = rows
             .map(OfficerVisit.fromJson)
-            .where((v) => v.status != 'cancelled' && (v.officerId == me || v.isRequest))
+            .where((v) =>
+                v.status != 'cancelled' &&
+                (v.officerId == me || (v.isRequest && addressedToMe(v))))
             .toList();
         int rank(OfficerVisit v) => v.isRequest ? 0 : (v.isCompleted ? 2 : 1);
         visits.sort((a, b) {

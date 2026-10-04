@@ -18,7 +18,14 @@ Future<String> resolveUserRole() async {
   if (userId == null) return 'farmer';
 
   try {
-    final row = await client.from('profiles').select('role').eq('id', userId).maybeSingle();
+    // Rural connections often hang rather than fail; fall back to the cached
+    // role instead of holding the user on the splash screen.
+    final row = await client
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle()
+        .timeout(const Duration(seconds: 6));
     final role = (row?['role'] as String?)?.toLowerCase() ?? 'farmer';
     await prefs.setString(_prefsKey, role);
     return role;

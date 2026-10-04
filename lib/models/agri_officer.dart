@@ -34,6 +34,12 @@ class AgriOfficer {
 
   bool get isOnDuty => availability.toLowerCase() == 'on duty';
 
+  /// First letter of the name without the "Ofcr." title, for avatars.
+  String get initial {
+    final bare = name.replaceFirst('Ofcr. ', '').trim();
+    return bare.isEmpty ? '?' : bare.substring(0, 1).toUpperCase();
+  }
+
   factory AgriOfficer.fromJson(Map<String, dynamic> json) {
     return AgriOfficer(
       id: json['id'] as String?,

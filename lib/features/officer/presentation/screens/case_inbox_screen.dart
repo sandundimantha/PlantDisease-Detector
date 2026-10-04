@@ -104,7 +104,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
     final consultations = all.where((c) => !_deletedIds.contains(c.id)).toList();
     switch (_selectedFilter) {
       case 'urgent':
-        return consultations.where((c) => c.isUrgent && !c.isClosed).toList();
+        return consultations.where((c) => c.needsUrgentAttention).toList();
       case 'pending':
         return consultations.where((c) => c.isPending || c.isOpen).toList();
       case 'resolved':
@@ -201,6 +201,12 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final c = filtered[index];
+                          final tile = _buildCaseTile(context, c, index);
+                          // RLS: officers may delete only unassigned cases or their own.
+                          final canDelete = c.officerId == null || c.officerId == _currentUserId;
+                          if (!canDelete) {
+                            return Padding(padding: const EdgeInsets.only(bottom: 16), child: tile);
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Dismissible(
@@ -208,7 +214,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                               direction: DismissDirection.endToStart,
                               confirmDismiss: (_) => _confirmDelete(c),
                               background: _buildDeleteBackground(),
-                              child: _buildCaseTile(context, c, index),
+                              child: tile,
                             ),
                           );
                         },

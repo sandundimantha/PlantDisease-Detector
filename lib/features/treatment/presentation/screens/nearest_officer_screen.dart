@@ -307,7 +307,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
                 radius: 28,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 child: Text(
-                  o.name.replaceFirst('Ofcr. ', '').substring(0, 1),
+                  o.initial,
                   style: AppTextStyles.headlineMedium.copyWith(color: AppColors.primary),
                 ),
               ),
@@ -455,6 +455,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
           v.scheduledFor != null ? 'Officer visiting ${fmt.format(v.scheduledFor!)}' : 'Officer will visit soon',
         ),
       'completed' => ('Completed', Colors.grey.shade600, 'Visit done'),
+      'cancelled' => ('Cancelled', const Color(0xFFDC2626), 'The officer cancelled this visit'),
       _ => (
           'Waiting',
           const Color(0xFFB45309),
