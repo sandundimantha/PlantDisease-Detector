@@ -662,7 +662,7 @@ class _OfficerHomeTab extends ConsumerWidget {
           error: (_, __) => const SizedBox(height: 170,
             child: Center(child: Text('Failed to load alerts'))),
           data: (consultations) {
-            final urgent = consultations.where((c) => c.isUrgent && !c.isResolved).toList();
+            final urgent = consultations.where((c) => c.isUrgent && !c.isClosed).toList();
             if (urgent.isEmpty) {
               return Container(
                 height: 170,

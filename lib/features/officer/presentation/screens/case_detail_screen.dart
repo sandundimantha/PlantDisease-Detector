@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/features/officer/application/chat_notifier.dart';
+import 'package:plant_disease_detector/features/officer/data/consultation_repository.dart';
 import 'package:plant_disease_detector/models/consultation.dart';
 import 'dart:ui';
 
@@ -125,6 +126,13 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
     );
   }
 
+  // Inbox and dashboard cache their lists; refetch so a resolved case moves
+  // out of "Urgent" / "Pending" straight away.
+  void _refreshCaseLists() {
+    ref.invalidate(consultationsProvider(null));
+    ref.invalidate(officerStatsProvider);
+  }
+
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -180,6 +188,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                 Navigator.pop(context);
                 if (_consultation != null) {
                   await ref.read(chatProvider(_consultation!.id).notifier).markResolved();
+                  _refreshCaseLists();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Case marked as resolved!')),
@@ -310,11 +319,11 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: c?.isUrgent == true
+                        color: c?.needsUrgentAttention == true
                             ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: c?.isUrgent == true
+                          color: c?.needsUrgentAttention == true
                               ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0),
                         ),
                       ),
@@ -322,18 +331,20 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            c?.isUrgent == true
+                            c?.needsUrgentAttention == true
                                 ? Icons.emergency_rounded : Icons.pending_rounded,
-                            color: c?.isUrgent == true
+                            color: c?.needsUrgentAttention == true
                                 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
                             size: 14,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            c?.isUrgent == true ? 'URGENT'
-                                : (c?.isResolved == true ? 'RESOLVED' : 'PENDING'),
+                            c?.needsUrgentAttention == true ? 'URGENT'
+                                : c?.isResolved == true
+                                    ? 'RESOLVED'
+                                    : c?.isCancelled == true ? 'CANCELLED' : 'PENDING',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: c?.isUrgent == true
+                              color: c?.needsUrgentAttention == true
                                   ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
                               fontWeight: FontWeight.bold,
                             ),
@@ -428,6 +439,28 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                     ],
                   ),
                 ),
+                // Farmer's own description from the Expert Consult request.
+                if (c?.notes != null && c!.notes!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Farmer\'s notes',
+                            style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        Text(c.notes!, style: AppTextStyles.bodyMedium),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -669,6 +702,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                 onPressed: () async {
                   await ref.read(chatProvider(_consultation!.id).notifier)
                       .markResolved();
+                  _refreshCaseLists();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('✅ Case marked as resolved!')));

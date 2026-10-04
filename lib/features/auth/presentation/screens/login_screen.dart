@@ -6,7 +6,7 @@ import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:plant_disease_detector/core/auth/user_role.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -50,16 +50,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: password,
       );
       
-      if (mounted) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_role', _selectedRole);
-        
-        setState(() => _isLoading = false);
-        if (_selectedRole == 'Officer') {
-          context.go('/officer_dashboard');
-        } else {
-          context.go('/main');
+      // Route by the role stored in Supabase, not by the tab that was picked.
+      final role = await resolveUserRole();
+      if (_selectedRole == 'Officer' && role != 'officer') {
+        await Supabase.instance.client.auth.signOut();
+        await clearCachedUserRole();
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('This account is not registered as an officer. Please log in as a Farmer.'),
+            backgroundColor: Colors.red,
+          ));
         }
+        return;
+      }
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go(homeRouteForRole(role));
       }
     } on AuthException catch (e) {
       if (mounted) {

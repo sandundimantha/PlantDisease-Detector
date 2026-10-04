@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:plant_disease_detector/core/auth/user_role.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,13 +31,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (mounted) {
         final session = Supabase.instance.client.auth.currentSession;
         if (session != null) {
-          final prefs = await SharedPreferences.getInstance();
-          final role = prefs.getString('user_role');
-          if (role == 'Officer') {
-            if (mounted) context.go('/officer_dashboard');
-          } else {
-            if (mounted) context.go('/main');
-          }
+          final role = await resolveUserRole();
+          if (mounted) context.go(homeRouteForRole(role));
         } else {
           if (mounted) context.go('/language');
         }

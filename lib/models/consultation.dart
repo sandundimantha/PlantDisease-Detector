@@ -6,7 +6,7 @@ class Consultation {
   final String? scanId;
   final String farmerId;
   final String? officerId;
-  final String status; // pending | open | resolved
+  final String status; // pending | open | resolved | cancelled
   final String? diseaseName;
   final String? severity;
   final String? imageUrl;
@@ -68,6 +68,10 @@ class Consultation {
   bool get isResolved => status == 'resolved';
   bool get isPending => status == 'pending';
   bool get isOpen => status == 'open';
+  bool get isCancelled => status == 'cancelled';
+  bool get isClosed => isResolved || isCancelled;
+  // High severity only demands attention while the case is still open.
+  bool get needsUrgentAttention => isUrgent && !isClosed;
 
   String get timeAgo {
     final diff = DateTime.now().difference(createdAt);
@@ -121,9 +125,11 @@ class ConsultationMessage {
   bool get isFromOfficer => senderRole == 'officer';
 
   String get timeString {
-    final m = createdAt.minute.toString().padLeft(2, '0');
-    final period = createdAt.hour < 12 ? 'AM' : 'PM';
-    final hour = createdAt.hour > 12 ? createdAt.hour - 12 : createdAt.hour;
+    // created_at arrives in UTC; show it in the device's time zone.
+    final local = createdAt.toLocal();
+    final m = local.minute.toString().padLeft(2, '0');
+    final period = local.hour < 12 ? 'AM' : 'PM';
+    final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
     return '$hour:$m $period';
   }
 }

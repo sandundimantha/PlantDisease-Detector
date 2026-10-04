@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
@@ -51,8 +53,25 @@ class UserData {
 }
 
 class UserNotifier extends StateNotifier<UserData> {
+  StreamSubscription<AuthState>? _authSub;
+
   UserNotifier() : super(UserData()) {
     _loadUserData();
+    // Reload on login / logout / sign-up so the previous account's name and
+    // district are not shown to the next user on the same device.
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      if (event.event == AuthChangeEvent.signedIn ||
+          event.event == AuthChangeEvent.signedOut ||
+          event.event == AuthChangeEvent.userUpdated) {
+        _loadUserData();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {

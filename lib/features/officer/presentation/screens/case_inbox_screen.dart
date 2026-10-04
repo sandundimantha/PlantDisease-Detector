@@ -104,7 +104,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
     final consultations = all.where((c) => !_deletedIds.contains(c.id)).toList();
     switch (_selectedFilter) {
       case 'urgent':
-        return consultations.where((c) => c.isUrgent && !c.isResolved).toList();
+        return consultations.where((c) => c.isUrgent && !c.isClosed).toList();
       case 'pending':
         return consultations.where((c) => c.isPending || c.isOpen).toList();
       case 'resolved':
@@ -423,14 +423,14 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
           color: Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: c.isUrgent
+            color: c.needsUrgentAttention
                 ? const Color(0xFFFECACA)
                 : Colors.white,
-            width: c.isUrgent ? 2 : 1.5,
+            width: c.needsUrgentAttention ? 2 : 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: c.isUrgent
+              color: c.needsUrgentAttention
                   ? const Color(0xFFEF4444).withValues(alpha: 0.08)
                   : Colors.black.withValues(alpha: 0.04),
               blurRadius: 20,
@@ -485,29 +485,35 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                         decoration: BoxDecoration(
                           color: c.isResolved
                               ? const Color(0xFFDEF7EC)
-                              : c.isUrgent
-                                  ? const Color(0xFFFEE2E2)
-                                  : c.isOpen
-                                      ? const Color(0xFFDBEAFE)
-                                      : const Color(0xFFFEF3C7),
+                              : c.isCancelled
+                                  ? Colors.grey.shade200
+                                  : c.isUrgent
+                                      ? const Color(0xFFFEE2E2)
+                                      : c.isOpen
+                                          ? const Color(0xFFDBEAFE)
+                                          : const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           c.isResolved
                               ? 'Resolved'
-                              : c.isUrgent
-                                  ? 'Urgent'
-                                  : c.isOpen
-                                      ? 'In Progress'
-                                      : 'Pending',
+                              : c.isCancelled
+                                  ? 'Cancelled'
+                                  : c.isUrgent
+                                      ? 'Urgent'
+                                      : c.isOpen
+                                          ? 'In Progress'
+                                          : 'Pending',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: c.isResolved
                                 ? const Color(0xFF046C4E)
-                                : c.isUrgent
-                                    ? const Color(0xFF991B1B)
-                                    : c.isOpen
-                                        ? const Color(0xFF1E40AF)
-                                        : const Color(0xFF92400E),
+                                : c.isCancelled
+                                    ? Colors.grey.shade700
+                                    : c.isUrgent
+                                        ? const Color(0xFF991B1B)
+                                        : c.isOpen
+                                            ? const Color(0xFF1E40AF)
+                                            : const Color(0xFF92400E),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -541,7 +547,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (!c.isResolved) ...[
+                  if (!c.isClosed) ...[
                     const SizedBox(height: 12),
                     _buildAssignmentAction(c),
                   ],
