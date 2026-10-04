@@ -189,7 +189,7 @@ class _OfficerHomeTab extends ConsumerWidget {
   Future<void> _toggleStatus(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(onDutyProvider.notifier).toggle();
+      if (!await ref.read(onDutyProvider.notifier).toggle()) return;
       final onDuty = ref.read(onDutyProvider).valueOrNull ?? true;
       messenger.showSnackBar(SnackBar(
         content: Text(onDuty

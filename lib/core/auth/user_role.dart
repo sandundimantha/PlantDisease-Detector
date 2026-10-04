@@ -7,19 +7,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // RLS checks). The login tab the user picked is only a UI hint and must not
 // decide routing, otherwise a farmer can land on the officer dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
-const _prefsKey = 'user_role';
 
-/// Returns 'officer', 'admin' or 'farmer' for the signed-in user.
-/// Falls back to the last cached role when offline.
-Future<String> resolveUserRole() async {
-  final prefs = await SharedPreferences.getInstance();
+// Cached per user, so a fallback never applies one account's role to another.
+String _prefsKey(String userId) => 'user_role_$userId';
+
+/// Reads the signed-in user's role from Supabase ('officer', 'admin' or
+/// 'farmer') and caches it. Returns null when it cannot be read, e.g. on a
+/// connection that hangs (rural networks often hang rather than fail).
+Future<String?> fetchUserRole() async {
   final client = Supabase.instance.client;
   final userId = client.auth.currentUser?.id;
-  if (userId == null) return 'farmer';
-
+  if (userId == null) return null;
   try {
-    // Rural connections often hang rather than fail; fall back to the cached
-    // role instead of holding the user on the splash screen.
     final row = await client
         .from('profiles')
         .select('role')
@@ -27,17 +26,31 @@ Future<String> resolveUserRole() async {
         .maybeSingle()
         .timeout(const Duration(seconds: 6));
     final role = (row?['role'] as String?)?.toLowerCase() ?? 'farmer';
-    await prefs.setString(_prefsKey, role);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey(userId), role);
     return role;
   } catch (e) {
-    debugPrint('resolveUserRole: using cached role ($e)');
-    return prefs.getString(_prefsKey)?.toLowerCase() ?? 'farmer';
+    debugPrint('fetchUserRole failed: $e');
+    return null;
   }
 }
 
-Future<void> clearCachedUserRole() async {
+/// Role for routing an existing session (splash): live value, else this
+/// user's cached value, else 'farmer'.
+Future<String> resolveUserRole() async {
+  final live = await fetchUserRole();
+  if (live != null) return live;
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  if (userId == null) return 'farmer';
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(_prefsKey);
+  return prefs.getString(_prefsKey(userId)) ?? 'farmer';
+}
+
+Future<void> clearCachedUserRole() async {
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('user_role'); // key used by older builds
+  if (userId != null) await prefs.remove(_prefsKey(userId));
 }
 
 String homeRouteForRole(String role) => role == 'officer' ? '/officer_dashboard' : '/main';

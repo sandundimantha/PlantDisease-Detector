@@ -51,14 +51,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       
       // Route by the role stored in Supabase, not by the tab that was picked.
-      final role = await resolveUserRole();
-      if (_selectedRole == 'Officer' && role != 'officer') {
+      final role = await fetchUserRole();
+      final rejection = role == null
+          ? 'Could not verify your account. Check your connection and try again.'
+          : (_selectedRole == 'Officer' && role != 'officer')
+              ? 'This account is not registered as an officer. Please log in as a Farmer.'
+              : null;
+      if (role == null || rejection != null) {
         await Supabase.instance.client.auth.signOut();
-        await clearCachedUserRole();
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('This account is not registered as an officer. Please log in as a Farmer.'),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(rejection!),
             backgroundColor: Colors.red,
           ));
         }

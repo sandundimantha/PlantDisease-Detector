@@ -244,8 +244,16 @@ Future<DateTime?> pickVisitDateTime(BuildContext context, {DateTime? initial}) a
     initialTime: TimeOfDay.fromDateTime(start),
     helpText: 'Visit time',
   );
-  if (time == null) return null;
-  return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  if (time == null || !context.mounted) return null;
+  final picked = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  if (picked.isBefore(DateTime.now())) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('That time has already passed. Please choose a future time.'),
+      backgroundColor: Color(0xFFEF4444),
+    ));
+    return null;
+  }
+  return picked;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

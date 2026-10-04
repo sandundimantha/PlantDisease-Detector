@@ -158,21 +158,24 @@ final officerVisitsProvider = StreamProvider.autoDispose<List<OfficerVisit>>((re
   final me = client.auth.currentUser?.id;
 
   // Directory entry id -> linked officer account (null = anyone may take it).
-  final owners = <String, String?>{
-    for (final row in await client.from('agri_officers').select('id, profile_id'))
-      row['id'] as String: row['profile_id'] as String?,
-  };
-  bool addressedToMe(OfficerVisit v) {
-    final target = v.agriOfficerId;
-    if (target == null) return true;
-    final owner = owners[target];
-    return owner == null || owner == me;
-  }
+  // Re-read on every change so newly linked officers are respected.
+  Future<Map<String, String?>> loadOwners() async => {
+        for (final row in await client.from('agri_officers').select('id, profile_id'))
+          row['id'] as String: row['profile_id'] as String?,
+      };
 
   yield* client
       .from('officer_visits')
       .stream(primaryKey: ['id'])
-      .map((rows) {
+      .asyncMap((rows) async {
+        final owners = await loadOwners();
+        bool addressedToMe(OfficerVisit v) {
+          final target = v.agriOfficerId;
+          if (target == null) return true;
+          final owner = owners[target];
+          return owner == null || owner == me;
+        }
+
         final visits = rows
             .map(OfficerVisit.fromJson)
             .where((v) =>
@@ -213,17 +216,25 @@ class OnDutyNotifier extends AutoDisposeAsyncNotifier<bool> {
     return ref.read(visitRepositoryProvider).fetchOnDuty(userId);
   }
 
+  bool _saving = false;
+
   /// Optimistically flips the status; reverts and rethrows if the save fails.
-  Future<void> toggle() async {
+  /// Returns false (no change) while a previous save is still in flight, so
+  /// rapid taps cannot leave the UI and the database disagreeing.
+  Future<bool> toggle() async {
     final userId = _userId;
     final current = state.valueOrNull ?? true;
-    if (userId == null) return;
+    if (userId == null || _saving) return false;
+    _saving = true;
     state = AsyncValue.data(!current);
     try {
       await ref.read(visitRepositoryProvider).setOnDuty(userId, !current);
+      return true;
     } catch (e) {
       state = AsyncValue.data(current);
       rethrow;
+    } finally {
+      _saving = false;
     }
   }
 }

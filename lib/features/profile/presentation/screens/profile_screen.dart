@@ -154,12 +154,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       child: GestureDetector(
                         onTap: () async {
+                          // Clear while the user id is still known.
+                          await clearCachedUserRole();
                           try {
                             await Supabase.instance.client.auth.signOut();
                           } catch (e) {
                             debugPrint('Sign out error: $e');
                           }
-                          await clearCachedUserRole();
                           if (context.mounted) {
                             context.go('/login');
                           }

@@ -55,8 +55,9 @@ class ConsultationRepository {
           .order('created_at', ascending: false);
       return (data as List).map((e) => Consultation.fromJson(e)).toList();
     } catch (e) {
+      // Rethrow so "My Requests" shows an error instead of an empty history.
       debugPrint('ConsultationRepository.fetchFarmer error: $e');
-      return [];
+      rethrow;
     }
   }
 

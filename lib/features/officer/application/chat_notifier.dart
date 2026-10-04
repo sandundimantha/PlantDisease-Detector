@@ -147,6 +147,8 @@ class ChatNotifier extends FamilyAsyncNotifier<List<ConsultationMessage>, String
           'resolved_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', _consultationId)
+        // A cancelled or already-resolved case must not be reopened as answered.
+        .inFilter('status', ['pending', 'open'])
         .select('id');
     if ((rows as List).isEmpty) {
       throw Exception('Case could not be resolved.');

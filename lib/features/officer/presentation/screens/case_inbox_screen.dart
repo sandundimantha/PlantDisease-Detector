@@ -181,7 +181,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                     children: [
                       const Icon(Icons.swipe_left_rounded, size: 16, color: AppColors.textSecondary),
                       const SizedBox(width: 6),
-                      Text('Swipe a case left to delete it',
+                      Text('Swipe a closed case left to delete it',
                           style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
                     ],
                   ),
@@ -202,8 +202,10 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                         itemBuilder: (context, index) {
                           final c = filtered[index];
                           final tile = _buildCaseTile(context, c, index);
-                          // RLS: officers may delete only unassigned cases or their own.
-                          final canDelete = c.officerId == null || c.officerId == _currentUserId;
+                          // RLS: only closed cases that are unassigned or the officer's
+                          // own can be deleted, so an open farmer request is never lost.
+                          final canDelete = c.isClosed &&
+                              (c.officerId == null || c.officerId == _currentUserId);
                           if (!canDelete) {
                             return Padding(padding: const EdgeInsets.only(bottom: 16), child: tile);
                           }
