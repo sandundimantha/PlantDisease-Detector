@@ -119,23 +119,27 @@ class ConsultationRepository {
   }
 
   // ── Assign officer to consultation ────────────────────────────────────────
+  // Throws so the UI can report failure. RLS blocks return 0 rows rather than
+  // an error, so the affected rows are checked explicitly.
   Future<void> assignOfficer(String consultationId, String officerId) async {
-    try {
-      await _client.from('consultations').update({
-        'officer_id': officerId,
-        'status': 'open',
-      }).eq('id', consultationId);
-    } catch (e) {
-      debugPrint('ConsultationRepository.assignOfficer error: $e');
+    final rows = await _client.from('consultations').update({
+      'officer_id': officerId,
+      'status': 'open',
+    }).eq('id', consultationId).select('id');
+    if ((rows as List).isEmpty) {
+      throw Exception('Case could not be accepted (no permission or already removed).');
     }
   }
 
   // ── Delete consultation ───────────────────────────────────────────────────
   Future<void> deleteConsultation(String consultationId) async {
-    try {
-      await _client.from('consultations').delete().eq('id', consultationId);
-    } catch (e) {
-      debugPrint('ConsultationRepository.delete error: $e');
+    final rows = await _client
+        .from('consultations')
+        .delete()
+        .eq('id', consultationId)
+        .select('id');
+    if ((rows as List).isEmpty) {
+      throw Exception('Case could not be deleted (no permission or already removed).');
     }
   }
 
