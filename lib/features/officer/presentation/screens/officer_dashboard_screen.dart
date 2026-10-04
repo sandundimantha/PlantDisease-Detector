@@ -7,6 +7,8 @@ import 'package:plant_disease_detector/core/providers/locale_provider.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/features/officer/presentation/screens/case_inbox_screen.dart';
 import 'package:plant_disease_detector/features/officer/data/consultation_repository.dart';
+import 'package:plant_disease_detector/features/officer/data/visit_repository.dart';
+import 'package:plant_disease_detector/features/officer/presentation/widgets/scheduled_visits_section.dart';
 import 'package:plant_disease_detector/features/profile/presentation/screens/profile_screen.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
@@ -25,17 +27,12 @@ class OfficerDashboardScreen extends ConsumerStatefulWidget {
 
 class _OfficerDashboardScreenState extends ConsumerState<OfficerDashboardScreen> {
   int _currentIndex = 0;
-  bool _isOnline = true;
 
   @override
   Widget build(BuildContext context) {
     final currentLocale = ref.watch(localeProvider);
     final List<Widget> pages = [
-      _OfficerHomeTab(
-        key: ValueKey('officer_home_${currentLocale.languageCode}'),
-        isOnline: _isOnline,
-        onToggleStatus: () => setState(() => _isOnline = !_isOnline),
-      ),
+      _OfficerHomeTab(key: ValueKey('officer_home_${currentLocale.languageCode}')),
       CaseInboxScreen(key: ValueKey('officer_inbox_${currentLocale.languageCode}')),
       ProfileScreen(key: ValueKey('officer_profile_${currentLocale.languageCode}')),
     ];
@@ -182,17 +179,38 @@ class _OfficerDashboardScreenState extends ConsumerState<OfficerDashboardScreen>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // _OfficerHomeTab — The main analytics view (Real Supabase data)
+// CRUD: Read (stats, urgent cases, visits) · Update (on-duty status, visits)
+//       · Create / Delete (visits, see ScheduledVisitsSection)
 // ─────────────────────────────────────────────────────────────────────────────
 class _OfficerHomeTab extends ConsumerWidget {
-  final bool isOnline;
-  final VoidCallback onToggleStatus;
+  const _OfficerHomeTab({super.key});
 
-  const _OfficerHomeTab({super.key, required this.isOnline, required this.onToggleStatus});
+  // ── Update: persist Online / Offline to profiles.is_on_duty ──────────────
+  Future<void> _toggleStatus(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(onDutyProvider.notifier).toggle();
+      final onDuty = ref.read(onDutyProvider).valueOrNull ?? true;
+      messenger.showSnackBar(SnackBar(
+        content: Text(onDuty
+            ? 'You are Online — new cases can be assigned to you.'
+            : 'You are Offline — your status has been saved.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF0F766E),
+      ));
+    } catch (e) {
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Status could not be saved. Check your connection.'),
+        backgroundColor: Color(0xFFEF4444),
+      ));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch real stats from Supabase
     final statsAsync = ref.watch(officerStatsProvider);
+    final isOnline = ref.watch(onDutyProvider).valueOrNull ?? true;
     final loc = ref.watch(locationProvider);
     final wx = ref.watch(weatherProvider);
     final user = ref.watch(userProvider);
@@ -201,7 +219,7 @@ class _OfficerHomeTab extends ConsumerWidget {
     // Notice: Removed SafeArea so the header can go edge-to-edge
     return Column(
       children: [
-        _buildHeroSection(context, loc, wx, user, l10n),
+        _buildHeroSection(context, loc, wx, user, l10n, isOnline, () => _toggleStatus(context, ref)),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.only(left: 24, right: 24, top: 32, bottom: 100),
@@ -247,6 +265,8 @@ class _OfficerHomeTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildUrgentAlertsList(context),
+                const SizedBox(height: 36),
+                const ScheduledVisitsSection(),
               ],
             ),
           ),
@@ -255,7 +275,8 @@ class _OfficerHomeTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, dynamic loc, dynamic wx, dynamic user, AppLocalizations? l10n) {
+  Widget _buildHeroSection(BuildContext context, dynamic loc, dynamic wx, dynamic user,
+      AppLocalizations? l10n, bool isOnline, VoidCallback onToggleStatus) {
     final hr = DateTime.now().hour;
     String greet = l10n?.goodEvening ?? 'Good Evening';
     if (hr < 12) greet = l10n?.goodMorning ?? 'Good Morning';
@@ -426,7 +447,7 @@ class _OfficerHomeTab extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  _buildStatusToggle(), // Put the officer status toggle right next to it
+                  _buildStatusToggle(isOnline, onToggleStatus),
                 ],
               ),
             ],
@@ -447,7 +468,7 @@ class _OfficerHomeTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusToggle() {
+  Widget _buildStatusToggle(bool isOnline, VoidCallback onToggleStatus) {
     return GestureDetector(
       onTap: onToggleStatus,
       child: AnimatedContainer(
