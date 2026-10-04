@@ -82,6 +82,38 @@ class VisitRepository {
     _ensureRows(rows, 'Visit could not be cancelled.');
   }
 
+  // ── Create: farmer asks an officer to visit (Officer Location Map) ───────
+  // officer_id stays null until an officer accepts it on the AO Dashboard.
+  Future<void> requestVisit({
+    required String farmerId,
+    required String farmerName,
+    required String agriOfficerId,
+    required String village,
+    required String reason,
+    DateTime? preferredDate,
+  }) async {
+    await _client.from('officer_visits').insert({
+      'farmer_id': farmerId,
+      'agri_officer_id': agriOfficerId,
+      'farmer_name': farmerName,
+      'village': village,
+      'reason': reason,
+      'scheduled_for': preferredDate?.toUtc().toIso8601String(),
+      'status': 'requested',
+    });
+  }
+
+  // ── Delete: farmer withdraws a request no officer has accepted yet ────────
+  Future<void> cancelRequest(String visitId) async {
+    final rows = await _client
+        .from('officer_visits')
+        .delete()
+        .eq('id', visitId)
+        .eq('status', 'requested')
+        .select('id');
+    _ensureRows(rows, 'An officer has already scheduled this visit, so it can no longer be cancelled.');
+  }
+
   // ── On-duty status (AO Dashboard Online / Offline toggle) ─────────────────
   Future<bool> fetchOnDuty(String userId) async {
     final row = await _client.from('profiles').select('is_on_duty').eq('id', userId).maybeSingle();
@@ -127,6 +159,18 @@ final officerVisitsProvider = StreamProvider.autoDispose<List<OfficerVisit>>((re
         });
         return visits;
       });
+});
+
+/// The signed-in farmer's own visit requests, newest first, live.
+final myVisitRequestsProvider = StreamProvider.autoDispose<List<OfficerVisit>>((ref) {
+  final me = Supabase.instance.client.auth.currentUser?.id;
+  if (me == null) return Stream.value(const []);
+  return Supabase.instance.client
+      .from('officer_visits')
+      .stream(primaryKey: ['id'])
+      .eq('farmer_id', me)
+      .order('created_at', ascending: false)
+      .map((rows) => rows.map(OfficerVisit.fromJson).toList());
 });
 
 class OnDutyNotifier extends AutoDisposeAsyncNotifier<bool> {

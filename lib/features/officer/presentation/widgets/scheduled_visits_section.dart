@@ -321,22 +321,27 @@ class _VisitTile extends StatelessWidget {
                   Text(v.reason!, style: AppTextStyles.bodyMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
                 const SizedBox(height: 8),
-                if (v.isRequest)
-                  Row(
-                    children: [
-                      _chip('Farmer request', _terracotta),
-                      const Spacer(),
-                      FilledButton(
-                        onPressed: onAccept,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _teal,
-                          visualDensity: VisualDensity.compact,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Accept & schedule'),
+                if (v.isRequest) ...[
+                  _chip(
+                    v.scheduledFor != null
+                        ? 'Farmer request • prefers ${DateFormat('d MMM').format(v.scheduledFor!)}'
+                        : 'Farmer request',
+                    _terracotta,
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: onAccept,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _teal,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                    ],
-                  )
+                      icon: const Icon(Icons.event_available_rounded, size: 18),
+                      label: const Text('Accept & schedule'),
+                    ),
+                  ),
+                ]
                 else
                   _chip(
                     v.isCompleted ? 'Completed' : (v.isOverdue ? 'Overdue' : 'Scheduled'),

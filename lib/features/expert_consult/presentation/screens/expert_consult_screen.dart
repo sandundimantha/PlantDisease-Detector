@@ -6,6 +6,7 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:plant_disease_detector/core/providers/user_provider.dart';
 import 'package:plant_disease_detector/features/expert_consult/presentation/screens/consultation_status_screen.dart';
 import 'package:plant_disease_detector/features/officer/data/consultation_repository.dart';
+import 'package:plant_disease_detector/features/treatment/presentation/screens/nearest_officer_screen.dart';
 import 'package:plant_disease_detector/models/agri_officer.dart';
 import 'package:plant_disease_detector/models/consultation.dart';
 import 'package:plant_disease_detector/shared/widgets/premium_app_bar.dart';
@@ -97,9 +98,23 @@ class _ExpertConsultScreenState extends ConsumerState<ExpertConsultScreen> {
           children: [
             _buildMyRequests(requestsAsync),
             const SizedBox(height: 24),
-            Text(context.tr(en: 'Agricultural Officers', si: 'කෘෂිකර්ම නිලධාරීන්', ta: 'வேளாண் அலுவலர்கள்'),
-                style: AppTextStyles.titleMedium),
-            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(context.tr(en: 'Agricultural Officers', si: 'කෘෂිකර්ම නිලධාරීන්', ta: 'வேளாண் அலுவலர்கள்'),
+                      style: AppTextStyles.titleMedium),
+                ),
+                TextButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NearestOfficerScreen()),
+                  ),
+                  icon: const Icon(Icons.map_rounded, size: 18),
+                  label: Text(context.tr(en: 'Map view', si: 'සිතියම', ta: 'வரைபடம்')),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             officersAsync.when(
               loading: () => const Padding(
                 padding: EdgeInsets.all(32),

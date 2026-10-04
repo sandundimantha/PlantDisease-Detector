@@ -5,6 +5,7 @@
 class OfficerVisit {
   final String id;
   final String? officerId;
+  final String? agriOfficerId; // officer the farmer picked on the map
   final String? farmerId;
   final String? consultationId;
   final String farmerName;
@@ -17,6 +18,7 @@ class OfficerVisit {
   const OfficerVisit({
     required this.id,
     this.officerId,
+    this.agriOfficerId,
     this.farmerId,
     this.consultationId,
     required this.farmerName,
@@ -31,6 +33,7 @@ class OfficerVisit {
     return OfficerVisit(
       id: json['id'] as String,
       officerId: json['officer_id'] as String?,
+      agriOfficerId: json['agri_officer_id'] as String?,
       farmerId: json['farmer_id'] as String?,
       consultationId: json['consultation_id'] as String?,
       farmerName: json['farmer_name'] as String? ?? 'Farmer',

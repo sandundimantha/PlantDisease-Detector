@@ -1,4 +1,7 @@
+import 'package:latlong2/latlong.dart';
+
 class AgriOfficer {
+  final String? id;
   final String name;
   final String title;
   final String zone;
@@ -8,8 +11,11 @@ class AgriOfficer {
   final String imageUrl;
   final String availability;
   final List<String> specializations;
+  final double? latitude;
+  final double? longitude;
 
   const AgriOfficer({
+    this.id,
     required this.name,
     required this.title,
     required this.zone,
@@ -19,10 +25,18 @@ class AgriOfficer {
     required this.imageUrl,
     required this.availability,
     required this.specializations,
+    this.latitude,
+    this.longitude,
   });
+
+  LatLng? get location =>
+      latitude != null && longitude != null ? LatLng(latitude!, longitude!) : null;
+
+  bool get isOnDuty => availability.toLowerCase() == 'on duty';
 
   factory AgriOfficer.fromJson(Map<String, dynamic> json) {
     return AgriOfficer(
+      id: json['id'] as String?,
       name: json['name'] ?? '',
       title: json['title'] ?? '',
       zone: json['zone'] ?? '',
@@ -32,6 +46,8 @@ class AgriOfficer {
       imageUrl: json['image_url'] ?? '',
       availability: json['availability'] ?? '',
       specializations: (json['specializations'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
