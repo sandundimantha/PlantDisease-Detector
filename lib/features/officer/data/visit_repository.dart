@@ -56,6 +56,19 @@ class VisitRepository {
     _ensureRows(rows, 'This request was already taken or withdrawn.');
   }
 
+  // ── Update: officer declines a farmer's request ───────────────────────────
+  // Kept as 'cancelled' (with the officer who declined it) so the farmer sees
+  // the outcome and it leaves every officer's dashboard.
+  Future<void> declineRequest(String visitId, String officerId) async {
+    final rows = await _client
+        .from('officer_visits')
+        .update({'officer_id': officerId, 'status': 'cancelled', 'updated_at': _now})
+        .eq('id', visitId)
+        .eq('status', 'requested')
+        .select('id');
+    _ensureRows(rows, 'This request was already taken or withdrawn.');
+  }
+
   // ── Update: move a visit to another date/time ─────────────────────────────
   Future<void> reschedule(String visitId, DateTime scheduledFor) async {
     final rows = await _client

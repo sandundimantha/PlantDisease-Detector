@@ -126,6 +126,23 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
     );
   }
 
+  // The officer can reply and resolve only while the case is open and is
+  // unassigned or theirs (the same rule RLS enforces).
+  bool get _canAct {
+    final c = _consultation;
+    if (c == null || c.isClosed) return false;
+    final me = Supabase.instance.client.auth.currentUser?.id;
+    return c.officerId == null || c.officerId == me;
+  }
+
+  String get _lockedReason {
+    final c = _consultation;
+    if (c == null) return '';
+    if (c.isResolved) return 'CASE RESOLVED';
+    if (c.isCancelled) return 'CANCELLED BY FARMER';
+    return 'ASSIGNED TO ${(c.officerName ?? 'ANOTHER OFFICER').toUpperCase()}';
+  }
+
   // Inbox and dashboard cache their lists; refetch so a resolved case moves
   // out of "Urgent" / "Pending" straight away.
   void _refreshCaseLists() {
@@ -202,7 +219,13 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
               title: const Text('Mark as Resolved'),
               onTap: () async {
                 Navigator.pop(context);
-                if (_consultation != null) await _resolveCase();
+                if (_canAct) {
+                  await _resolveCase();
+                } else if (mounted) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(
+                    content: Text('This case can no longer be resolved ($_lockedReason).'),
+                  ));
+                }
               },
             ),
           ],
@@ -654,7 +677,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Message input row
-          Row(
+          if (_canAct) Row(
             children: [
               Expanded(
                 child: Container(
@@ -701,7 +724,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
           ),
 
           // Mark as Resolved button
-          if (_consultation != null && !(_consultation?.isResolved ?? false)) ...[
+          if (_canAct) ...[
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
@@ -732,25 +755,25 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             ),
           ],
 
-          // Already resolved badge
-          if (_consultation?.isResolved == true) ...[
-            const SizedBox(height: 14),
+          // Locked: resolved, cancelled or another officer's case
+          if (_consultation != null && !_canAct) ...[
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFFDEF7EC),
+                color: _consultation!.isResolved ? const Color(0xFFDEF7EC) : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.check_circle_rounded,
-                      color: Color(0xFF046C4E), size: 22),
+                  Icon(_consultation!.isResolved ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
+                      color: _consultation!.isResolved ? const Color(0xFF046C4E) : Colors.grey.shade700,
+                      size: 22),
                   const SizedBox(width: 8),
-                  Text('CASE RESOLVED',
+                  Text(_lockedReason,
                       style: AppTextStyles.titleMedium.copyWith(
-                          color: const Color(0xFF046C4E),
+                          color: _consultation!.isResolved ? const Color(0xFF046C4E) : Colors.grey.shade700,
                           fontWeight: FontWeight.w800, letterSpacing: 1.2)),
                 ],
               ),

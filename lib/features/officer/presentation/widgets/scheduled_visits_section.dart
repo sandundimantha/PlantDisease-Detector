@@ -78,6 +78,31 @@ class _ScheduledVisitsSectionState extends ConsumerState<ScheduledVisitsSection>
         'Request accepted — visit to ${v.farmerName} scheduled.');
   }
 
+  Future<void> _decline(BuildContext context, WidgetRef ref, OfficerVisit v) async {
+    final me = _me;
+    if (me == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Decline this request?'),
+        content: Text('${v.farmerName} will see that the visit was declined.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Decline'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final ok = await _run(context, ref, () => ref.read(visitRepositoryProvider).declineRequest(v.id, me),
+        'Request from ${v.farmerName} declined.');
+    if (ok && mounted) setState(() => _cancelledIds.add(v.id));
+  }
+
   Future<void> _reschedule(BuildContext context, WidgetRef ref, OfficerVisit v) async {
     final when = await pickVisitDateTime(context, initial: v.scheduledFor);
     if (when == null || !context.mounted) return;
@@ -166,6 +191,7 @@ class _ScheduledVisitsSectionState extends ConsumerState<ScheduledVisitsSection>
                 final tile = _VisitTile(
                   visit: v,
                   onAccept: () => _accept(context, ref, v),
+                  onDecline: () => _decline(context, ref, v),
                   onReschedule: () => _reschedule(context, ref, v),
                   onComplete: () => _run(
                     context, ref,
@@ -262,6 +288,7 @@ Future<DateTime?> pickVisitDateTime(BuildContext context, {DateTime? initial}) a
 class _VisitTile extends StatelessWidget {
   final OfficerVisit visit;
   final VoidCallback onAccept;
+  final VoidCallback onDecline;
   final VoidCallback onReschedule;
   final VoidCallback onComplete;
   final VoidCallback onCancel;
@@ -269,6 +296,7 @@ class _VisitTile extends StatelessWidget {
   const _VisitTile({
     required this.visit,
     required this.onAccept,
+    required this.onDecline,
     required this.onReschedule,
     required this.onComplete,
     required this.onCancel,
@@ -352,17 +380,30 @@ class _VisitTile extends StatelessWidget {
                     _terracotta,
                   ),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: onAccept,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _teal,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  Row(
+                    children: [
+                      OutlinedButton(
+                        onPressed: onDecline,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFEF4444),
+                          side: const BorderSide(color: Color(0xFFEF4444)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Decline'),
                       ),
-                      icon: const Icon(Icons.event_available_rounded, size: 18),
-                      label: const Text('Accept & schedule'),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: onAccept,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _teal,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.event_available_rounded, size: 18),
+                          label: const Text('Accept'),
+                        ),
+                      ),
+                    ],
                   ),
                 ]
                 else

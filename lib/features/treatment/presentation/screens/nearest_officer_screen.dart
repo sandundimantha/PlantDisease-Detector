@@ -148,7 +148,13 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
           if (officers.isEmpty) {
             return _buildCentered(Icons.person_search_rounded, 'No agricultural officers found.');
           }
-          final selected = officers.firstWhere((o) => o.id == _selectedId, orElse: () => officers.first);
+          // No usable GPS: start on the officer in the farmer's own district.
+          final district = ref.watch(userProvider).district.toLowerCase();
+          final local = user == null && district.isNotEmpty
+              ? officers.where((o) => o.zone.toLowerCase() == district).firstOrNull
+              : null;
+          final selected = officers.firstWhere((o) => o.id == _selectedId,
+              orElse: () => local ?? officers.first);
           return Column(
             children: [
               Expanded(flex: 5, child: _buildMap(officers, selected, user)),
@@ -455,7 +461,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
           v.scheduledFor != null ? 'Officer visiting ${fmt.format(v.scheduledFor!)}' : 'Officer will visit soon',
         ),
       'completed' => ('Completed', Colors.grey.shade600, 'Visit done'),
-      'cancelled' => ('Cancelled', const Color(0xFFDC2626), 'The officer cancelled this visit'),
+      'cancelled' => ('Cancelled', const Color(0xFFDC2626), 'The officer declined or cancelled this visit'),
       _ => (
           'Waiting',
           const Color(0xFFB45309),

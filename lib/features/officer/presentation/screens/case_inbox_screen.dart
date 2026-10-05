@@ -56,7 +56,9 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
       _showResult('Case accepted — ${c.farmerName ?? 'farmer'} has been assigned to you.');
       _refreshCases();
     } catch (e) {
-      _showResult('Could not accept case. Please try again.', isError: true);
+      // Usually the inbox was stale (case cancelled or taken): say so and refresh.
+      _showResult(e.toString().replaceFirst('Exception: ', ''), isError: true);
+      _refreshCases();
     } finally {
       if (mounted) setState(() => _acceptingIds.remove(c.id));
     }

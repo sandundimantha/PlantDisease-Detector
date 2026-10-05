@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -35,15 +37,19 @@ Future<String?> fetchUserRole() async {
   }
 }
 
-/// Role for routing an existing session (splash): live value, else this
-/// user's cached value, else 'farmer'.
+/// Role for routing an existing session (splash). Uses this user's cached
+/// role straight away and refreshes it in the background, so a slow network
+/// does not hold the splash screen; only a first launch waits for the lookup.
 Future<String> resolveUserRole() async {
-  final live = await fetchUserRole();
-  if (live != null) return live;
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return 'farmer';
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getString(_prefsKey(userId)) ?? 'farmer';
+  final cached = prefs.getString(_prefsKey(userId));
+  if (cached != null) {
+    unawaited(fetchUserRole());
+    return cached;
+  }
+  return await fetchUserRole() ?? 'farmer';
 }
 
 Future<void> clearCachedUserRole() async {
