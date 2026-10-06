@@ -221,16 +221,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(context.tr(en: 'Password', si: 'මුරපදය', ta: 'கடவுச்சொல்'), style: AppTextStyles.titleSmall),
-                              TextButton(
-                                onPressed: () {},
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  context.tr(en: 'forgot password?', si: 'මුරපදය අමතකද?', ta: 'கடவுச்சொல் மறந்துவிட்டதா?'),
-                                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary),
+                              const SizedBox(width: 12),
+                              // Flexible so long translations (e.g. Tamil) wrap instead of overflowing.
+                              Flexible(
+                                child: TextButton(
+                                  onPressed: () {},
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    context.tr(en: 'forgot password?', si: 'මුරපදය අමතකද?', ta: 'கடவுச்சொல் மறந்துவிட்டதா?'),
+                                    textAlign: TextAlign.end,
+                                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary),
+                                  ),
                                 ),
                               ),
                             ],

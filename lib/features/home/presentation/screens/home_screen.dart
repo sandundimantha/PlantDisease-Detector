@@ -19,6 +19,9 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
+import 'package:plant_disease_detector/features/home/application/saved_items_provider.dart';
+import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
+import 'package:plant_disease_detector/models/disease_result.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
@@ -862,6 +865,10 @@ class _ScanCard extends StatelessWidget {
                   ),
                 ),
               ),
+              Positioned(
+                top: 8, left: 8,
+                child: _BookmarkButton(scan: scan as ScanRecord),
+              ),
             ],
           ),
           Padding(
@@ -879,6 +886,89 @@ class _ScanCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Saved Items — Create (save) and Delete (unsave) straight from a recent scan.
+class _BookmarkButton extends ConsumerStatefulWidget {
+  final ScanRecord scan;
+  const _BookmarkButton({required this.scan});
+
+  @override
+  ConsumerState<_BookmarkButton> createState() => _BookmarkButtonState();
+}
+
+class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
+  bool _busy = false;
+
+  Future<void> _toggle() async {
+    if (_busy) return;
+    final notifier = ref.read(savedItemsProvider.notifier);
+    final existing = notifier.itemForScan(widget.scan.id);
+    final messenger = ScaffoldMessenger.of(context);
+    final savedText = context.tr(en: 'Saved to Saved Items', si: 'සුරැකි අයිතම වලට සුරැකුණා', ta: 'சேமிக்கப்பட்டவையில் சேர்க்கப்பட்டது');
+    final removedText = context.tr(en: 'Removed from saved items', si: 'සුරැකි අයිතම වලින් ඉවත් කළා', ta: 'சேமிக்கப்பட்டவையிலிருந்து நீக்கப்பட்டது');
+    final viewText = context.tr(en: 'View', si: 'බලන්න', ta: 'பார்');
+    final errorText = context.tr(en: 'Something went wrong. Please try again.', si: 'යමක් වැරදුණා. නැවත උත්සාහ කරන්න.', ta: 'ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.');
+
+    setState(() => _busy = true);
+    try {
+      if (existing == null) {
+        await notifier.saveScan(widget.scan);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(
+          content: Text(savedText),
+          backgroundColor: _emLight,
+          action: SnackBarAction(
+            label: viewText,
+            textColor: _gold,
+            onPressed: () {
+              if (mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedItemsScreen()));
+            },
+          ),
+        ));
+      } else {
+        await notifier.remove(existing.id);
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(SnackBar(content: Text(removedText)));
+      }
+    } catch (_) {
+      // e.g. saved from another device meanwhile — resync with the database.
+      ref.invalidate(savedItemsProvider);
+      messenger.showSnackBar(SnackBar(content: Text(errorText), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = ref.watch(savedItemsProvider).maybeWhen(
+          data: (items) => items.any((item) => item.scanId == widget.scan.id),
+          orElse: () => false,
+        );
+
+    return GestureDetector(
+      onTap: _toggle,
+      child: Container(
+        width: 34, height: 34,
+        decoration: BoxDecoration(
+          color: _white.withValues(alpha: 0.95),
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
+        ),
+        child: _busy
+            ? const Padding(
+                padding: EdgeInsets.all(9),
+                child: CircularProgressIndicator(strokeWidth: 2, color: _emLight),
+              )
+            : Icon(
+                saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                color: saved ? _emLight : _textMute,
+                size: 20,
+              ),
       ),
     );
   }

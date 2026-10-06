@@ -15,6 +15,8 @@ import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/core/auth/user_role.dart';
+import 'package:plant_disease_detector/features/home/application/saved_items_provider.dart';
+import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ProfileScreen — Matches Figma ProfileScreen.tsx
@@ -148,6 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     _buildProfileCard(ref, scanCount),
                     _buildAchievements(achievements),
                     _buildFarmDetails(ref),
+                    _buildSavedItemsLink(ref),
                     _buildSettings(settings),
                     
                     Padding(
@@ -174,6 +177,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             context.tr(en: 'Sign Out', si: 'පිටවීම', ta: 'வெளியேறு'),
                             style: const TextStyle(color: AppColors.signOutText, fontSize: 14, fontWeight: FontWeight.w600),
                           ),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: _confirmDeleteAccount,
+                        icon: const Icon(Icons.delete_forever_outlined, color: AppColors.signOutText, size: 18),
+                        label: Text(
+                          context.tr(en: 'Delete Account', si: 'ගිණුම මකන්න', ta: 'கணக்கை நீக்கு'),
+                          style: const TextStyle(color: AppColors.signOutText, fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -407,6 +420,103 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
     );
+  }
+
+  // Saved Items entry — count is read live from the saved_items table.
+  Widget _buildSavedItemsLink(WidgetRef ref) {
+    final count = ref.watch(savedItemsProvider).maybeWhen(data: (items) => items.length, orElse: () => null);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedItemsScreen())),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          ),
+          child: Row(
+            children: [
+              const Text('🔖', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.tr(en: 'Saved Items', si: 'සුරැකි අයිතම', ta: 'சேமிக்கப்பட்டவை'), style: AppTextStyles.titleSmall.copyWith(fontSize: 14)),
+                    Text(
+                      context.tr(en: 'Bookmarked scans & notes', si: 'සුරැකි ස්කෑන් සහ සටහන්', ta: 'சேமித்த ஸ்கேன்கள் & குறிப்புகள்'),
+                      style: AppTextStyles.bodySmall.copyWith(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              if (count != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+                  child: Text('$count', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.settingsChevron, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Delete Account — confirm, then remove the account in Supabase and sign out.
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(context.tr(en: 'Delete your account?', si: 'ඔබේ ගිණුම මකන්නද?', ta: 'உங்கள் கணக்கை நீக்கவா?')),
+        content: Text(context.tr(
+          en: 'Your profile, scans, saved items, farm logs and consultations will be permanently deleted. This cannot be undone.',
+          si: 'ඔබේ පැතිකඩ, ස්කෑන්, සුරැකි අයිතම, ගොවි සටහන් සහ උපදේශන සදහටම මැකී යයි. මෙය ආපසු හැරවිය නොහැක.',
+          ta: 'உங்கள் சுயவிவரம், ஸ்கேன்கள், சேமித்தவை, பண்ணைப் பதிவுகள் மற்றும் ஆலோசனைகள் நிரந்தரமாக நீக்கப்படும். இதை மீட்டெடுக்க முடியாது.',
+        )),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.tr(en: 'Cancel', si: 'අවලංගු කරන්න', ta: 'ரத்து செய்')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              context.tr(en: 'Delete', si: 'මකන්න', ta: 'நீக்கு'),
+              style: const TextStyle(color: AppColors.signOutText, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final deletedText = context.tr(en: 'Your account has been deleted', si: 'ඔබේ ගිණුම මකා දමන ලදී', ta: 'உங்கள் கணக்கு நீக்கப்பட்டது');
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+    );
+    try {
+      await ref.read(userProvider.notifier).deleteMyAccount();
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      router.go('/login');
+      messenger.showSnackBar(SnackBar(content: Text(deletedText), backgroundColor: AppColors.primary));
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      final message = e is PostgrestException ? e.message : 'Could not delete the account. Please try again.';
+      messenger.showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
+    }
   }
 
   Widget _buildSettings(List<_Setting> settings) {

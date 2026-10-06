@@ -57,6 +57,8 @@ class _SignupScreenState extends State<SignupScreen> {
         data: {
           'full_name': name,
           'district': _selectedDistrict,
+          // Stored on the new profile by handle_new_user() (migration 019).
+          'preferred_lang': AppStrings.currentLocaleCode,
         },
       );
       
@@ -161,10 +163,12 @@ class _SignupScreenState extends State<SignupScreen> {
                     ],
                   ),
                 ),
-                const Spacer(),
-                
-                // Form Container
-                Container(
+                // Form Container — sits at the bottom and scrolls when it is
+                // taller than the space left (long translations, small screens).
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
                   padding: const EdgeInsets.all(32.0),
                   decoration: const BoxDecoration(
                     color: Colors.white,
@@ -291,6 +295,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
+                  ),
+                ),
             ],
           ),
         ),

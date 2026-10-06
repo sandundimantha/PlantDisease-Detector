@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:plant_disease_detector/core/auth/user_role.dart';
 
 class UserData {
   final String fullName;
@@ -128,6 +129,22 @@ class UserNotifier extends StateNotifier<UserData> {
     }
 
     state = user; // Update the Riverpod state
+  }
+
+  // Permanently deletes the signed-in account (see delete_my_account() in
+  // migration 019) and signs out. Throws if the database refuses, in which
+  // case nothing has been deleted and the user stays signed in.
+  Future<void> deleteMyAccount() async {
+    final client = Supabase.instance.client;
+    await client.rpc('delete_my_account');
+    await clearCachedUserRole();
+    try {
+      await client.auth.signOut();
+    } catch (e) {
+      // The server-side session went with the user; the local one is cleared.
+      debugPrint('Sign out after account deletion: $e');
+    }
+    state = UserData();
   }
 }
 
