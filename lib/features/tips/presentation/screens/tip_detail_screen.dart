@@ -36,7 +36,7 @@ class TipDetailScreen extends StatelessWidget {
             children: [
               Chip(label: Text(context.trCrop(tip.crop)), backgroundColor: AppColors.primary.withValues(alpha: 0.1), side: BorderSide.none),
               if (tip.season.isNotEmpty && tip.season != 'Any')
-                Chip(label: Text(tip.season), backgroundColor: AppColors.primary.withValues(alpha: 0.1), side: BorderSide.none),
+                Chip(label: Text(context.trSeason(tip.season)), backgroundColor: AppColors.primary.withValues(alpha: 0.1), side: BorderSide.none),
             ],
           ),
           const SizedBox(height: 12),

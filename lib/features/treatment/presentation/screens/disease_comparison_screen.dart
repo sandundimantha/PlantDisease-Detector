@@ -4,6 +4,7 @@ import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:plant_disease_detector/features/treatment/data/disease_model.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
 import 'package:plant_disease_detector/features/treatment/presentation/screens/treatment_detail_screen.dart';
 
 class DiseaseComparisonScreen extends StatelessWidget {
@@ -16,57 +17,9 @@ class DiseaseComparisonScreen extends StatelessWidget {
     this.diseaseB,
   });
 
-  static const Disease _fallbackA = Disease(
-    id: 'd1',
-    name: 'Tomato Early Blight',
-    cropName: 'Tomato',
-    severity: DiseaseSeverity.high,
-    description: 'Fungal infection caused by Alternaria solani producing target-like concentric rings.',
-    symptoms: [
-      'Brown spots with concentric rings (target board pattern)',
-      'Yellow halo surrounding necrotic lesions',
-      'Starts on older lower leaves, spreads upwards',
-      'Premature defoliation and fruit collar rot',
-    ],
-    causes: [
-      'Alternaria solani fungus spores',
-      'High humidity (>80%) and warm temps (24–29°C)',
-      'Splash dispersal via rain or overhead irrigation',
-    ],
-    treatments: [
-      'Remove and burn infected foliage immediately',
-      'Apply Copper Oxychloride 50% WP (Rs. 950 / 500g)',
-      'Chlorothalonil 75% WP every 7–10 days (Rs. 1,450)',
-      'Ensure 60cm plant spacing for air circulation',
-    ],
-    imageUrl: 'https://images.unsplash.com/photo-1596541570197-047cf395bc24?q=80&w=800&auto=format&fit=crop',
-  );
-
-  static const Disease _fallbackB = Disease(
-    id: 'd2',
-    name: 'Tomato Late Blight',
-    cropName: 'Tomato',
-    severity: DiseaseSeverity.high,
-    description: 'Destructive water mold Phytophthora infestans causing rapid foliage and fruit collapse.',
-    symptoms: [
-      'Large irregular water-soaked dark patches without rings',
-      'White fluffy fungal growth on leaf undersides in humidity',
-      'Rapid stem browning and sudden plant wilt',
-      'Dark greasy firm rot on green tomato fruits',
-    ],
-    causes: [
-      'Phytophthora infestans oomycete pathogen',
-      'Cool wet weather (15–20°C) with persistent fog/rain',
-      'Wind-blown sporangia across neighboring fields',
-    ],
-    treatments: [
-      'Destroy whole infected plants if >40% canopy affected',
-      'Apply Mancozeb 80% WP protectant (Rs. 1,200 / 1kg)',
-      'Metalaxyl + Mancozeb systemic spray (Rs. 2,100 / 250g)',
-      'Switch strictly to drip irrigation at root level',
-    ],
-    imageUrl: 'https://images.unsplash.com/photo-1592424001815-32e6040ea468?q=80&w=800&auto=format&fit=crop',
-  );
+  // Two look-alike diseases, shown when nothing was picked in the library
+  static final Disease _fallbackA = Disease.fromCatalog(DiseaseCatalog.lookup('Tomato Early Blight')!);
+  static final Disease _fallbackB = Disease.fromCatalog(DiseaseCatalog.lookup('Tomato Late Blight')!);
 
   @override
   Widget build(BuildContext context) {
@@ -211,11 +164,17 @@ class DiseaseComparisonScreen extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: SmartImage(
-              src: d.imageUrl,
-              height: 120,
-              fit: BoxFit.cover,
-            ),
+            child: d.imageUrl.isEmpty
+                ? Container(
+                    height: 120,
+                    color: d.severityColor.withValues(alpha: 0.12),
+                    child: Icon(Icons.eco_rounded, color: d.severityColor, size: 44),
+                  )
+                : SmartImage(
+                    src: d.imageUrl,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(12),

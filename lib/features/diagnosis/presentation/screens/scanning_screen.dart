@@ -15,6 +15,8 @@ import 'package:plant_disease_detector/core/providers/location_provider.dart';
 import 'package:plant_disease_detector/core/providers/user_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
 import 'package:plant_disease_detector/shared/utils/uuid.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/leaf_check.dart';
+import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ScanningScreen — Matches Figma ScanningScreen.tsx
@@ -73,6 +75,19 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
     // Give animation at least some time to play
     await Future.delayed(const Duration(milliseconds: 2000));
 
+    if (!mounted) return;
+    // The model labels any photo as one of its 38 classes, so ask before
+    // showing a diagnosis for a photo that does not look like a leaf.
+    final leafRatio = result?['leaf_ratio'] as double?;
+    if (leafRatio != null && !LeafCheck.looksLikeLeaf(leafRatio)) {
+      final proceed = await _confirmNotLeaf();
+      if (!mounted) return;
+      if (!proceed) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const CameraCaptureScreen()));
+        return;
+      }
+    }
+
     if (mounted) {
       final label = result?['label'] as String?;
       final info = label == null ? null : DiseaseCatalog.lookup(label);
@@ -104,6 +119,34 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
         ),
       );
     }
+  }
+
+  Future<bool> _confirmNotLeaf() async {
+    final answer = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.eco_outlined, color: AppColors.warning, size: 36),
+        title: Text(context.tr(en: 'Is this a leaf?', si: 'මෙය කොළයක්ද?', ta: 'இது இலையா?')),
+        content: Text(context.tr(
+          en: 'We could not find a plant leaf in this photo. For a correct result, take a close, clear photo of one leaf in daylight.',
+          si: 'මෙම ඡායාරූපයේ ශාක කොළයක් හමු නොවීය. නිවැරදි ප්‍රතිඵලයක් සඳහා, දිවා ආලෝකයේ එක් කොළයක ළඟින් ගත් පැහැදිලි ඡායාරූපයක් ගන්න.',
+          ta: 'இந்தப் புகைப்படத்தில் செடி இலையைக் கண்டறிய முடியவில்லை. சரியான முடிவுக்கு, பகல் வெளிச்சத்தில் ஒரு இலையை அருகில் தெளிவாகப் படம் எடுக்கவும்.',
+        )),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.tr(en: 'Continue anyway', si: 'කෙසේ වෙතත් ඉදිරියට', ta: 'இருந்தாலும் தொடரவும்')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: Text(context.tr(en: 'Retake photo', si: 'නැවත ඡායාරූපය ගන්න', ta: 'மீண்டும் படம் எடு'), style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    return answer ?? false;
   }
 
   /// Gallery and camera photos live in temporary cache folders that Android

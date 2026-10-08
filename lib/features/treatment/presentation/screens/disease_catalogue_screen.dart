@@ -9,6 +9,7 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/shared/widgets/premium_app_bar.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
 
 class DiseaseCatalogueScreen extends StatefulWidget {
   const DiseaseCatalogueScreen({super.key});
@@ -20,45 +21,18 @@ class DiseaseCatalogueScreen extends StatefulWidget {
 class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
   String _searchQuery = '';
   String _selectedCrop = 'All';
-  final List<String> _cropFilters = ['All', 'Tomato', 'Potato', 'Paddy'];
   final List<Disease> _selectedForCompare = [];
 
   late Future<List<Disease>> _diseasesFuture;
 
-  static const List<Disease> _defaultDiseases = [
-    Disease(
-      id: 'cat_d1',
-      name: 'Tomato Early Blight',
-      cropName: 'Tomato',
-      severity: DiseaseSeverity.high,
-      description: 'Concentric dark target-board lesions on older foliage with yellowing margins.',
-      symptoms: ['Target-like rings', 'Yellow halo surrounding lesions', 'Premature leaf drop'],
-      causes: ['Alternaria solani fungal spores', 'High humidity >80%', 'Rain splashes'],
-      treatments: ['Prune lower leaves', 'Spray Copper Oxychloride 50% WP (Rs. 950)', 'Space plants 60cm'],
-      imageUrl: 'assets/images/scan_tomato.jpg',
-    ),
-    Disease(
-      id: 'cat_d2',
-      name: 'Tomato Late Blight',
-      cropName: 'Tomato',
-      severity: DiseaseSeverity.high,
-      description: 'Rapid destructive water-mold blighting stems, leaves, and green fruits.',
-      symptoms: ['Large irregular water-soaked spots', 'White fuzzy mold on underside', 'Rapid stem browning'],
-      causes: ['Phytophthora infestans', 'Cool wet weather 15–20°C', 'Wind-blown sporangia'],
-      treatments: ['Destroy severely blighted vines', 'Apply Mancozeb 80% WP (Rs. 1,200)', 'Switch to drip irrigation'],
-      imageUrl: 'assets/images/scan_spot.jpg',
-    ),
-    Disease(
-      id: 'cat_d3',
-      name: 'Tomato Leaf Curl Virus',
-      cropName: 'Tomato',
-      severity: DiseaseSeverity.high,
-      description: 'Severe stunting and upward curling of leaves transmitted by whiteflies.',
-      symptoms: ['Upward curling & puckering', 'Stunted bush-like growth', 'Flower and fruit drop'],
-      causes: ['Begomovirus complex', 'Bemisia tabaci (whitefly vector)', 'Hot dry spells'],
-      treatments: ['Apply yellow sticky traps', 'Neem oil spray (Rs. 750 / 500ml)', 'Imidacloprid for vectors (Rs. 1,600)'],
-      imageUrl: 'assets/images/scan_leaf_curl.jpg',
-    ),
+  /// Every disease the AI model can detect (26 diseases from the catalog).
+  static final List<Disease> _catalogDiseases = [
+    for (final info in DiseaseCatalog.all)
+      if (!info.isHealthy) Disease.fromCatalog(info),
+  ];
+
+  /// Common Sri Lankan diseases outside the AI model's 38 classes.
+  static const List<Disease> _extraDiseases = [
     Disease(
       id: 'cat_d4',
       name: 'Potato Black Scurf',
@@ -68,7 +42,7 @@ class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
       symptoms: ['Black dirt-like specks on tubers', 'Stem cankers below soil line', 'Aerial tubers formation'],
       causes: ['Rhizoctonia solani fungus', 'Cold damp soils at planting', 'Infected seed tubers'],
       treatments: ['Use certified disease-free seed', 'Crop rotation with corn/grasses', 'Tuber treatment with Trichoderma'],
-      imageUrl: 'assets/images/scan_powdery.jpg',
+      imageUrl: '',
     ),
     Disease(
       id: 'cat_d5',
@@ -103,12 +77,23 @@ class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
   Future<List<Disease>> _fetchDiseases() async {
     try {
       final response = await Supabase.instance.client.from('diseases').select('*');
-      final list = response.map<Disease>((json) => Disease.fromJson(json)).toList();
-      return list.isNotEmpty ? list : _defaultDiseases;
+      final fromDb = response.map<Disease>((json) => Disease.fromJson(json)).toList();
+      return _merge([...fromDb, ..._extraDiseases]);
     } catch (_) {
-      // Graceful fallback to verified Sri Lankan crop catalogue
-      return _defaultDiseases;
+      // Offline: the catalog and extras are bundled with the app
+      return _merge(_extraDiseases);
     }
+  }
+
+  /// Catalog first; other sources only add diseases the catalog does not cover.
+  static List<Disease> _merge(List<Disease> others) {
+    final seen = {for (final d in _catalogDiseases) d.name.toLowerCase()};
+    final list = [..._catalogDiseases];
+    for (final d in others) {
+      if (seen.add(d.name.toLowerCase())) list.add(d);
+    }
+    list.sort((a, b) => a.cropName == b.cropName ? a.name.compareTo(b.name) : a.cropName.compareTo(b.cropName));
+    return list;
   }
 
   void _toggleCompare(Disease disease) {
@@ -186,50 +171,52 @@ class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
                 ),
               ),
 
-              // Wireframe 6: [ Filter: All Crops | Tomato | Potato | Paddy ]
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                child: Row(
-                  children: _cropFilters.map((crop) {
-                    final isSelected = _selectedCrop == crop;
-                    final cropLabel = switch (crop) {
-                      'All' => context.tr(en: 'All Crops', si: 'සියලු බෝග', ta: 'அனைத்து பயிர்கள்'),
-                      'Tomato' => context.tr(en: 'Tomato', si: 'තක්කාලි', ta: 'தக்காளி'),
-                      'Potato' => context.tr(en: 'Potato', si: 'අර්තාපල්', ta: 'உருளைக்கிழங்கு'),
-                      'Paddy' => context.tr(en: 'Paddy', si: 'වී / ගොයම්', ta: 'நெல்'),
-                      _ => crop,
-                    };
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedCrop = crop),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primary : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected ? AppColors.primary : AppColors.border,
+              // Crop filter chips, built from the crops in the list
+              FutureBuilder<List<Disease>>(
+                future: _diseasesFuture,
+                builder: (context, snapshot) {
+                  final crops = ['All', ...{for (final d in snapshot.data ?? _catalogDiseases) d.cropName}];
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    child: Row(
+                      children: crops.map((crop) {
+                        final isSelected = _selectedCrop == crop;
+                        final cropLabel = crop == 'All'
+                            ? context.tr(en: 'All Crops', si: 'සියලු බෝග', ta: 'அனைத்து பயிர்கள்')
+                            : context.trCrop(crop);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedCrop = crop),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.primary : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected ? AppColors.primary : AppColors.border,
+                                ),
+                                boxShadow: isSelected
+                                    ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 2))]
+                                    : null,
+                              ),
+                              child: Text(
+                                cropLabel,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
-                            boxShadow: isSelected
-                                ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 2))]
-                                : null,
                           ),
-                          child: Text(
-                            cropLabel,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : AppColors.textPrimary,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 8),
@@ -243,18 +230,24 @@ class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
                       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
                     }
 
-                    final diseases = snapshot.data ?? _defaultDiseases;
+                    final diseases = snapshot.data ?? _catalogDiseases;
+                    final q = _searchQuery.trim().toLowerCase();
                     final filteredDiseases = diseases.where((d) {
-                      final matchesQuery = _searchQuery.isEmpty ||
-                          d.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                          d.cropName.toLowerCase().contains(_searchQuery.toLowerCase());
+                      final matchesQuery = q.isEmpty ||
+                          d.name.toLowerCase().contains(q) ||
+                          d.cropName.toLowerCase().contains(q) ||
+                          context.trDisease(d.name).toLowerCase().contains(q) ||
+                          context.trCrop(d.cropName).toLowerCase().contains(q);
                       final matchesCrop = _selectedCrop == 'All' || d.cropName.toLowerCase() == _selectedCrop.toLowerCase();
                       return matchesQuery && matchesCrop;
                     }).toList();
 
                     if (filteredDiseases.isEmpty) {
                       return Center(
-                        child: Text('No diseases found for "$_selectedCrop"', style: AppTextStyles.bodyMedium),
+                        child: Text(
+                          context.tr(en: 'No diseases found', si: 'රෝග හමු නොවීය', ta: 'நோய்கள் எதுவும் இல்லை'),
+                          style: AppTextStyles.bodyMedium,
+                        ),
                       );
                     }
 
@@ -320,12 +313,7 @@ class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
 
   Widget _buildDiseaseCard(Disease disease) {
     final isSelectedForCompare = _selectedForCompare.any((d) => d.id == disease.id);
-    final cropTranslated = switch (disease.cropName) {
-      'Tomato' => context.tr(en: 'Tomato', si: 'තක්කාලි', ta: 'தக்காளி'),
-      'Potato' => context.tr(en: 'Potato', si: 'අර්තාපල්', ta: 'உருளைக்கிழங்கு'),
-      'Paddy' => context.tr(en: 'Paddy', si: 'වී / ගොයම්', ta: 'நெல்'),
-      _ => disease.cropName,
-    };
+    final cropTranslated = context.trCrop(disease.cropName);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -358,13 +346,23 @@ class _DiseaseCatalogueScreenState extends State<DiseaseCatalogueScreen> {
             children: [
               Hero(
                 tag: 'disease_img_${disease.id}',
-                child: SmartImage(
-                  src: disease.imageUrl.isEmpty ? 'assets/images/scan_tomato.jpg' : disease.imageUrl,
-                  width: 90,
-                  height: 96,
-                  fit: BoxFit.cover,
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
-                ),
+                child: disease.imageUrl.isEmpty
+                    ? Container(
+                        width: 90,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          color: disease.severityColor.withValues(alpha: 0.12),
+                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                        ),
+                        child: Icon(Icons.eco_rounded, color: disease.severityColor, size: 36),
+                      )
+                    : SmartImage(
+                        src: disease.imageUrl,
+                        width: 90,
+                        height: 96,
+                        fit: BoxFit.cover,
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                      ),
               ),
               const SizedBox(width: 14),
               Expanded(

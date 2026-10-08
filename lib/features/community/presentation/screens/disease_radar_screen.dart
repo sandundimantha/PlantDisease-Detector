@@ -431,7 +431,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
                                   ),
                                   Text(
-                                    '${context.trDisease(_liveOutbreaks!.first.diseaseName)} ${_liveOutbreaks!.first.distanceKm}km. ${context.tr(en: 'Take precautions.', si: 'පූර්වාරක්ෂක පියවර ගන්න.', ta: 'முன்னெச்சரிக்கை எடுக்கவும்.')}',
+                                    '${_diseaseLabel(context, _liveOutbreaks!.first)} ${_liveOutbreaks!.first.distanceKm}km. ${context.tr(en: 'Take precautions.', si: 'පූර්වාරක්ෂක පියවර ගන්න.', ta: 'முன்னெச்சரிக்கை எடுக்கவும்.')}',
                                     style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11),
                                   ),
                                 ],
@@ -633,8 +633,8 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(context.trDisease(outbreak.diseaseName), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                        Text('${context.trCrop(outbreak.cropType)} · ${outbreak.timeAgo}', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+                        Text(_diseaseLabel(context, outbreak), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                        Text('${_cropLabel(context, outbreak)} · ${_agoLabel(context, outbreak.timeAgo)}', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
                       ],
                     ),
                   ),
@@ -668,7 +668,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '${context.tr(en: 'Recommended: Apply copper-based fungicide. Inspect your', si: 'නිර්දේශය: කොපර් දිලීර නාශක යොදන්න. ඔබේ', ta: 'பரிந்துரை: காப்பர் பூஞ்சைக்கொல்லியைப் பயன்படுத்துங்கள். உங்கள்')} ${context.trCrop(outbreak.cropType)} ${context.tr(en: 'crop immediately.', si: 'වගාව වහාම පරීක්ෂා කරන්න.', ta: 'பயிரை உடனடியாக பரிசோதிக்கவும்.')}',
+                        _advice(context, outbreak),
                         style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12, height: 1.4),
                       ),
                     ),
@@ -702,6 +702,40 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
       ),
     );
   }
+
+  String _diseaseLabel(BuildContext context, OutbreakReport o) => o.diseaseName == 'Unconfirmed disease'
+      ? context.tr(en: 'Unconfirmed disease', si: 'තහවුරු නොකළ රෝගය', ta: 'உறுதிப்படுத்தப்படாத நோய்')
+      : context.trDisease(o.diseaseName);
+
+  String _cropLabel(BuildContext context, OutbreakReport o) => o.cropType == 'Unknown'
+      ? context.tr(en: 'Crop not given', si: 'බෝගය සඳහන් නැත', ta: 'பயிர் குறிப்பிடப்படவில்லை')
+      : context.trCrop(o.cropType);
+
+  /// "Just now", "5 min ago", "3 h ago", "2 d ago" in the app language.
+  String _agoLabel(BuildContext context, String ago) {
+    if (ago == 'Just now') return context.tr(en: 'Just now', si: 'දැන්', ta: 'இப்போது');
+    final m = RegExp(r'^(\d+)\s*(min|h|d) ago$').firstMatch(ago);
+    if (m == null) return ago;
+    final n = m[1];
+    return switch (m[2]) {
+      'min' => context.tr(en: '$n min ago', si: 'මිනි. $n කට පෙර', ta: '$n நிமி. முன்'),
+      'h' => context.tr(en: '$n h ago', si: 'පැය $n කට පෙර', ta: '$n மணி முன்'),
+      _ => context.tr(en: '$n d ago', si: 'දින $n කට පෙර', ta: '$n நாள் முன்'),
+    };
+  }
+
+  /// First step from the disease catalog; general advice when the disease is not known.
+  String _advice(BuildContext context, OutbreakReport o) {
+    final step = DiseaseCatalog.lookup(o.diseaseName)?.treatments.firstOrNull;
+    final label = context.tr(en: 'Recommended', si: 'නිර්දේශය', ta: 'பரிந்துரை');
+    if (step != null) return '$label: ${context.trTreatment(step.title)} — ${context.trTreatment(step.desc)}';
+    return '$label: ${context.tr(
+      en: 'Inspect your crop today and ask your Agriculture Instructor before spraying anything.',
+      si: 'අදම ඔබේ වගාව පරීක්ෂා කර කිසිවක් ඉසීමට පෙර කෘෂිකර්ම උපදේශකගෙන් විමසන්න.',
+      ta: 'இன்றே உங்கள் பயிரைச் சரிபார்த்து, எதையும் தெளிப்பதற்கு முன் வேளாண் போதனாசிரியரிடம் கேளுங்கள்.',
+    )}';
+  }
+
 }
 
 // ── Custom Heat Zone Painter for Map Markers ────────────────────────────────

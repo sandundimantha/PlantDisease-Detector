@@ -16,6 +16,8 @@ class FarmingTip {
   final String bodyEn;
   final String titleSi;
   final String bodySi;
+  final String titleTa;
+  final String bodyTa;
   final DateTime publishedAt;
 
   const FarmingTip({
@@ -26,6 +28,8 @@ class FarmingTip {
     required this.bodyEn,
     required this.titleSi,
     required this.bodySi,
+    this.titleTa = '',
+    this.bodyTa = '',
     required this.publishedAt,
   });
 
@@ -37,12 +41,22 @@ class FarmingTip {
         bodyEn: j['body_en'] ?? j['body_si'] ?? '',
         titleSi: j['title_si'] ?? '',
         bodySi: j['body_si'] ?? '',
+        titleTa: j['title_ta'] ?? '',
+        bodyTa: j['body_ta'] ?? '',
         publishedAt: DateTime.tryParse(j['published_at']?.toString() ?? '') ?? DateTime.now(),
       );
 
-  /// Sinhala text when the app is in Sinhala; English otherwise (no Tamil text yet).
-  String title(String code) => code == 'si' && titleSi.isNotEmpty ? titleSi : titleEn;
-  String body(String code) => code == 'si' && bodySi.isNotEmpty ? bodySi : bodyEn;
+  /// Text in the app language; English when that language is missing.
+  String title(String code) => switch (code) {
+        'si' when titleSi.isNotEmpty => titleSi,
+        'ta' when titleTa.isNotEmpty => titleTa,
+        _ => titleEn,
+      };
+  String body(String code) => switch (code) {
+        'si' when bodySi.isNotEmpty => bodySi,
+        'ta' when bodyTa.isNotEmpty => bodyTa,
+        _ => bodyEn,
+      };
 
   int get readMinutes => (bodyEn.split(' ').length / 180).ceil().clamp(1, 10);
 }
@@ -112,7 +126,7 @@ class TipsFeedScreen extends ConsumerWidget {
                           spacing: 8,
                           children: [
                             _chip(context.trCrop(tip.crop)),
-                            if (tip.season.isNotEmpty && tip.season != 'Any') _chip(tip.season),
+                            if (tip.season.isNotEmpty && tip.season != 'Any') _chip(context.trSeason(tip.season)),
                           ],
                         ),
                         const SizedBox(height: 10),

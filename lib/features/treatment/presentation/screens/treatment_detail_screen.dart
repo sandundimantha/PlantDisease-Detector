@@ -28,225 +28,126 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
   // Checkbox state for tasks: map key = '$tabIndex-$taskIndex'
   final Map<String, bool> _stepStates = {};
 
-  final Map<int, List<Map<String, dynamic>>> _treatmentTasks = {
-    0: [
-      {
-        'title': 'Neem Leaf Extract Spray',
-        'subtitle': 'Mix 50ml neem oil in 10L water with soap',
-        'time': 'Early Morning',
-        'cost': 'Rs. 450',
-        'icon': Icons.eco_rounded,
-      },
-      {
-        'title': 'Prune Diseased Foliage',
-        'subtitle': 'Sterilize shears, remove bottom 30cm leaves',
-        'time': '7:30 AM',
-        'cost': 'Free',
-        'icon': Icons.content_cut_rounded,
-      },
-      {
-        'title': 'Wood Ash Soil Dusting',
-        'subtitle': 'Dust dry ash around root zones to balance pH',
-        'time': 'Evening',
-        'cost': 'Rs. 150',
-        'icon': Icons.grass_rounded,
-      },
-      {
-        'title': 'Trichoderma Bio-Agent',
-        'subtitle': 'Incorporate antagonistic bio-culture into compost',
-        'time': 'Weekly',
-        'cost': 'Rs. 850',
-        'icon': Icons.science_outlined,
-      },
-    ],
-    1: [
-      {
-        'title': 'Copper Oxychloride 50 WP',
-        'subtitle': 'Apply 30g per 10L water on whole canopy',
-        'time': '7:00 AM (Calm wind)',
-        'cost': 'Rs. 1,450',
-        'icon': Icons.water_drop_outlined,
-      },
-      {
-        'title': 'Mancozeb 75% WG Spray',
-        'subtitle': 'Alternate with copper spray to prevent resistance',
-        'time': 'Every 10 days',
-        'cost': 'Rs. 1,200',
-        'icon': Icons.medication_liquid_rounded,
-      },
-      {
-        'title': 'Wear Certified PPE Gear',
-        'subtitle': 'Safety goggles, N95 respirator, and rubber gloves',
-        'time': 'Before spraying',
-        'cost': 'Rs. 850',
-        'icon': Icons.shield_outlined,
-      },
-      {
-        'title': 'Observe Pre-Harvest Interval (PHI)',
-        'subtitle': 'Wait minimum 7 days before picking tomatoes',
-        'time': '7 Days Waiting',
-        'cost': 'Crucial',
-        'icon': Icons.timer_outlined,
-      },
-    ],
-    2: [
-      {
-        'title': 'Install Drip Irrigation',
-        'subtitle': 'Direct water strictly to soil; avoid wet foliage',
-        'time': 'Continuous',
-        'cost': 'Rs. 2,200',
-        'icon': Icons.opacity_rounded,
-      },
-      {
-        'title': 'Ensure 60cm Plant Spacing',
-        'subtitle': 'Promotes aeration and fast drying of dew',
-        'time': 'Planting stage',
-        'cost': 'Free',
-        'icon': Icons.space_bar_rounded,
-      },
-      {
-        'title': 'Stake & Trellis Vines',
-        'subtitle': 'Elevate leaves above soil splash pathogens',
-        'time': 'Growth stage',
-        'cost': 'Rs. 500',
-        'icon': Icons.fence_rounded,
-      },
-      {
-        'title': 'Crop Rotation with Legumes',
-        'subtitle': 'Do not plant Solanaceae crops consecutively',
-        'time': 'Next Season',
-        'cost': 'Free',
-        'icon': Icons.sync_rounded,
-      },
-    ],
+  DiseaseInfo? get _info => DiseaseCatalog.lookup(widget.diseaseName);
+
+  // Indicative retail prices (LKR) for common pack sizes in Sri Lanka.
+  static const Map<String, (String, int, IconData)> _products = {
+    'mancozeb': ('Mancozeb 80% WP · 1 kg', 1200, Icons.science_outlined),
+    'copper': ('Copper Oxychloride 50% WP · 500 g', 950, Icons.science_outlined),
+    'chlorothalonil': ('Chlorothalonil 75% WP · 500 g', 1450, Icons.science_outlined),
+    'metalaxyl': ('Metalaxyl + Mancozeb · 250 g', 2100, Icons.science_outlined),
+    'captan': ('Captan 50% WP · 500 g', 1300, Icons.science_outlined),
+    'propiconazole': ('Propiconazole 250 EC · 100 ml', 1100, Icons.science_outlined),
+    'azoxystrobin': ('Azoxystrobin 250 SC · 100 ml', 1900, Icons.science_outlined),
+    'myclobutanil': ('Myclobutanil 10% WP · 100 g', 1250, Icons.science_outlined),
+    'hexaconazole': ('Hexaconazole 5% SC · 100 ml', 650, Icons.science_outlined),
+    'imidacloprid': ('Imidacloprid 200 SL · 100 ml', 850, Icons.pest_control_outlined),
+    'abamectin': ('Abamectin 1.8 EC · 100 ml', 900, Icons.pest_control_outlined),
+    'sulphur': ('Wettable Sulphur 80% · 1 kg', 600, Icons.eco_outlined),
+    'neem': ('Neem Oil · 250 ml', 950, Icons.eco_outlined),
   };
 
-  final Map<int, List<Map<String, String>>> _recommendedProducts = {
-    0: [
-      {
-        'name': 'Bio Neem Oil 250ml',
-        'price': 'Rs. 950',
-        'image': 'https://images.unsplash.com/photo-1608687352332-9c3f1debc347?q=80&w=200&auto=format&fit=crop',
-      },
-      {
-        'name': 'Organic Compost 5kg',
-        'price': 'Rs. 650',
-        'image': 'https://images.unsplash.com/photo-1627920769931-50e42f9e403d?q=80&w=200&auto=format&fit=crop',
-      },
-      {
-        'name': 'Trichoderma Harzianum 500g',
-        'price': 'Rs. 850',
-        'image': 'https://images.unsplash.com/photo-1584483789066-50ba68dd6531?q=80&w=200&auto=format&fit=crop',
-      },
-    ],
-    1: [
-      {
-        'name': 'Copper Fungicide 500g',
-        'price': 'Rs. 1,450',
-        'image': 'https://images.unsplash.com/photo-1584483789066-50ba68dd6531?q=80&w=200&auto=format&fit=crop',
-      },
-      {
-        'name': 'Mancozeb 75% WG 500g',
-        'price': 'Rs. 1,200',
-        'image': 'https://images.unsplash.com/photo-1627920769931-50e42f9e403d?q=80&w=200&auto=format&fit=crop',
-      },
-      {
-        'name': 'N95 Respirator + Gloves Set',
-        'price': 'Rs. 850',
-        'image': 'https://images.unsplash.com/photo-1584483789066-50ba68dd6531?q=80&w=200&auto=format&fit=crop',
-      },
-    ],
-    2: [
-      {
-        'name': 'Drip Irrigation Kit (50m)',
-        'price': 'Rs. 2,200',
-        'image': 'https://images.unsplash.com/photo-1584483789066-50ba68dd6531?q=80&w=200&auto=format&fit=crop',
-      },
-      {
-        'name': 'Bypass Pruning Shears',
-        'price': 'Rs. 1,950',
-        'image': 'https://images.unsplash.com/photo-1416879598555-46e38bc86445?q=80&w=200&auto=format&fit=crop',
-      },
-      {
-        'name': 'Bamboo Trellis Stakes (x10)',
-        'price': 'Rs. 600',
-        'image': 'https://images.unsplash.com/photo-1627920769931-50e42f9e403d?q=80&w=200&auto=format&fit=crop',
-      },
-    ],
-  };
+  static const _chemicalWords = [
+    'fungicide', 'bactericide', 'miticide', 'mancozeb', 'copper', 'chlorothalonil', 'captan',
+    'propiconazole', 'azoxystrobin', 'myclobutanil', 'metalaxyl', 'hexaconazole', 'imidacloprid', 'abamectin',
+  ];
 
-  Widget _buildDiseaseSpecificPlan(DiseaseInfo info) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(info.isHealthy ? Icons.eco_rounded : Icons.healing_rounded, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  info.isHealthy
-                      ? context.tr(en: 'Keep your crop healthy', si: 'ඔබේ වගාව නිරෝගීව තබා ගන්න', ta: 'உங்கள் பயிரை ஆரோக்கியமாக வைத்திருங்கள்')
-                      : context.tr(en: 'Recommended for this disease', si: 'මෙම රෝගය සඳහා නිර්දේශිත', ta: 'இந்த நோய்க்கு பரிந்துரைக்கப்படுகிறது'),
-                  style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(info.pathogen, style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic)),
-          const SizedBox(height: 12),
-          for (var i = 0; i < info.treatments.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(context.trTreatment(info.treatments[i].title), style: AppTextStyles.titleSmall.copyWith(fontSize: 14)),
-                        const SizedBox(height: 2),
-                        Text(context.trTreatment(info.treatments[i].desc), style: AppTextStyles.bodySmall),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          Text(
-            context.tr(
-              en: 'Follow the dose on the product label and check with your Agriculture Instructor before spraying.',
-              si: 'නිෂ්පාදන ලේබලයේ මාත්‍රාව අනුගමනය කර ඉසීමට පෙර ඔබේ කෘෂිකර්ම උපදේශකගෙන් විමසන්න.',
-              ta: 'தயாரிப்பு லேபிளில் உள்ள அளவைப் பின்பற்றி, தெளிப்பதற்கு முன் உங்கள் வேளாண் போதனாசிரியரிடம் உறுதிப்படுத்தவும்.',
-            ),
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
-          ),
-        ],
-      ),
-    );
+  /// 0 organic · 1 chemical · 2 cultural
+  static int _category(DiseaseStep step) {
+    final text = '${step.title} ${step.desc}'.toLowerCase();
+    if (_chemicalWords.any(text.contains)) return 1;
+    if (text.contains('neem') || text.contains('sulphur')) return 0;
+    return 2;
   }
+
+  /// Steps for the selected tab: this disease's own steps first, then general
+  /// advice that is safe for any crop.
+  List<Map<String, dynamic>> _tasksFor(int tab) {
+    final own = (_info?.treatments ?? const <DiseaseStep>[])
+        .where((s) => _category(s) == tab && !s.title.startsWith('Confirm with'))
+        .map((s) => {
+              'title': context.trTreatment(s.title),
+              'subtitle': context.trTreatment(s.desc),
+              'time': context.tr(en: 'For this disease', si: 'මෙම රෝගය සඳහා', ta: 'இந்த நோய்க்கு'),
+              'own': true,
+            });
+    final general = switch (tab) {
+      0 => [
+          {
+            'title': context.tr(en: 'Neem Leaf Extract Spray', si: 'කොහොඹ කොළ සාර ඉසීම', ta: 'வேப்பிலைச் சாறு தெளிப்பு'),
+            'subtitle': context.tr(en: 'Mix 50 ml neem oil with a little soap in 10 L water; spray in the evening.', si: 'කොහොඹ තෙල් මි.ලී. 50 ක් සබන් ස්වල්පයක් සමඟ ජලය ලීටර් 10 ක මිශ්‍ර කර සවස ඉසින්න.', ta: '50 மி.லி வேப்ப எண்ணெயை சிறிது சோப்புடன் 10 லி நீரில் கலந்து மாலையில் தெளிக்கவும்.'),
+            'time': context.tr(en: 'Evening', si: 'සවස', ta: 'மாலை'),
+          },
+          {
+            'title': context.tr(en: 'Trichoderma Bio-Agent', si: 'ට්‍රයිකොඩර්මා ජෛව කාරකය', ta: 'டிரைக்கோடெர்மா உயிர்க்காரணி'),
+            'subtitle': context.tr(en: 'Mix the bio-culture into compost before applying it around the plants.', si: 'පැල වටා යෙදීමට පෙර ජෛව සංස්කෘතිය කොම්පෝස්ට් සමඟ මිශ්‍ර කරන්න.', ta: 'செடிகளைச் சுற்றி இடுவதற்கு முன் உயிர்க் கலவையை உரத்துடன் கலக்கவும்.'),
+            'time': context.tr(en: 'Weekly', si: 'සතිපතා', ta: 'வாராந்திர'),
+          },
+          {
+            'title': context.tr(en: 'Add Compost', si: 'කොම්පෝස්ට් යොදන්න', ta: 'மட்கிய உரம் இடுங்கள்'),
+            'subtitle': context.tr(en: 'Well-rotted compost feeds the soil and helps plants resist disease.', si: 'හොඳින් දිරාපත් වූ කොම්පෝස්ට් පස පෝෂණය කර පැලවලට රෝගවලට ඔරොත්තු දීමට උපකාරී වේ.', ta: 'நன்கு மட்கிய உரம் மண்ணை வளப்படுத்தி செடிகள் நோயை எதிர்க்க உதவுகிறது.'),
+            'time': context.tr(en: 'Before planting', si: 'සිටුවීමට පෙර', ta: 'நடவுக்கு முன்'),
+          },
+        ],
+      1 => [
+          {
+            'title': context.tr(en: 'Wear Protective Gear', si: 'ආරක්ෂක ඇඳුම් පළඳින්න', ta: 'பாதுகாப்பு உடை அணியுங்கள்'),
+            'subtitle': context.tr(en: 'Gloves, mask and goggles; do not spray against the wind.', si: 'අත්වැසුම්, මුහුණු ආවරණ සහ ඇස් කණ්ණාඩි; සුළඟට එරෙහිව ඉසින්න එපා.', ta: 'கையுறை, முகக்கவசம், கண்ணாடி; காற்றுக்கு எதிராகத் தெளிக்க வேண்டாம்.'),
+            'time': context.tr(en: 'Before spraying', si: 'ඉසීමට පෙර', ta: 'தெளிப்பதற்கு முன்'),
+          },
+          {
+            'title': context.tr(en: 'Respect the Waiting Period', si: 'පොරොත්තු කාලය රකින්න', ta: 'காத்திருப்பு காலத்தைக் கடைப்பிடியுங்கள்'),
+            'subtitle': context.tr(en: 'Do not harvest before the pre-harvest interval on the label.', si: 'ලේබලයේ සඳහන් අස්වනු පෙර කාලය ගතවීමට පෙර අස්වනු නොනෙළන්න.', ta: 'லேபிளில் உள்ள அறுவடைக்கு முந்தைய இடைவெளிக்கு முன் அறுவடை செய்ய வேண்டாம்.'),
+            'time': context.tr(en: 'See label', si: 'ලේබලය බලන්න', ta: 'லேபிளைப் பார்க்கவும்'),
+          },
+        ],
+      _ => [
+          {
+            'title': context.tr(en: 'Space Plants Well', si: 'පැල අතර හොඳ පරතරයක් තබන්න', ta: 'செடிகளுக்கு நல்ல இடைவெளி விடுங்கள்'),
+            'subtitle': context.tr(en: 'Good spacing lets air move and leaves dry quickly.', si: 'හොඳ පරතරය වාතය ගමන් කිරීමට සහ කොළ ඉක්මනින් වියළීමට ඉඩ දෙයි.', ta: 'நல்ல இடைவெளி காற்று செல்லவும் இலைகள் விரைவாக உலரவும் உதவுகிறது.'),
+            'time': context.tr(en: 'Planting stage', si: 'සිටුවීමේ අවධිය', ta: 'நடவு நிலை'),
+          },
+          {
+            'title': context.tr(en: 'Water at the Base', si: 'මුල් අසලට ජලය දමන්න', ta: 'அடிப்பகுதியில் நீர் பாய்ச்சுங்கள்'),
+            'subtitle': context.tr(en: 'Drip or base watering keeps leaves dry and slows disease.', si: 'බිංදු හෝ මුල් අසලට ජලය දැමීම කොළ වියළිව තබා රෝග අඩු කරයි.', ta: 'சொட்டு அல்லது அடிப்பகுதி நீர்ப்பாசனம் இலைகளை உலர்வாக வைத்து நோயைக் குறைக்கிறது.'),
+            'time': context.tr(en: 'Daily', si: 'දිනපතා', ta: 'தினமும்'),
+          },
+          {
+            'title': context.tr(en: 'Rotate Crops', si: 'බෝග මාරු කරන්න', ta: 'பயிர்களைச் சுழற்சி செய்யுங்கள்'),
+            'subtitle': context.tr(en: 'Do not plant the same crop family in the same bed next season.', si: 'ඊළඟ කන්නයේ එම පාත්තියේම එකම බෝග පවුල වගා නොකරන්න.', ta: 'அடுத்த பருவத்தில் அதே பாத்தியில் அதே பயிர்க் குடும்பத்தை நட வேண்டாம்.'),
+            'time': context.tr(en: 'Next season', si: 'ඊළඟ කන්නය', ta: 'அடுத்த பருவம்'),
+          },
+        ],
+    };
+    return [...own, ...general];
+  }
+
+  /// Products named in this disease's steps for the tab (organic: neem/sulphur,
+  /// chemical: active ingredients). Cultural steps need no purchases.
+  List<(String, int, IconData)> _productsFor(int tab) {
+    if (tab == 2) return const [];
+    final text = (_info?.treatments ?? const <DiseaseStep>[])
+        .where((s) => _category(s) == tab)
+        .map((s) => '${s.title} ${s.desc}'.toLowerCase())
+        .join(' ');
+    final keys = tab == 0 ? ['neem', 'sulphur'] : _products.keys.where((k) => k != 'neem' && k != 'sulphur');
+    final found = [for (final k in keys) if (text.contains(k)) _products[k]!];
+    if (found.isEmpty && tab == 0) return [_products['neem']!];
+    return found;
+  }
+
+  String _costLabel(List<(String, int, IconData)> products) {
+    if (products.isEmpty) return context.tr(en: 'No purchase needed', si: 'මිලදී ගැනීමක් අවශ්‍ය නැත', ta: 'வாங்க வேண்டியதில்லை');
+    final total = products.fold<int>(0, (sum, p) => sum + p.$2);
+    return '${context.tr(en: 'Est. Cost', si: 'ඇස්තමේන්තු පිරිවැය', ta: 'மதிப்பிடப்பட்ட செலவு')}: Rs. ${_formatRs(total)}';
+  }
+
+  static String _formatRs(int v) => v.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
 
   @override
   Widget build(BuildContext context) {
-    final tasks = _treatmentTasks[_selectedTabIndex] ?? [];
-    final products = _recommendedProducts[_selectedTabIndex] ?? [];
+    final tasks = _tasksFor(_selectedTabIndex);
+    final products = _productsFor(_selectedTabIndex);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -279,7 +180,7 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                     fit: StackFit.expand,
                     children: [
                       const SmartImage(
-                        src: 'https://images.unsplash.com/photo-1592424001815-32e6040ea468?q=80&w=800&auto=format&fit=crop',
+                        src: 'assets/images/hero_leaf.jpg',
                         fit: BoxFit.cover,
                       ),
                       // Dark gradient overlay for text readability
@@ -307,13 +208,10 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Steps specific to the detected disease (from the catalog)
-                      if (DiseaseCatalog.lookup(widget.diseaseName) case final info?) ...[
-                        _buildDiseaseSpecificPlan(info),
-                        const SizedBox(height: 24),
+                      if (_info != null) ...[
                         Text(
-                          context.tr(en: 'General good practice', si: 'සාමාන්‍ය හොඳ පිළිවෙත්', ta: 'பொதுவான நல்ல நடைமுறைகள்'),
-                          style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary),
+                          '${context.tr(en: 'Cause', si: 'හේතුව', ta: 'காரணம்')}: ${_info!.pathogen}',
+                          style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic),
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -349,11 +247,7 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _selectedTabIndex == 0
-                                        ? '${context.tr(en: 'Est. Cost', si: 'ඇස්තමේන්තු පිරිවැය', ta: 'மதிப்பிடப்பட்ட செலவு')}: Rs. 950 - 1,450'
-                                        : (_selectedTabIndex == 1
-                                            ? '${context.tr(en: 'Est. Cost', si: 'ඇස්තමේන්තු පිරිවැය', ta: 'மதிப்பிடப்பட்ட செலவு')}: Rs. 2,650'
-                                            : '${context.tr(en: 'Est. Cost', si: 'ඇස්තමේන්තු පිරිවැය', ta: 'மதிப்பிடப்பட்ட செலவு')}: Rs. 0 - 2,200'),
+                                    _costLabel(products),
                                     style: AppTextStyles.titleSmall.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.primary,
@@ -499,25 +393,18 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                                               padding: const EdgeInsets.symmetric(
                                                   horizontal: 8, vertical: 3),
                                               decoration: BoxDecoration(
-                                                color: AppColors.cardSurface,
+                                                color: task['own'] == true ? AppColors.primary.withValues(alpha: 0.12) : AppColors.cardSurface,
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Text(
                                                 task['time'] as String,
                                                 style: AppTextStyles.labelSmall.copyWith(
-                                                  color: AppColors.textSecondary,
+                                                  color: task['own'] == true ? AppColors.primary : AppColors.textSecondary,
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              task['cost'] as String,
-                                              style: AppTextStyles.labelSmall.copyWith(
-                                                color: AppColors.primary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
+
                                           ],
                                         ),
                                       ],
@@ -531,34 +418,41 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // Recommended Sri Lankan Agricultural Products
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            context.tr(en: 'Recommended Inputs (LKR)', si: 'නිර්දේශිත ද්‍රව්‍ය (රු.)', ta: 'பரிந்துரைக்கப்பட்ட பொருட்கள் (ரூ.)'),
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text(context.tr(en: 'Indicative', si: 'ආසන්න', ta: 'தோராயம்'), style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        height: 104,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          itemCount: products.length,
-                          itemBuilder: (context, idx) {
-                            final prod = products[idx];
-                            return _buildProductCard(
-                              prod['name']!,
-                              prod['price']!,
-                              prod['image']!,
-                            );
-                          },
+                      // Products named in the steps above, with indicative prices
+                      if (products.isNotEmpty) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              context.tr(en: 'Recommended Inputs (LKR)', si: 'නිර්දේශිත ද්‍රව්‍ය (රු.)', ta: 'பரிந்துரைக்கப்பட்ட பொருட்கள் (ரூ.)'),
+                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            Text(context.tr(en: 'Indicative', si: 'ආසන්න', ta: 'தோராயம்'), style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                          ],
                         ),
-                      ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          height: 84,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            clipBehavior: Clip.none,
+                            itemCount: products.length,
+                            itemBuilder: (context, idx) {
+                              final (name, price, icon) = products[idx];
+                              return _buildProductCard(name, 'Rs. ${_formatRs(price)}', icon);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          context.tr(
+                            en: 'Follow the dose on the product label and check with your Agriculture Instructor before spraying.',
+                            si: 'නිෂ්පාදන ලේබලයේ මාත්‍රාව අනුගමනය කර ඉසීමට පෙර ඔබේ කෘෂිකර්ම උපදේශකගෙන් විමසන්න.',
+                            ta: 'தயாரிப்பு லேபிளில் உள்ள அளவைப் பின்பற்றி, தெளிப்பதற்கு முன் உங்கள் வேளாண் போதனாசிரியரிடம் உறுதிப்படுத்தவும்.',
+                          ),
+                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                        ),
+                      ],
                       const SizedBox(height: 120), // Bottom button clearance
                     ],
                   ),
@@ -596,7 +490,7 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => TreatmentReminderScreen(
-                            treatmentTitle: '${_tabs[_selectedTabIndex]} Treatment',
+                            treatmentTitle: tasks.isNotEmpty ? tasks.first['title'] as String : _tabs[_selectedTabIndex],
                             diseaseName: widget.diseaseName,
                           ),
                         ),
@@ -626,7 +520,7 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
     );
   }
 
-  Widget _buildProductCard(String name, String price, String imageUrl) {
+  Widget _buildProductCard(String name, String price, IconData icon) {
     return Container(
       width: 220,
       margin: const EdgeInsets.only(right: 14),
@@ -645,14 +539,14 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SmartImage(
-              src: imageUrl,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(icon, color: AppColors.primary),
           ),
           const SizedBox(width: 12),
           Expanded(

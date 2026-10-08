@@ -28,5 +28,5 @@ void main() {
     } catch (e) {
       print('Failed to add user: $e');
     }
-  });
+  }, skip: 'Manual script: creates a real account on the shared Supabase project. Run it on purpose only.');
 }

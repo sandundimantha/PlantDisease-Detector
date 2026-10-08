@@ -1,3 +1,4 @@
+import 'package:plant_disease_detector/core/services/notification_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
@@ -263,6 +264,10 @@ final liveConsultationProvider =
 // Live messages for one request (farmer side; officer side uses ChatNotifier)
 final consultationMessagesProvider =
     StreamProvider.autoDispose.family<List<ConsultationMessage>, String>((ref, id) {
+  NotificationService.openChatId = id;
+  ref.onDispose(() {
+    if (NotificationService.openChatId == id) NotificationService.openChatId = null;
+  });
   return Supabase.instance.client
       .from('consultation_messages')
       .stream(primaryKey: ['id'])

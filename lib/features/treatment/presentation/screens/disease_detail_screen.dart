@@ -5,6 +5,8 @@ import 'package:plant_disease_detector/features/treatment/data/disease_model.dar
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'dart:ui';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
+import 'package:plant_disease_detector/features/treatment/presentation/screens/treatment_detail_screen.dart';
 
 class DiseaseDetailScreen extends StatelessWidget {
   final Disease disease;
@@ -12,6 +14,9 @@ class DiseaseDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final info = DiseaseCatalog.lookup(disease.name);
+    final steps = info?.treatments ?? [for (final t in disease.treatments) DiseaseStep(t, '')];
+    final overview = info == null ? disease.description : _overview(context, info);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -42,13 +47,15 @@ class DiseaseDetailScreen extends StatelessWidget {
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 24, bottom: 16, right: 24),
+              titlePadding: const EdgeInsetsDirectional.only(start: 64, bottom: 16, end: 24), // clear the back button when collapsed
               title: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     context.trDisease(disease.name),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -64,7 +71,7 @@ class DiseaseDetailScreen extends StatelessWidget {
                   Hero(
                     tag: 'disease_img_${disease.id}',
                     child: SmartImage(
-                      src: disease.imageUrl.isEmpty ? 'assets/images/scan_tomato.jpg' : disease.imageUrl,
+                      src: disease.imageUrl.isEmpty ? 'assets/images/hero_leaf.jpg' : disease.imageUrl,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -107,7 +114,7 @@ class DiseaseDetailScreen extends StatelessWidget {
                   // Description
                   Text(context.tr(en: 'Overview', si: 'දළ විශ්ලේෂණය', ta: 'கண்ணோட்டம்'), style: AppTextStyles.titleMedium),
                   const SizedBox(height: 8),
-                  Text(disease.description, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.5)),
+                  Text(overview, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.5)),
                   const SizedBox(height: 32),
 
                   // Symptoms
@@ -133,9 +140,34 @@ class DiseaseDetailScreen extends StatelessWidget {
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
                     ),
                     child: Column(
-                      children: List.generate(disease.treatments.length, (index) {
-                        return _buildTreatmentStep(index + 1, context.trTreatment(disease.treatments[index]), isLast: index == disease.treatments.length - 1);
+                      children: List.generate(steps.length, (index) {
+                        return _buildTreatmentStep(
+                          index + 1,
+                          context.trTreatment(steps[index].title),
+                          steps[index].desc.isEmpty ? null : context.trTreatment(steps[index].desc),
+                          isLast: index == steps.length - 1,
+                        );
                       }),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => TreatmentDetailScreen(diseaseName: disease.name, cropName: disease.cropName)),
+                      ),
+                      icon: const Icon(Icons.healing_rounded, color: Colors.white),
+                      label: Text(
+                        context.tr(en: 'Open Treatment Plan', si: 'ප්‍රතිකාර සැලැස්ම විවෘත කරන්න', ta: 'சிகிச்சைத் திட்டத்தைத் திறக்கவும்'),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 60),
@@ -146,6 +178,26 @@ class DiseaseDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _overview(BuildContext context, DiseaseInfo info) {
+    final cause = context.tr(
+      en: '${context.trDisease(info.label)} is caused by ${info.pathogen}.',
+      si: '${context.trDisease(info.label)} ඇති වන්නේ ${info.pathogen} නිසාය.',
+      ta: '${context.trDisease(info.label)} ${info.pathogen} மூலம் ஏற்படுகிறது.',
+    );
+    final control = info.treatable
+        ? context.tr(
+            en: 'It can be controlled if you act early. Follow the steps below.',
+            si: 'ඉක්මනින් ක්‍රියා කළහොත් එය පාලනය කළ හැක. පහත පියවර අනුගමනය කරන්න.',
+            ta: 'விரைவில் செயல்பட்டால் இதைக் கட்டுப்படுத்தலாம். கீழே உள்ள படிகளைப் பின்பற்றவும்.',
+          )
+        : context.tr(
+            en: 'There is no cure once a plant is infected. Remove infected plants and protect healthy ones.',
+            si: 'පැලයක් ආසාදනය වූ පසු සුවයක් නැත. ආසාදිත පැල ඉවත් කර නිරෝගී පැල ආරක්ෂා කරන්න.',
+            ta: 'ஒரு செடி பாதிக்கப்பட்டால் குணப்படுத்த முடியாது. பாதிக்கப்பட்ட செடிகளை அகற்றி ஆரோக்கியமானவற்றைப் பாதுகாக்கவும்.',
+          );
+    return '$cause $control';
   }
 
   Widget _buildQuickBadge(IconData icon, String label, Color color) {
@@ -200,7 +252,7 @@ class DiseaseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTreatmentStep(int step, String text, {bool isLast = false}) {
+  Widget _buildTreatmentStep(int step, String text, String? detail, {bool isLast = false}) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +278,23 @@ class DiseaseDetailScreen extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24.0, top: 2),
-              child: Text(text, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.4)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      height: 1.4,
+                      fontWeight: detail == null ? FontWeight.normal : FontWeight.w700,
+                    ),
+                  ),
+                  if (detail != null) ...[
+                    const SizedBox(height: 4),
+                    Text(detail, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, height: 1.4)),
+                  ],
+                ],
+              ),
             ),
           ),
         ],

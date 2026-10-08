@@ -1,3 +1,4 @@
+import 'package:plant_disease_detector/core/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,6 +42,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
   void _initializeChat() {
     if (_chatInitialized || _consultation == null) return;
     _chatInitialized = true;
+    NotificationService.openChatId = _consultation!.id;
     ref.read(chatProvider(_consultation!.id).notifier).initialize(_consultation!.id);
   }
 
@@ -58,6 +60,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
 
   @override
   void dispose() {
+    if (NotificationService.openChatId == _consultation?.id) NotificationService.openChatId = null;
     _chatController.dispose();
     _scrollController.dispose();
     super.dispose();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
 
 enum DiseaseSeverity { low, medium, high }
 
@@ -56,6 +57,22 @@ class Disease {
         return 'High Severity';
     }
   }
+  /// Builds a library entry from the offline catalog used by the AI model.
+  /// [description] is left empty; screens show a localized overview instead.
+  factory Disease.fromCatalog(DiseaseInfo info) {
+    return Disease(
+      id: 'cat_${info.label}',
+      name: info.label,
+      cropName: info.crop,
+      severity: _parseSeverity(info.severity),
+      description: '',
+      symptoms: info.symptoms,
+      causes: [info.pathogen],
+      treatments: [for (final t in info.treatments) t.title],
+      imageUrl: '',
+    );
+  }
+
   factory Disease.fromJson(Map<String, dynamic> json) {
     return Disease(
       id: json['id'] as String,

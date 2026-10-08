@@ -105,13 +105,11 @@ class OutboxProcessor {
     }
   }
 
-  /// Uploads one queued scan as a row of the Supabase `scans` table.
-  Future<bool> _syncDiagnosis(String clientUuid, Map<String, dynamic> payload) async {
-    final supabase = Supabase.instance.client;
-    final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return false; // Not signed in yet; keep it queued.
-
-    // Rows queued by older builds used other key names; map them across.
+  /// Maps a queued scan payload to a `scans` row. Rows queued by older builds
+  /// used other key names, so both are accepted. `id` is kept only when it is
+  /// a UUID (the column type); otherwise the database generates one.
+  @visibleForTesting
+  static Map<String, dynamic> scanRowFromPayload(Map<String, dynamic> payload, {required String userId, required String clientUuid}) {
     final row = <String, dynamic>{
       'disease_name': payload['disease_name'] ?? payload['disease'] ?? 'Unknown',
       'confidence_score': payload['confidence_score'] ?? payload['confidence'] ?? 0.0,
@@ -127,6 +125,17 @@ class OutboxProcessor {
     }..removeWhere((_, v) => v == null);
     final id = (payload['id'] ?? clientUuid).toString();
     if (_uuid.hasMatch(id)) row['id'] = id;
+    return row;
+  }
+
+  /// Uploads one queued scan as a row of the Supabase `scans` table.
+  Future<bool> _syncDiagnosis(String clientUuid, Map<String, dynamic> payload) async {
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return false; // Not signed in yet; keep it queued.
+
+    final row = scanRowFromPayload(payload, userId: userId, clientUuid: clientUuid);
+    final id = (payload['id'] ?? clientUuid).toString();
 
     // The photo is still a file on this phone: upload it so officers and the
     // farmer's other devices can see it. Retry later if the upload fails.

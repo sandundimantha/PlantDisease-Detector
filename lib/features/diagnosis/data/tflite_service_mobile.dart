@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/leaf_check.dart';
 import 'package:image/image.dart' as img;
 
 class TfLiteService {
@@ -69,6 +70,7 @@ class TfLiteService {
       'label': _labels![maxIndex],
       'confidence': maxProb,
       'top_3': sortedResults.take(3).toList(),
+      'leaf_ratio': LeafCheck.leafPixelRatio(resizedImage),
     };
   }
 }

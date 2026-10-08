@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Ban, Trash2, Eye } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { DataTable, Th, Td, Pagination } from '../../components/ui/DataTable';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
-import { Badge } from '../../components/ui/Badge';
-import { formatDate } from '../../lib/utils';
 import toast from 'react-hot-toast';
 import type { Profile } from '../../types/database';
 

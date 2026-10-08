@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog_l10n.dart';
 
 /// Context extension for instant, reactive, multi-language string lookup.
 /// Dynamically updates whenever the app locale changes (en, si, ta).
@@ -43,8 +44,28 @@ extension AppLocalizationContext on BuildContext {
     if (c == 'potato') return tr(en: 'Potato', si: 'අර්තාපල්', ta: 'உருளைக்கிழங்கு');
     if (c == 'paddy' || c == 'rice') return tr(en: 'Paddy', si: 'වී / ගොයම්', ta: 'நெல்');
     if (c == 'corn' || c == 'maize') return tr(en: 'Corn', si: 'ඉරිඟු', ta: 'சோளம்');
-    if (c == 'chilli' || c == 'pepper') return tr(en: 'Chilli', si: 'මිරිස්', ta: 'மிளகாய்');
+    if (c == 'chilli') return tr(en: 'Chilli', si: 'මිරිස්', ta: 'மிளகாய்');
+    if (c == 'pepper' || c == 'capsicum') return tr(en: 'Capsicum', si: 'මාළු මිරිස්', ta: 'குடைமிளகாய்');
+    if (c == 'apple') return tr(en: 'Apple', si: 'ඇපල්', ta: 'ஆப்பிள்');
+    if (c == 'cherry') return tr(en: 'Cherry', si: 'චෙරි', ta: 'செர்ரி');
+    if (c == 'grape') return tr(en: 'Grape', si: 'මිදි', ta: 'திராட்சை');
+    if (c == 'orange') return tr(en: 'Orange', si: 'දොඩම්', ta: 'ஆரஞ்சு');
+    if (c == 'peach') return tr(en: 'Peach', si: 'පීච්', ta: 'பீச்');
+    if (c == 'strawberry') return tr(en: 'Strawberry', si: 'ස්ට්‍රෝබෙරි', ta: 'ஸ்ட்ராபெர்ரி');
+    if (c == 'squash') return tr(en: 'Squash', si: 'වට්ටක්කා', ta: 'பூசணி');
+    if (c == 'blueberry') return tr(en: 'Blueberry', si: 'බ්ලූබෙරි', ta: 'புளுபெர்ரி');
+    if (c == 'raspberry') return tr(en: 'Raspberry', si: 'රාස්බෙරි', ta: 'ராஸ்பெர்ரி');
+    if (c == 'soybean') return tr(en: 'Soybean', si: 'සෝයා', ta: 'சோயாபீன்');
+    if (c == 'all crops') return tr(en: 'All crops', si: 'සියලු බෝග', ta: 'அனைத்து பயிர்கள்');
     return crop;
+  }
+
+  /// Sri Lankan cultivation seasons
+  String trSeason(String season) {
+    final s = season.trim().toLowerCase();
+    if (s == 'yala') return tr(en: 'Yala', si: 'යල', ta: 'யால');
+    if (s == 'maha') return tr(en: 'Maha', si: 'මහ', ta: 'மஹா');
+    return season;
   }
 
   /// Translates relative dates like "Today", "Yesterday"
@@ -265,6 +286,9 @@ class AppStrings {
     if (entry != null && entry.containsKey(code)) {
       return entry[code]!;
     }
+    // Symptoms and treatment steps from the disease catalog (38 classes).
+    final catalog = diseaseCatalogText[symptom];
+    if (catalog != null) return code == 'si' ? catalog[0] : catalog[1];
     return symptom;
   }
 
@@ -274,6 +298,9 @@ class AppStrings {
     if (entry != null && entry.containsKey(code)) {
       return entry[code]!;
     }
+    // Symptoms and treatment steps from the disease catalog (38 classes).
+    final catalog = diseaseCatalogText[text];
+    if (catalog != null) return code == 'si' ? catalog[0] : catalog[1];
     return text;
   }
 }

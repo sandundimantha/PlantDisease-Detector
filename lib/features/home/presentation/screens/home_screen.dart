@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,8 +27,6 @@ import 'package:flutter/foundation.dart';
 // ── Ultra Premium Tokens ───────────────────────────────────────────────────────
 const _bg = Color(0xFFF4F6F5); // Cool, luxury off-white
 const _white = Colors.white;
-const _emDark = Color(0xFF092917);
-const _emMid = Color(0xFF134D2E);
 const _emLight = Color(0xFF1E7045);
 const _copper = Color(0xFFC87D55);
 const _gold = Color(0xFFE8C97A);
@@ -983,25 +980,4 @@ class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
       ),
     );
   }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PAINTERS
-// ══════════════════════════════════════════════════════════════════════════════
-class _Ring extends CustomPainter {
-  final double prog, sw;
-  final Color fg, bg;
-  const _Ring({required this.prog, required this.fg, required this.bg, this.sw = 9});
-
-  @override
-  void paint(Canvas c, Size s) {
-    final center = Offset(s.width / 2, s.height / 2);
-    final r = s.width / 2 - sw / 2;
-    c.drawArc(Rect.fromCircle(center: center, radius: r), 0, 2 * pi, false,
-        Paint()..color = bg..strokeWidth = sw..style = PaintingStyle.stroke..strokeCap = StrokeCap.round);
-    c.drawArc(Rect.fromCircle(center: center, radius: r), -pi / 2, 2 * pi * prog, false,
-        Paint()..color = fg..strokeWidth = sw..style = PaintingStyle.stroke..strokeCap = StrokeCap.round);
-  }
-  @override
-  bool shouldRepaint(covariant _Ring o) => o.prog != prog || o.fg != fg;
 }

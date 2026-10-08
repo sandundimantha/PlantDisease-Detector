@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Send } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AppLayout } from '../../components/layout/AppLayout';
-import { DataTable, Th, Td, Pagination } from '../../components/ui/DataTable';
+import { DataTable, Th, Td } from '../../components/ui/DataTable';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
-import { formatDateTime } from '../../lib/utils';
 import toast from 'react-hot-toast';
 import type { Announcement } from '../../types/database';
 
@@ -20,7 +19,7 @@ async function fetchAnnouncements(page: number) {
 
 export function AnnouncementsPage() {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Announcement | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);

@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, Search, CheckCircle, XCircle, MapPin, Briefcase } from 'lucide-react';
+import { Plus, Edit2, XCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AppLayout } from '../../components/layout/AppLayout';
-import { DataTable, Th, Td, Pagination } from '../../components/ui/DataTable';
+import { DataTable, Th, Td } from '../../components/ui/DataTable';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
-import { Badge, RoleBadge } from '../../components/ui/Badge';
-import { getInitials, formatDate, timeAgo } from '../../lib/utils';
+import { RoleBadge } from '../../components/ui/Badge';
 import toast from 'react-hot-toast';
 import type { Profile } from '../../types/database';
 
@@ -25,9 +24,8 @@ const EMPTY_FORM = { full_name: '', email: '', phone: '', district: '', bio: '' 
 
 export function OfficersPage() {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [page] = useState(1);
+  const [search] = useState('');
   const [editTarget, setEditTarget] = useState<Profile | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
   const [createOpen, setCreateOpen] = useState(false);

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Edit2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AppLayout } from '../../components/layout/AppLayout';
-import { DataTable, Th, Td, Pagination } from '../../components/ui/DataTable';
+import { DataTable, Th, Td } from '../../components/ui/DataTable';
 import { ConfirmModal, Modal } from '../../components/ui/Modal';
 import { Badge } from '../../components/ui/Badge';
 import toast from 'react-hot-toast';
@@ -17,7 +17,7 @@ async function fetchCases(page: number) {
 
 export function CasesPage() {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const [editTarget, setEditTarget] = useState<Consultation | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Consultation | null>(null);
 
