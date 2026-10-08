@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:flutter/material.dart' show TimeOfDay, ValueNotifier;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -18,6 +18,10 @@ class NotificationService {
   /// Consultation whose chat is on screen; its messages need no notification.
   static String? openChatId;
 
+  /// Ticks when a case this user can see is created or changes, so case
+  /// lists and stats reload without a manual refresh.
+  static final ValueNotifier<int> caseChanges = ValueNotifier(0);
+
   RealtimeChannel? _userChannel;
   String? _userId;
   final Map<String, String> _knownStatus = {};
@@ -29,7 +33,7 @@ class NotificationService {
     tz_data.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Colombo'));
 
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_stat_lumina');
     
     final DarwinInitializationSettings initializationSettingsDarwin = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -65,16 +69,21 @@ class NotificationService {
 
   /// Case and chat alerts for the signed-in user. Realtime only delivers rows
   /// this user may read (RLS), so officers hear about cases they can see and
-  /// farmers only about their own. Alerts arrive while the app is running or
-  /// in the background; a closed app needs server push (not set up yet).
+  /// farmers only about their own. Alerts arrive while the app is open;
+  /// Android pauses apps in the background, so those need server push (FCM,
+  /// not set up yet).
   Future<void> _listenForUser() async {
     final client = Supabase.instance.client;
     final uid = client.auth.currentUser?.id;
     if (uid == _userId) return;
+    final switched = _userId != null;
     _userId = uid;
     await _userChannel?.unsubscribe();
     _userChannel = null;
     _knownStatus.clear();
+    // Case and chat alerts belong to the previous account; clear them from the
+    // tray on sign-out (scheduled treatment reminders are left alone).
+    if (switched) await _clearShownAlerts();
     if (uid == null) return;
 
     String role = 'farmer';
@@ -99,6 +108,7 @@ class NotificationService {
             schema: 'public',
             table: 'consultations',
             callback: (payload) {
+              caseChanges.value++;
               final c = payload.newRecord;
               final id = c['id'].toString();
               _knownStatus[id] = c['status']?.toString() ?? '';
@@ -119,6 +129,7 @@ class NotificationService {
             schema: 'public',
             table: 'consultations',
             callback: (payload) {
+              caseChanges.value++;
               final c = payload.newRecord;
               final id = c['id'].toString();
               final status = c['status']?.toString() ?? '';
@@ -188,6 +199,19 @@ class NotificationService {
           .subscribe();
     } catch (e) {
       log('Error setting up Realtime for notifications: $e');
+    }
+  }
+
+  Future<void> _clearShownAlerts() async {
+    try {
+      final shown = await flutterLocalNotificationsPlugin.getActiveNotifications();
+      for (final n in shown) {
+        if (n.channelId == 'lumina_announcements' && n.id != null) {
+          await flutterLocalNotificationsPlugin.cancel(id: n.id!);
+        }
+      }
+    } catch (e) {
+      log('Could not clear alerts: $e');
     }
   }
 

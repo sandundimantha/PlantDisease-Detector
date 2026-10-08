@@ -218,14 +218,23 @@ final consultationRepositoryProvider = Provider<ConsultationRepository>((ref) {
   return ConsultationRepository(Supabase.instance.client);
 });
 
+/// Reloads the provider whenever a case is created or changes (Realtime).
+void _reloadOnCaseChange(Ref ref) {
+  void reload() => ref.invalidateSelf();
+  NotificationService.caseChanges.addListener(reload);
+  ref.onDispose(() => NotificationService.caseChanges.removeListener(reload));
+}
+
 // All consultations (for officer inbox)
 final consultationsProvider = FutureProvider.family<List<Consultation>, String?>((ref, statusFilter) async {
+  _reloadOnCaseChange(ref);
   final repo = ref.read(consultationRepositoryProvider);
   return repo.fetchAllConsultations(statusFilter: statusFilter);
 });
 
 // Officer dashboard stats
 final officerStatsProvider = FutureProvider<Map<String, int>>((ref) async {
+  _reloadOnCaseChange(ref);
   final repo = ref.read(consultationRepositoryProvider);
   return repo.fetchOfficerStats();
 });
@@ -238,6 +247,7 @@ final consultationDetailProvider = FutureProvider.family<Consultation?, String>(
 
 // Logged-in farmer's own requests (Expert Consult → "My Requests")
 final myConsultationsProvider = FutureProvider.autoDispose<List<Consultation>>((ref) async {
+  _reloadOnCaseChange(ref);
   final userId = Supabase.instance.client.auth.currentUser?.id;
   if (userId == null) return [];
   return ref.read(consultationRepositoryProvider).fetchFarmerConsultations(userId);
