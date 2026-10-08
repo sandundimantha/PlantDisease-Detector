@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/shared/utils/confirm_delete.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
@@ -42,7 +43,22 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     return allAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) => Scaffold(body: Center(child: Text('Error loading history: $err'))),
+      error: (err, stack) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.textSecondary),
+              const SizedBox(height: 12),
+              Text(context.tr(en: 'Could not load your scans', si: 'ඔබේ ස්කෑන් පූරණය කළ නොහැක', ta: 'உங்கள் ஸ்கேன்களை ஏற்ற முடியவில்லை'), style: AppTextStyles.titleSmall),
+              TextButton(
+                onPressed: () => ref.invalidate(scanHistoryProvider),
+                child: Text(context.tr(en: 'Retry', si: 'නැවත උත්සාහ කරන්න', ta: 'மீண்டும் முயற்சி')),
+              ),
+            ],
+          ),
+        ),
+      ),
       data: (all) {
         final filtered = _filteredScans(all);
         
@@ -128,7 +144,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 ),
 
                 // Summary Bar
-                _buildSummaryBar(),
+                _buildSummaryBar(all),
 
                 // List
                 Expanded(
@@ -166,7 +182,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildSummaryBar() {
+  // Share of this month's scans at each severity (real counts).
+  Widget _buildSummaryBar(List<ScanRecord> all) {
+    final now = DateTime.now();
+    final month = all.where((s) => s.scannedAt.year == now.year && s.scannedAt.month == now.month).toList();
+    int n(String sev) => month.where((s) => s.severity == sev).length;
+    final counts = [n('high'), n('medium'), n('low'), month.length - n('high') - n('medium') - n('low')];
+    final total = month.length;
+    String pct(int c) => total == 0 ? '0%' : '${(c * 100 / total).round()}%';
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -197,10 +220,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               height: 8,
               child: Row(
                 children: [
-                  Expanded(flex: 17, child: Container(color: AppColors.severityHigh)),
-                  Expanded(flex: 33, child: Container(color: AppColors.severityMedium)),
-                  Expanded(flex: 17, child: Container(color: AppColors.severityLow)),
-                  Expanded(flex: 33, child: Container(color: AppColors.severityDefault)),
+                  if (total == 0) Expanded(child: Container(color: AppColors.imageLoadingBg)),
+                  if (counts[0] > 0) Expanded(flex: counts[0], child: Container(color: AppColors.severityHigh)),
+                  if (counts[1] > 0) Expanded(flex: counts[1], child: Container(color: AppColors.severityMedium)),
+                  if (counts[2] > 0) Expanded(flex: counts[2], child: Container(color: AppColors.severityLow)),
+                  if (counts[3] > 0) Expanded(flex: counts[3], child: Container(color: AppColors.severityDefault)),
                 ],
               ),
             ),
@@ -209,10 +233,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatLegend(context.tr(en: 'High', si: 'ඉහළ', ta: 'அதிகம்'), AppColors.severityHigh, '17%'),
-              _buildStatLegend(context.tr(en: 'Medium', si: 'මධ්‍යම', ta: 'நடுத்தரம்'), AppColors.severityMedium, '33%'),
-              _buildStatLegend(context.tr(en: 'Low', si: 'අඩු', ta: 'குறைவு'), AppColors.severityLow, '17%'),
-              _buildStatLegend(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), AppColors.severityDefault, '33%'),
+              _buildStatLegend(context.tr(en: 'High', si: 'ඉහළ', ta: 'அதிகம்'), AppColors.severityHigh, pct(counts[0])),
+              _buildStatLegend(context.tr(en: 'Medium', si: 'මධ්‍යම', ta: 'நடுத்தரம்'), AppColors.severityMedium, pct(counts[1])),
+              _buildStatLegend(context.tr(en: 'Low', si: 'අඩු', ta: 'குறைவு'), AppColors.severityLow, pct(counts[2])),
+              _buildStatLegend(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), AppColors.severityDefault, pct(counts[3])),
             ],
           )
         ],
@@ -249,17 +273,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         alignment: Alignment.centerRight,
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
+      confirmDismiss: (_) => confirmDelete(context, itemName: context.tr(en: 'this scan', si: 'මෙම ස්කෑන් එක', ta: 'இந்த ஸ்கேன்')),
       onDismissed: (_) async {
-        try {
-          await ref.read(scanHistoryProvider.notifier).removeScan(scan.id);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scan deleted')));
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
-          }
-        }
+        final messenger = ScaffoldMessenger.of(context);
+        final deleted = context.tr(en: 'Scan deleted', si: 'ස්කෑන් එක මකා දැමිණි', ta: 'ஸ்கேன் நீக்கப்பட்டது');
+        await ref.read(scanHistoryProvider.notifier).removeScan(scan.id);
+        messenger.showSnackBar(SnackBar(content: Text(deleted)));
       },
       child: GestureDetector(
       onTap: () => _openScan(scan),

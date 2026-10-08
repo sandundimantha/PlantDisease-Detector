@@ -4,6 +4,7 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
 
 class AddFarmLogScreen extends ConsumerStatefulWidget {
@@ -15,6 +16,61 @@ class AddFarmLogScreen extends ConsumerStatefulWidget {
 
 class _AddFarmLogScreenState extends ConsumerState<AddFarmLogScreen> {
   String _selectedActivity = 'Watering';
+  DateTime _date = DateTime.now();
+  final TextEditingController _notesController = TextEditingController();
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  bool get _isToday {
+    final n = DateTime.now();
+    return _date.year == n.year && _date.month == n.month && _date.day == n.day;
+  }
+
+  String _dateLabel(BuildContext context) {
+    final d = DateFormat('d MMM yyyy').format(_date);
+    return _isToday ? '${context.tr(en: 'Today', si: 'අද', ta: 'இன்று')}, $d' : d;
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 1),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _save() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final savedText = context.tr(en: 'Farm log saved', si: 'ගොවි සටහන සුරැකිණි', ta: 'பண்ணைப் பதிவு சேமிக்கப்பட்டது');
+    final failText = context.tr(en: 'Could not save. Check your connection and try again.', si: 'සුරැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
+    final note = _notesController.text.trim();
+    final data = {
+      // The farm_tasks table has no notes column, so the note goes with the label.
+      'label': note.isEmpty ? _selectedActivity : '$_selectedActivity — $note',
+      'due_date': _isToday ? 'Today' : DateFormat('d MMM yyyy').format(_date),
+      'priority': _selectedActivity == 'Spraying' ? 'High' : 'Medium',
+      'is_done': false,
+    };
+    setState(() => _saving = true);
+    try {
+      await ref.read(farmApiServiceProvider).createFarmTask(data);
+      ref.read(farmTaskNotifierProvider.notifier).refresh();
+      navigator.pop();
+      messenger.showSnackBar(SnackBar(content: Text(savedText), backgroundColor: AppColors.primary));
+    } catch (e) {
+      if (mounted) setState(() => _saving = false);
+      messenger.showSnackBar(SnackBar(content: Text(failText), backgroundColor: Colors.red));
+    }
+  }
   final List<Map<String, dynamic>> _activities = [
     {'name': 'Watering', 'icon': Icons.water_drop_outlined, 'color': Colors.blue},
     {'name': 'Fertilizer', 'icon': Icons.eco_outlined, 'color': Colors.green},
@@ -107,21 +163,24 @@ class _AddFarmLogScreenState extends ConsumerState<AddFarmLogScreen> {
 
                     Text(context.tr(en: 'Date', si: 'දිනය', ta: 'தேதி'), style: AppTextStyles.titleSmall),
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${context.tr(en: 'Today', si: 'අද', ta: 'இன்று')}, Oct 12', style: AppTextStyles.titleMedium),
-                          const Icon(Icons.calendar_today_rounded, color: AppColors.textSecondary),
-                        ],
+                    GestureDetector(
+                      onTap: _pickDate,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_dateLabel(context), style: AppTextStyles.titleMedium),
+                            const Icon(Icons.calendar_today_rounded, color: AppColors.textSecondary),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -137,10 +196,11 @@ class _AddFarmLogScreenState extends ConsumerState<AddFarmLogScreen> {
                         ],
                       ),
                       child: TextField(
+                        controller: _notesController,
                         maxLines: 4,
                         style: AppTextStyles.bodyLarge,
                         decoration: InputDecoration(
-                          hintText: 'e.g., Used NPK 15-15-15 on plot A...',
+                          hintText: context.tr(en: 'e.g. Used NPK 15-15-15 on plot A', si: 'උදා: A කොටසට NPK 15-15-15 යෙදුවා', ta: 'எ.கா: A பகுதியில் NPK 15-15-15 இட்டேன்'),
                           hintStyle: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -157,40 +217,16 @@ class _AddFarmLogScreenState extends ConsumerState<AddFarmLogScreen> {
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: ElevatedButton(
-                onPressed: () async {
-                  // Save to DB
-                  final priority = _selectedActivity == 'Spraying' ? 'High' : 'Medium';
-                  final dueDate = 'Today';
-                  final data = {
-                    'label': _selectedActivity,
-                    'due_date': dueDate,
-                    'priority': priority,
-                    'is_done': false,
-                  };
-                  try {
-                    await ref.read(farmApiServiceProvider).createFarmTask(data);
-                    if (context.mounted) {
-                      ref.read(farmTaskNotifierProvider.notifier).refresh();
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Farm task saved successfully!')),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to save task: $e')),
-                      );
-                    }
-                  }
-                },
+                onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   minimumSize: const Size(double.infinity, 56),
                 ),
-                child: Text(context.tr(en: 'Save Log Entry', si: 'සටහන සුරකින්න', ta: 'பதிவைச் சேமிக்கவும்'), style: AppTextStyles.titleMedium.copyWith(color: Colors.white)),
+                child: _saving
+                    ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                    : Text(context.tr(en: 'Save Log Entry', si: 'සටහන සුරකින්න', ta: 'பதிவைச் சேமிக்கவும்'), style: AppTextStyles.titleMedium.copyWith(color: Colors.white)),
               ),
             ),
           ],

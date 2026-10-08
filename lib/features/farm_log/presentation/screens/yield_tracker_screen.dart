@@ -1,13 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:plant_disease_detector/features/farm_log/data/farm_models.dart';
 
 class YieldTrackerScreen extends ConsumerStatefulWidget {
   const YieldTrackerScreen({super.key});
@@ -19,11 +19,54 @@ class YieldTrackerScreen extends ConsumerStatefulWidget {
 class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['All Time', 'This Year', 'This Month', 'Custom'];
+  DateTimeRange? _customRange;
+
+  /// Entries inside the selected date range (All Time / This Year / This Month / Custom).
+  List<YieldEntry> _inRange(List<YieldEntry> all) {
+    final now = DateTime.now();
+    return all.where((e) {
+      switch (_selectedTabIndex) {
+        case 1:
+          return e.date.year == now.year;
+        case 2:
+          return e.date.year == now.year && e.date.month == now.month;
+        case 3:
+          final r = _customRange;
+          if (r == null) return true;
+          final day = DateTime(e.date.year, e.date.month, e.date.day);
+          return !day.isBefore(r.start) && !day.isAfter(r.end);
+        default:
+          return true;
+      }
+    }).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  Future<void> _pickCustomRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 5),
+      lastDate: now,
+      initialDateRange: _customRange ?? DateTimeRange(start: now.subtract(const Duration(days: 90)), end: now),
+    );
+    if (picked != null) setState(() { _selectedTabIndex = 3; _customRange = picked; });
+  }
+
+  /// Monthly totals for the chart: the last six months that have entries.
+  List<MapEntry<DateTime, int>> _monthlyTotals(List<YieldEntry> entries) {
+    final totals = <DateTime, int>{};
+    for (final e in entries) {
+      final m = DateTime(e.date.year, e.date.month);
+      totals[m] = (totals[m] ?? 0) + e.yieldAmount;
+    }
+    final months = totals.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    return months.length > 6 ? months.sublist(months.length - 6) : months;
+  }
 
   // Colors
   final Color _goldAccent = const Color(0xFFF5C842);
   final Color _darkGreen = const Color(0xFF0F3820);
-  final Color _textLight = Colors.white;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +133,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                               context.tr(en: 'Custom', si: 'වෙනත්', ta: 'தனிப்பயன்'),
                             ];
                             return GestureDetector(
-                              onTap: () => setState(() => _selectedTabIndex = index),
+                              onTap: () => index == 3 ? _pickCustomRange() : setState(() => _selectedTabIndex = index),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 300),
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -119,100 +162,129 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Chart Container (Glassmorphic)
-                      _buildGlassContainer(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      // Chart and summary — calculated from the farmer's yield entries
+                      Builder(builder: (context) {
+                        final entries = _inRange(yieldsAsync.valueOrNull ?? const <YieldEntry>[]);
+                        final months = _monthlyTotals(entries);
+                        final maxMonth = months.isEmpty ? 0 : months.map((m) => m.value).reduce((a, b) => a > b ? a : b);
+                        final maxY = maxMonth == 0 ? 100.0 : (maxMonth * 1.2 / 50).ceil() * 50.0;
+                        final total = entries.fold<int>(0, (sum, e) => sum + e.yieldAmount);
+                        final byCrop = <String, int>{};
+                        for (final e in entries) {
+                          byCrop[e.cropName] = (byCrop[e.cropName] ?? 0) + e.yieldAmount;
+                        }
+                        final best = byCrop.entries.isEmpty ? null : (byCrop.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).first;
+                        final last = entries.isEmpty ? null : entries.last;
+                        final nf = NumberFormat.decimalPattern();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              context.tr(en: 'Yield Over Time (kg)', si: 'කාලය අනුව අස්වැන්න (kg)', ta: 'காலப்போக்கில் விளைச்சல் (kg)'),
-                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 24),
-                            SizedBox(
-                              height: 200,
-                              child: BarChart(
-                                BarChartData(
-                                  alignment: BarChartAlignment.spaceAround,
-                                  maxY: 250,
-                                  barTouchData: BarTouchData(enabled: false),
-                                  titlesData: FlTitlesData(
-                                    show: true,
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        getTitlesWidget: (value, meta) {
-                                          const titles = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL'];
-                                          if (value.toInt() >= 0 && value.toInt() < titles.length) {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(top: 8.0),
-                                              child: Text(
-                                                titles[value.toInt()],
-                                                style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                            if (_selectedTabIndex == 3 && _customRange != null) ...[
+                              Text(
+                                '${DateFormat('d MMM yyyy').format(_customRange!.start)} – ${DateFormat('d MMM yyyy').format(_customRange!.end)}',
+                                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            _buildGlassContainer(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    context.tr(en: 'Yield per Month (kg)', si: 'මාසික අස්වැන්න (kg)', ta: 'மாதாந்திர விளைச்சல் (kg)'),
+                                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  SizedBox(
+                                    height: 200,
+                                    child: months.isEmpty
+                                        ? Center(
+                                            child: Text(
+                                              context.tr(en: 'No harvests in this period', si: 'මෙම කාලයේ අස්වනු නැත', ta: 'இந்தக் காலத்தில் அறுவடை இல்லை'),
+                                              style: const TextStyle(color: Colors.white70),
+                                            ),
+                                          )
+                                        : BarChart(
+                                            BarChartData(
+                                              alignment: BarChartAlignment.spaceAround,
+                                              maxY: maxY,
+                                              barTouchData: BarTouchData(
+                                                enabled: true,
+                                                touchTooltipData: BarTouchTooltipData(
+                                                  getTooltipItem: (group, _, rod, _) => BarTooltipItem(
+                                                    '${nf.format(rod.toY.round())} kg',
+                                                    const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
                                               ),
-                                            );
-                                          }
-                                          return const SizedBox.shrink();
-                                        },
-                                        reservedSize: 30,
-                                      ),
-                                    ),
-                                    leftTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        reservedSize: 35,
-                                        interval: 50,
-                                        getTitlesWidget: (value, meta) {
-                                          return Text(
-                                            value.toInt().toString(),
-                                            style: const TextStyle(color: Colors.white54, fontSize: 10),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                              titlesData: FlTitlesData(
+                                                show: true,
+                                                bottomTitles: AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                    showTitles: true,
+                                                    reservedSize: 30,
+                                                    getTitlesWidget: (value, meta) {
+                                                      final i = value.toInt();
+                                                      if (i < 0 || i >= months.length) return const SizedBox.shrink();
+                                                      return Padding(
+                                                        padding: const EdgeInsets.only(top: 8.0),
+                                                        child: Text(
+                                                          DateFormat('MMM').format(months[i].key).toUpperCase(),
+                                                          style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                leftTitles: AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                    showTitles: true,
+                                                    reservedSize: 40,
+                                                    interval: maxY / 4,
+                                                    getTitlesWidget: (value, meta) => Text(
+                                                      value.toInt().toString(),
+                                                      style: const TextStyle(color: Colors.white54, fontSize: 10),
+                                                    ),
+                                                  ),
+                                                ),
+                                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                              ),
+                                              gridData: FlGridData(
+                                                show: true,
+                                                drawVerticalLine: false,
+                                                horizontalInterval: maxY / 4,
+                                                getDrawingHorizontalLine: (value) => FlLine(color: Colors.white.withValues(alpha: 0.1), strokeWidth: 1),
+                                              ),
+                                              borderData: FlBorderData(show: false),
+                                              barGroups: [
+                                                for (var i = 0; i < months.length; i++) _buildBarGroup(i, months[i].value.toDouble(), maxY),
+                                              ],
+                                            ),
+                                          ),
                                   ),
-                                  gridData: FlGridData(
-                                    show: true,
-                                    drawVerticalLine: false,
-                                    horizontalInterval: 50,
-                                    getDrawingHorizontalLine: (value) => FlLine(color: Colors.white.withOpacity(0.1), strokeWidth: 1),
-                                  ),
-                                  borderData: FlBorderData(show: false),
-                                  barGroups: [
-                                    _buildBarGroup(0, 50),
-                                    _buildBarGroup(1, 120),
-                                    _buildBarGroup(2, 85),
-                                    _buildBarGroup(3, 195),
-                                    _buildBarGroup(4, 160),
-                                    _buildBarGroup(5, 210),
-                                    _buildBarGroup(6, 180),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(child: _buildSummaryCard(Icons.shopping_bag_outlined, context.tr(en: 'Total Harvest', si: 'මුළු අස්වැන්න', ta: 'மொத்த அறுவடை'), '${nf.format(total)} kg')),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildSummaryCard(Icons.emoji_events_outlined, context.tr(en: 'Avg Yield/Crop', si: 'සාමාන්‍ය අස්වැන්න', ta: 'சராசரி விளைச்சல்'), byCrop.isEmpty ? '—' : '${nf.format((total / byCrop.length).round())} kg')),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(child: _buildSummaryCard(Icons.grass_rounded, context.tr(en: 'Best Crop', si: 'හොඳම බෝගය', ta: 'சிறந்த பயிர்'), best == null ? '—' : '${context.trCrop(best.key)}\n${nf.format(best.value)} kg')),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildSummaryCard(Icons.calendar_today_outlined, context.tr(en: 'Last Entry', si: 'අවසන් සටහන', ta: 'கடைசி பதிவு'), last == null ? '—' : '${DateFormat('MMM d').format(last.date)}\n${nf.format(last.yieldAmount)} kg')),
+                              ],
+                            ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Summary Cards
-                      Row(
-                        children: [
-                          Expanded(child: _buildSummaryCard(Icons.shopping_bag_outlined, context.tr(en: 'Total Harvest', si: 'මුළු අස්වැන්න', ta: 'மொத்த அறுவடை'), '2,450 kg')),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildSummaryCard(Icons.emoji_events_outlined, context.tr(en: 'Avg Yield/Crop', si: 'සාමාන්‍ය අස්වැන්න', ta: 'சராசரி விளைச்சல்'), '310 kg')),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(child: _buildSummaryCard(Icons.grass_rounded, context.tr(en: 'Best Crop', si: 'හොඳම බෝගය', ta: 'சிறந்த பயிர்'), 'Wheat\n820 kg')),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildSummaryCard(Icons.calendar_today_outlined, context.tr(en: 'Last Entry', si: 'අවසන් සටහන', ta: 'கடைசி பதிவு'), 'Jun 12\n180 kg')),
-                        ],
-                      ),
+                        );
+                      }),
                       const SizedBox(height: 32),
 
                       // Yield Entries List
@@ -224,11 +296,12 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                       _buildGlassContainer(
                         padding: const EdgeInsets.all(0),
                         child: yieldsAsync.when(
-                          data: (entries) {
+                          data: (allEntries) {
+                            final entries = _inRange(allEntries).reversed.toList();
                             if (entries.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.all(20),
-                                child: Center(child: Text("No yield entries found.", style: TextStyle(color: Colors.white70))),
+                              return Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Center(child: Text(context.tr(en: 'No yield entries in this period.', si: 'මෙම කාලයේ අස්වනු සටහන් නැත.', ta: 'இந்தக் காலத்தில் விளைச்சல் பதிவுகள் இல்லை.'), style: const TextStyle(color: Colors.white70))),
                               );
                             }
                             return Column(
@@ -251,7 +324,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                             );
                           },
                           loading: () => const Padding(padding: EdgeInsets.all(30), child: Center(child: CircularProgressIndicator(color: Colors.white))),
-                          error: (err, _) => Padding(padding: const EdgeInsets.all(20), child: Text('Error: $err', style: const TextStyle(color: Colors.redAccent))),
+                          error: (err, _) => Padding(padding: const EdgeInsets.all(20), child: Text(context.tr(en: 'Could not load yield entries.', si: 'අස්වනු සටහන් පූරණය කළ නොහැක.', ta: 'விளைச்சல் பதிவுகளை ஏற்ற முடியவில்லை.'), style: const TextStyle(color: Colors.redAccent))),
                         ),
                       ),
                       const SizedBox(height: 80),
@@ -284,7 +357,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
     );
   }
 
-  BarChartGroupData _buildBarGroup(int x, double y) {
+  BarChartGroupData _buildBarGroup(int x, double y, double maxY) {
     return BarChartGroupData(
       x: x,
       barRods: [
@@ -298,8 +371,8 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
           ),
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
-            toY: 250,
-            color: Colors.white.withOpacity(0.05),
+            toY: maxY,
+            color: Colors.white.withValues(alpha: 0.05),
           ),
         ),
       ],

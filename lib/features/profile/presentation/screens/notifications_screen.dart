@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
@@ -9,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/providers/announcements_provider.dart';
 
 import 'dart:ui';
-import 'package:plant_disease_detector/core/providers/announcements_provider.dart';
 
 class _ShimmerSkeleton extends StatefulWidget {
   final double width;
@@ -77,7 +75,7 @@ class NotificationsScreen extends ConsumerWidget {
             icon: const Icon(Icons.done_all_rounded, color: AppColors.primary),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('All marked as read')),
+                SnackBar(content: Text(context.tr(en: 'All marked as read', si: 'සියල්ල කියවූ ලෙස සලකුණු කළා', ta: 'அனைத்தும் படித்ததாகக் குறிக்கப்பட்டது'))),
               );
             },
             tooltip: 'Mark all as read',

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
-import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/providers/locale_provider.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/home_screen.dart';
 import 'package:plant_disease_detector/features/history/presentation/screens/history_screen.dart';
@@ -9,6 +8,14 @@ import 'package:plant_disease_detector/features/farm_log/presentation/screens/fa
 import 'package:plant_disease_detector/features/profile/presentation/screens/profile_screen.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
+import 'package:plant_disease_detector/core/providers/connectivity_provider.dart';
+import 'package:plant_disease_detector/core/providers/database_provider.dart';
+import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
+import 'package:plant_disease_detector/features/sync/presentation/screens/sync_status_screen.dart';
+
+/// Selected bottom tab (0 Home, 1 Farm, 2 History, 3 Profile). Other screens
+/// can switch tabs, e.g. Home → Recent Scans → See All opens History.
+final mainTabProvider = StateProvider<int>((ref) => 0);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MainScreen — Handles Bottom Navigation (Glassmorphism)
@@ -21,11 +28,28 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  int _currentIndex = 0;
+  @override
+  void initState() {
+    super.initState();
+    // Upload any scans saved while offline (e.g. from a previous session).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncNow());
+  }
+
+  Future<void> _syncNow() async {
+    await ref.read(outboxProcessorProvider).processOutbox();
+    if (mounted) ref.invalidate(scanHistoryProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // When the connection comes back, upload what was saved offline.
+    ref.listen<AsyncValue<bool>>(connectivityProvider, (previous, next) {
+      if (previous?.valueOrNull == false && next.valueOrNull == true) _syncNow();
+    });
+    final online = ref.watch(connectivityProvider).valueOrNull ?? true;
+    final pendingCount = ref.watch(pendingUploadsProvider).valueOrNull?.length ?? 0;
     final currentLocale = ref.watch(localeProvider);
+    final currentIndex = ref.watch(mainTabProvider);
     final List<Widget> pages = [
       HomeScreen(key: ValueKey('home_tab_${currentLocale.languageCode}')),
       FarmScreen(key: ValueKey('farm_tab_${currentLocale.languageCode}')),
@@ -38,9 +62,56 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         children: [
           // The active page
           IndexedStack(
-            index: _currentIndex,
+            index: currentIndex,
             children: pages,
           ),
+
+          // Offline / waiting-to-upload notice (tap for details)
+          if (!online || pendingCount > 0)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 112, // just above the bottom navigation bar
+              child: GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncStatusScreen())),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: online ? const Color(0xFFB7791F) : const Color(0xFF37474F),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, 4))],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(online ? Icons.cloud_upload_rounded : Icons.wifi_off_rounded, color: Colors.white, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            !online
+                                ? context.tr(
+                                    en: pendingCount > 0 ? 'Offline · $pendingCount scan(s) will upload later' : 'Offline · scanning still works',
+                                    si: pendingCount > 0 ? 'නොබැඳි · ස්කෑන් $pendingCount ක් පසුව උඩුගත වේ' : 'නොබැඳි · ස්කෑන් කිරීම තවමත් ක්‍රියා කරයි',
+                                    ta: pendingCount > 0 ? 'ஆஃப்லைன் · $pendingCount ஸ்கேன் பின்னர் பதிவேற்றப்படும்' : 'ஆஃப்லைன் · ஸ்கேன் இன்னும் வேலை செய்யும்',
+                                  )
+                                : context.tr(
+                                    en: '$pendingCount scan(s) waiting to upload',
+                                    si: 'ස්කෑන් $pendingCount ක් උඩුගත කිරීමට ඇත',
+                                    ta: '$pendingCount ஸ்கேன் பதிவேற்றக் காத்திருக்கிறது',
+                                  ),
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded, color: Colors.white70, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           
           // ── LIGHT PREMIUM GLASSMORPHIC NAV BAR ──
           Positioned(
@@ -148,13 +219,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Widget _buildNavItem(int index, IconData icon, String label) {
-    final isSelected = _currentIndex == index;
+    final isSelected = ref.watch(mainTabProvider) == index;
     // Elegant light theme nav colors with Earthy Terracotta
     const Color activeColor = Color(0xFFBA5A31);   // Rich terracotta
     const Color inactiveColor = Color(0xFF9BA6AE); // Soft premium silver/grey
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _currentIndex = index),
+        onTap: () => ref.read(mainTabProvider.notifier).state = index,
         behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

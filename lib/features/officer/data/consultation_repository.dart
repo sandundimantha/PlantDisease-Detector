@@ -187,12 +187,6 @@ class ConsultationRepository {
       final pending = list.where((c) => c['status'] == 'pending' || c['status'] == 'open').length;
       
       final today = DateTime.now();
-      final resolvedToday = list.where((c) {
-        if (c['status'] != 'resolved') return false;
-        // We don't have resolved_at in this query, use created_at as approximation
-        return true; // Will refine later
-      }).length;
-      
       // Fetch resolved today specifically
       final resolvedTodayData = await _client
           .from('consultations')

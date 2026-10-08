@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/shared/widgets/premium_app_bar.dart';
@@ -48,7 +49,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const PremiumAppBar(title: Text('Post Details')),
+      appBar: PremiumAppBar(title: Text(context.tr(en: 'Post Details', si: 'පළකිරීමේ විස්තර', ta: 'இடுகை விவரங்கள்'))),
       body: Column(
         children: [
           Expanded(
@@ -98,16 +99,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                 const SizedBox(height: 24),
                 const Divider(),
                 const SizedBox(height: 12),
-                Text('Comments', style: AppTextStyles.titleMedium),
+                Text(context.tr(en: 'Comments', si: 'අදහස්', ta: 'கருத்துகள்'), style: AppTextStyles.titleMedium),
                 const SizedBox(height: 16),
 
                 // Comments List
                 commentsAsync.when(
                   data: (comments) {
                     if (comments.isEmpty) {
-                      return const Padding(
+                      return Padding(
                         padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Text('No comments yet. Be the first to comment!', style: TextStyle(color: Colors.grey)),
+                        child: Text(context.tr(en: 'No comments yet. Be the first to comment!', si: 'තවම අදහස් නැත. පළමුව අදහස් දක්වන්න!', ta: 'இன்னும் கருத்துகள் இல்லை. முதலில் கருத்துத் தெரிவியுங்கள்!'), style: TextStyle(color: Colors.grey)),
                       );
                     }
                     return ListView.separated(
@@ -182,7 +183,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                     child: TextField(
                       controller: _commentController,
                       decoration: InputDecoration(
-                        hintText: 'Add a comment...',
+                        hintText: context.tr(en: 'Add a comment...', si: 'අදහසක් එක් කරන්න...', ta: 'கருத்தைச் சேர்க்கவும்...'),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),

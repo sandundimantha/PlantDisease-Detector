@@ -70,14 +70,14 @@ class _ConsultationStatusScreenState extends ConsumerState<ConsultationStatusScr
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Cancel this request?'),
-        content: const Text('Officers will no longer see it as waiting. You can send a new request at any time.'),
+        title: Text(context.tr(en: 'Cancel this request?', si: 'මෙම ඉල්ලීම අවලංගු කරන්නද?', ta: 'இந்தக் கோரிக்கையை ரத்து செய்யவா?')),
+        content: Text(context.tr(en: 'Officers will no longer see it as waiting. You can send a new request at any time.', si: 'නිලධාරීන්ට එය තවදුරටත් පොරොත්තුවෙන් ලෙස නොපෙනේ. ඕනෑම වේලාවක නව ඉල්ලීමක් යැවිය හැක.', ta: 'அலுவலர்கள் இனி இதைக் காத்திருப்பதாகப் பார்க்க மாட்டார்கள். எப்போது வேண்டுமானாலும் புதிய கோரிக்கையை அனுப்பலாம்.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep request')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr(en: 'Keep request', si: 'ඉල්ලීම තබා ගන්න', ta: 'கோரிக்கையை வைத்திரு'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Cancel request'),
+            child: Text(context.tr(en: 'Cancel request', si: 'ඉල්ලීම අවලංගු කරන්න', ta: 'கோரிக்கையை ரத்து செய்')),
           ),
         ],
       ),
@@ -121,11 +121,11 @@ class _ConsultationStatusScreenState extends ConsumerState<ConsultationStatusScr
                     const SizedBox(height: 16),
                     _buildDetails(c),
                     const SizedBox(height: 24),
-                    Text('Timeline', style: AppTextStyles.titleMedium),
+                    Text(context.tr(en: 'Timeline', si: 'කාලරේඛාව', ta: 'காலவரிசை'), style: AppTextStyles.titleMedium),
                     const SizedBox(height: 16),
                     ..._buildTimeline(c),
                     const SizedBox(height: 24),
-                    Text('Conversation', style: AppTextStyles.titleMedium),
+                    Text(context.tr(en: 'Conversation', si: 'සංවාදය', ta: 'உரையாடல்'), style: AppTextStyles.titleMedium),
                     const SizedBox(height: 12),
                     _buildMessages(c),
                     if (c.isPending) ...[
@@ -282,7 +282,7 @@ class _ConsultationStatusScreenState extends ConsumerState<ConsultationStatusScr
     final messagesAsync = ref.watch(consultationMessagesProvider(c.id));
     return messagesAsync.when(
       loading: () => const LinearProgressIndicator(),
-      error: (_, _) => Text('Could not load messages.', style: AppTextStyles.bodyMedium),
+      error: (_, _) => Text(context.tr(en: 'Could not load messages.', si: 'පණිවිඩ පූරණය කළ නොහැක.', ta: 'செய்திகளை ஏற்ற முடியவில்லை.'), style: AppTextStyles.bodyMedium),
       data: (messages) {
         if (messages.isEmpty) {
           return Container(
@@ -349,8 +349,8 @@ class _ConsultationStatusScreenState extends ConsumerState<ConsultationStatusScr
                 minLines: 1,
                 maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'Add more details for the officer…',
+                decoration: InputDecoration(
+                  hintText: context.tr(en: 'Add more details for the officer…', si: 'නිලධාරියා සඳහා තවත් විස්තර එක් කරන්න…', ta: 'அலுவலருக்கு மேலும் விவரங்களைச் சேர்க்கவும்…'),
                   border: InputBorder.none,
                 ),
               ),

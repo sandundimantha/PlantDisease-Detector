@@ -6,6 +6,9 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:plant_disease_detector/features/profile/presentation/screens/language_selection_screen.dart';
 import 'package:plant_disease_detector/shared/widgets/premium_app_bar.dart';
+import 'package:plant_disease_detector/core/providers/app_settings_provider.dart';
+import 'package:plant_disease_detector/features/profile/presentation/delete_account_flow.dart';
+import 'package:plant_disease_detector/features/profile/presentation/screens/info_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -13,6 +16,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLocale = ref.watch(localeProvider);
+    final appSettings = ref.watch(appSettingsProvider);
 
     String languageLabel = 'English';
     if (currentLocale.languageCode == 'si') {
@@ -48,17 +52,25 @@ class SettingsScreen extends ConsumerWidget {
               );
             },
           ),
-          _buildSettingsTile(
-            Icons.notifications_none_rounded,
-            context.tr(en: 'Notifications', si: 'දැනුම්දීම්', ta: 'அறிவிப்புகள்'),
-            context.tr(en: 'Enabled', si: 'සක්‍රියයි', ta: 'இயக்கப்பட்டது'),
-            onTap: () {},
-          ),
-          _buildSettingsTile(
-            Icons.dark_mode_outlined,
-            context.tr(en: 'Dark Mode', si: 'අඳුරු තේමාව', ta: 'இருண்ட பயன்முறை'),
-            context.tr(en: 'Off (System)', si: 'ක්‍රියාවිරහිතයි', ta: 'முடக்கப்பட்டது'),
-            onTap: () {},
+          // Dark Mode removed: the app has no dark theme, so the switch could do nothing.
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
+            ),
+            child: SwitchListTile(
+              secondary: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
+              title: Text(context.tr(en: 'Notifications', si: 'දැනුම්දීම්', ta: 'அறிவிப்புகள்'), style: AppTextStyles.titleMedium),
+              subtitle: Text(
+                context.tr(en: 'Announcements and treatment reminders', si: 'නිවේදන සහ ප්‍රතිකාර මතක් කිරීම්', ta: 'அறிவிப்புகள் மற்றும் சிகிச்சை நினைவூட்டல்கள்'),
+                style: AppTextStyles.bodySmall,
+              ),
+              value: appSettings.notifications,
+              activeThumbColor: AppColors.primary,
+              onChanged: (on) => ref.read(appSettingsProvider.notifier).setNotifications(on),
+            ),
           ),
           
           const SizedBox(height: 32),
@@ -71,27 +83,25 @@ class SettingsScreen extends ConsumerWidget {
             Icons.help_outline_rounded,
             context.tr(en: 'Help Center', si: 'උපකාරක මධ්‍යස්ථානය', ta: 'உதவி மையம்'),
             null,
-            onTap: () {},
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen(page: InfoPage.help))),
           ),
           _buildSettingsTile(
             Icons.privacy_tip_outlined,
             context.tr(en: 'Privacy Policy', si: 'රහස්‍යතා ප්‍රතිපත්තිය', ta: 'தனியுரிமைக் கொள்கை'),
             null,
-            onTap: () {},
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen(page: InfoPage.privacy))),
           ),
           _buildSettingsTile(
             Icons.description_outlined,
             context.tr(en: 'Terms of Service', si: 'සේවා කොන්දේසි', ta: 'சேவை விதிமுறைகள்'),
             null,
-            onTap: () {},
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen(page: InfoPage.terms))),
           ),
 
           const SizedBox(height: 48),
           Center(
             child: TextButton.icon(
-              onPressed: () {
-                // Delete account logic
-              },
+              onPressed: () => confirmAndDeleteAccount(context, ref),
               icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
               label: Text(
                 context.tr(en: 'Delete Account', si: 'ගිණුම මකන්න', ta: 'கணக்கை நீக்கு'),

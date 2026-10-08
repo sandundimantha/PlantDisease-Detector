@@ -11,10 +11,13 @@ import 'package:plant_disease_detector/features/profile/presentation/screens/lan
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/core/auth/user_role.dart';
+import 'package:plant_disease_detector/features/profile/presentation/delete_account_flow.dart';
+import 'package:plant_disease_detector/features/profile/presentation/screens/info_screen.dart';
+import 'package:plant_disease_detector/features/sync/presentation/screens/sync_status_screen.dart';
+import 'package:plant_disease_detector/core/providers/app_settings_provider.dart';
 import 'package:plant_disease_detector/features/home/application/saved_items_provider.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
@@ -30,9 +33,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  bool _notificationsOn = true;
-  bool _locationOn = true;
-  bool _offlineOn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -58,47 +58,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _Achievement(icon: "⭐", label: context.tr(en: "Top Farmer", si: "විශිෂ්ට ගොවියා", ta: "சிறந்த விவசாயி"), earned: scanCount >= 500),
     ];
 
+    final appSettings = ref.watch(appSettingsProvider);
     final settings = [
       _Setting(
         icon: "🔔",
         label: context.tr(en: "Notifications", si: "දැනුම්දීම්", ta: "அறிவிப்புகள்"),
-        sub: context.tr(en: "Disease alerts & tips", si: "රෝග අනතුරු ඇඟවීම් සහ උපදෙස්", ta: "நோய் எச்சரிக்கைகள் & குறிப்புகள்"),
+        sub: context.tr(en: "Announcements & treatment reminders", si: "නිවේදන සහ ප්‍රතිකාර මතක් කිරීම්", ta: "அறிவிப்புகள் & சிகிச்சை நினைவூட்டல்கள்"),
         toggle: true,
-        on: _notificationsOn,
+        on: appSettings.notifications,
+        onTap: () => ref.read(appSettingsProvider.notifier).setNotifications(!appSettings.notifications),
       ),
       _Setting(
         icon: "📍",
         label: context.tr(en: "Location", si: "ස්ථානය", ta: "இடம்"),
-        sub: locationState.isLoading
-            ? context.tr(en: "Locating...", si: "ස්ථානය සොයමින්...", ta: "கண்டறியப்படுகிறது...")
-            : locationState.address,
+        sub: !appSettings.location
+            ? context.tr(en: "Off — weather and nearby officers use Sri Lanka", si: "අක්‍රියයි — ශ්‍රී ලංකාව ලෙස භාවිතා වේ", ta: "முடக்கப்பட்டது — இலங்கை எனப் பயன்படுத்தப்படும்")
+            : locationState.isLoading
+                ? context.tr(en: "Locating...", si: "ස්ථානය සොයමින්...", ta: "கண்டறியப்படுகிறது...")
+                : locationState.address,
         toggle: true,
-        on: _locationOn,
+        on: appSettings.location,
+        onTap: () async {
+          await ref.read(appSettingsProvider.notifier).setLocation(!appSettings.location);
+          ref.read(locationProvider.notifier).fetchLocation();
+        },
       ),
       _Setting(
         icon: "🌐",
         label: context.tr(en: "Language", si: "භාෂාව", ta: "மொழி"),
         sub: languageLabel,
         toggle: false,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LanguageSelectionScreen())),
       ),
       _Setting(
         icon: "📱",
-        label: context.tr(en: "Offline Mode", si: "නොබැඳි ක්‍රමය", ta: "ஆஃப்லைன் பயன்முறை"),
-        sub: context.tr(en: "Scan without internet", si: "අන්තර්ජාලය නොමැතිව ස්කෑන් කරන්න", ta: "இணையம் இல்லாமல் ஸ்கேன் செய்"),
-        toggle: true,
-        on: _offlineOn,
+        label: context.tr(en: "Offline & Sync", si: "නොබැඳි සහ සමමුහුර්තය", ta: "ஆஃப்லைன் & ஒத்திசைவு"),
+        sub: context.tr(en: "Scans work without internet", si: "අන්තර්ජාලය නොමැතිවද ස්කෑන් කළ හැක", ta: "இணையம் இல்லாமலும் ஸ்கேன் செய்யலாம்"),
+        toggle: false,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncStatusScreen())),
       ),
       _Setting(
         icon: "📞",
-        label: context.tr(en: "Emergency Contact", si: "හදිසි ඇමතුම්", ta: "அவசர தொடர்பு"),
-        sub: "0771 234 567",
+        label: context.tr(en: "Agriculture Advisory Line", si: "කෘෂිකර්ම උපදේශන අංකය", ta: "வேளாண் ஆலோசனை எண்"),
+        sub: context.tr(en: "Call $agricultureHotline (Govi Sahana Sarana)", si: "$agricultureHotline අමතන්න (ගොවි සහන සරණ)", ta: "$agricultureHotline ஐ அழைக்கவும்"),
         toggle: false,
+        onTap: () => callAgricultureHotline(context),
       ),
       _Setting(
         icon: "❓",
         label: context.tr(en: "Help & Support", si: "උදව් සහ සහාය", ta: "உதவி & ஆதரவு"),
-        sub: context.tr(en: "FAQs and tutorials", si: "නිතර අසන ප්‍රශ්න සහ නිබන්ධන", ta: "அடிக்கடி கேட்கப்படும் கேள்விகள்"),
+        sub: context.tr(en: "FAQs and how to use the app", si: "නිතර අසන ප්‍රශ්න සහ භාවිත උපදෙස්", ta: "அடிக்கடி கேட்கப்படும் கேள்விகள்"),
         toggle: false,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen(page: InfoPage.help))),
       ),
     ];
 
@@ -183,7 +194,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     Center(
                       child: TextButton.icon(
-                        onPressed: _confirmDeleteAccount,
+                        onPressed: () => confirmAndDeleteAccount(context, ref),
                         icon: const Icon(Icons.delete_forever_outlined, color: AppColors.signOutText, size: 18),
                         label: Text(
                           context.tr(en: 'Delete Account', si: 'ගිණුම මකන්න', ta: 'கணக்கை நீக்கு'),
@@ -273,7 +284,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 child: const Icon(Icons.star_rounded, color: Colors.white, size: 10),
                               ),
                               const SizedBox(width: 4),
-                              Text('Active Member', style: AppTextStyles.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 10)),
+                              Text(context.tr(en: 'Active Member', si: 'සක්‍රීය සාමාජික', ta: 'செயலில் உள்ள உறுப்பினர்'), style: AppTextStyles.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 10)),
                             ],
                           ),
                         ],
@@ -467,57 +478,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // Delete Account — confirm, then remove the account in Supabase and sign out.
-  Future<void> _confirmDeleteAccount() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(context.tr(en: 'Delete your account?', si: 'ඔබේ ගිණුම මකන්නද?', ta: 'உங்கள் கணக்கை நீக்கவா?')),
-        content: Text(context.tr(
-          en: 'Your profile, scans, saved items, farm logs and consultations will be permanently deleted. This cannot be undone.',
-          si: 'ඔබේ පැතිකඩ, ස්කෑන්, සුරැකි අයිතම, ගොවි සටහන් සහ උපදේශන සදහටම මැකී යයි. මෙය ආපසු හැරවිය නොහැක.',
-          ta: 'உங்கள் சுயவிவரம், ஸ்கேன்கள், சேமித்தவை, பண்ணைப் பதிவுகள் மற்றும் ஆலோசனைகள் நிரந்தரமாக நீக்கப்படும். இதை மீட்டெடுக்க முடியாது.',
-        )),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.tr(en: 'Cancel', si: 'අවලංගු කරන්න', ta: 'ரத்து செய்')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(
-              context.tr(en: 'Delete', si: 'මකන්න', ta: 'நீக்கு'),
-              style: const TextStyle(color: AppColors.signOutText, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
-    final deletedText = context.tr(en: 'Your account has been deleted', si: 'ඔබේ ගිණුම මකා දමන ලදී', ta: 'உங்கள் கணக்கு நீக்கப்பட்டது');
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-    );
-    try {
-      await ref.read(userProvider.notifier).deleteMyAccount();
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      router.go('/login');
-      messenger.showSnackBar(SnackBar(content: Text(deletedText), backgroundColor: AppColors.primary));
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-      final message = e is PostgrestException ? e.message : 'Could not delete the account. Please try again.';
-      messenger.showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
-    }
-  }
-
   Widget _buildSettings(List<_Setting> settings) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
@@ -539,14 +499,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        if (s.label == "Language" || s.icon == "🌐" || s.label.contains("භාෂාව") || s.label.contains("மொழி")) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
-                          );
-                        }
-                      },
+                      onTap: s.onTap,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                         child: Row(
@@ -564,13 +517,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             if (s.toggle)
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    if (i == 0) _notificationsOn = !_notificationsOn;
-                                    if (i == 1) _locationOn = !_locationOn;
-                                    if (i == 3) _offlineOn = !_offlineOn;
-                                  });
-                                },
+                                onTap: s.onTap,
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
                                   width: 44,
@@ -627,6 +574,7 @@ class _Achievement {
 class _Setting {
   final String icon, label, sub;
   final bool toggle;
-  bool on;
-  _Setting({required this.icon, required this.label, required this.sub, required this.toggle, this.on = false});
+  final bool on;
+  final VoidCallback onTap;
+  _Setting({required this.icon, required this.label, required this.sub, required this.toggle, this.on = false, required this.onTap});
 }

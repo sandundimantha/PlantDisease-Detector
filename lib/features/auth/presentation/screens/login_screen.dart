@@ -7,6 +7,7 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/core/auth/user_role.dart';
+import 'package:plant_disease_detector/features/home/presentation/screens/main_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -27,6 +28,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Forgot password: Supabase emails a reset link to the address entered.
+  Future<void> _showForgotPassword() async {
+    final email = await showDialog<String>(
+      context: context,
+      builder: (_) => _ResetPasswordDialog(initialEmail: _emailController.text.trim()),
+    );
+    if (email == null || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr(en: 'Enter a valid email address', si: 'වලංගු විද්‍යුත් තැපැල් ලිපිනයක් ඇතුළත් කරන්න', ta: 'சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்')),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    final sentText = context.tr(
+      en: 'If an account exists for $email, a reset link has been sent. Check your inbox.',
+      si: '$email සඳහා ගිණුමක් ඇත්නම් යළි සැකසීමේ සබැඳියක් යවා ඇත. ඔබේ තැපැල් පෙට්ටිය පරීක්ෂා කරන්න.',
+      ta: '$email க்கு கணக்கு இருந்தால், மீட்டமைப்பு இணைப்பு அனுப்பப்பட்டது. உங்கள் இன்பாக்ஸைச் சரிபார்க்கவும்.',
+    );
+    final failText = context.tr(en: 'Could not send the email. Check your connection and try again.', si: 'විද්‍යුත් තැපෑල යැවිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'மின்னஞ்சலை அனுப்ப முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      messenger.showSnackBar(SnackBar(content: Text(sentText), backgroundColor: AppColors.primary, duration: const Duration(seconds: 5)));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(failText), backgroundColor: Colors.red));
+    }
   }
 
   Future<void> _onLogin() async {
@@ -71,6 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
+        ref.read(mainTabProvider.notifier).state = 0; // always land on Home
         context.go(homeRouteForRole(role));
       }
     } on AuthException catch (e) {
@@ -225,7 +257,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               // Flexible so long translations (e.g. Tamil) wrap instead of overflowing.
                               Flexible(
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: _showForgotPassword,
                                   style: TextButton.styleFrom(
                                     padding: EdgeInsets.zero,
                                     minimumSize: Size.zero,
@@ -285,40 +317,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: 32),
 
-                          // OR Divider
-                          Row(
-                            children: [
-                              Expanded(child: Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.2))),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(context.tr(en: 'OR', si: 'හෝ', ta: 'அல்லது'), style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary.withValues(alpha: 0.6))),
-                              ),
-                              Expanded(child: Container(height: 1, color: AppColors.textPrimary.withValues(alpha: 0.2))),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Social Login Label
-                          Text(
-                            context.tr(en: 'Social Login', si: 'සමාජ මාධ්‍ය හරහා ඇතුල් වන්න', ta: 'சமூக ஊடக உள்நுழைவு'),
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Social Buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildSocialCircle(Icons.facebook_rounded, AppColors.facebook, () => context.go('/main')),
-                              const SizedBox(width: 24),
-                              _buildSocialCircle(Icons.g_mobiledata_rounded, Colors.red, () => context.go('/main'), iconSize: 44),
-                              const SizedBox(width: 24),
-                              _buildSocialCircle(Icons.apple_rounded, Colors.black, () => context.go('/main')),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
-
+                          // Social login removed: those buttons opened the app without signing in.
                           // Sign up text
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -379,29 +378,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildSocialCircle(IconData icon, Color color, VoidCallback onTap, {double iconSize = 28}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.8),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Icon(icon, color: color, size: iconSize),
-        ),
-      ),
-    );
-  }
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -436,6 +412,67 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         ),
       ),
+    );
+  }
+}
+
+
+/// Asks for the email to send a password reset link to. Owns its text
+/// controller so it is only disposed after the dialog has fully closed.
+class _ResetPasswordDialog extends StatefulWidget {
+  final String initialEmail;
+  const _ResetPasswordDialog({required this.initialEmail});
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  late final TextEditingController _controller = TextEditingController(text: widget.initialEmail);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(context.tr(en: 'Reset your password', si: 'මුරපදය යළි සකසන්න', ta: 'கடவுச்சொல்லை மீட்டமைக்கவும்')),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.tr(
+            en: 'Enter your email. We will send you a link to set a new password.',
+            si: 'ඔබේ විද්‍යුත් තැපෑල ඇතුළත් කරන්න. නව මුරපදයක් සැකසීමට සබැඳියක් එවනු ලැබේ.',
+            ta: 'உங்கள் மின்னஞ்சலை உள்ளிடவும். புதிய கடவுச்சொல்லை அமைக்க இணைப்பு அனுப்பப்படும்.',
+          )),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'name@example.com',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.tr(en: 'Cancel', si: 'අවලංගු කරන්න', ta: 'ரத்து செய்')),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          child: Text(context.tr(en: 'Send link', si: 'සබැඳිය යවන්න', ta: 'இணைப்பை அனுப்பு'), style: const TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 }

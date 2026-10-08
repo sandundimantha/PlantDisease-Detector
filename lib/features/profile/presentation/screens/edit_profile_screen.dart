@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
@@ -9,7 +10,6 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/providers/user_provider.dart';
 import 'package:plant_disease_detector/shared/widgets/premium_app_bar.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -131,13 +131,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            Text('Update Profile Picture', style: AppTextStyles.titleMedium),
+            Text(context.tr(en: 'Update Profile Picture', si: 'පැතිකඩ පින්තූරය වෙනස් කරන්න', ta: 'சுயவிவரப் படத்தைப் புதுப்பி'), style: AppTextStyles.titleMedium),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildPickerOption(icon: Icons.camera_alt_rounded, label: 'Camera', onTap: () => _pickImage(ImageSource.camera)),
-                _buildPickerOption(icon: Icons.photo_library_rounded, label: 'Gallery', onTap: () => _pickImage(ImageSource.gallery)),
+                _buildPickerOption(icon: Icons.camera_alt_rounded, label: context.tr(en: 'Camera', si: 'කැමරාව', ta: 'கேமரா'), onTap: () => _pickImage(ImageSource.camera)),
+                _buildPickerOption(icon: Icons.photo_library_rounded, label: context.tr(en: 'Gallery', si: 'ගැලරිය', ta: 'கேலரி'), onTap: () => _pickImage(ImageSource.gallery)),
               ],
             ),
             const SizedBox(height: 32),
@@ -196,18 +196,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         imagePath: finalImagePath,
       );
 
-      await ref.read(userProvider.notifier).saveUserData(updatedUser);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        Navigator.pop(context);
-      }
+      final messenger = ScaffoldMessenger.of(context);
+      final savedText = context.tr(en: 'Profile updated', si: 'පැතිකඩ යාවත්කාලීන කළා', ta: 'சுயவிவரம் புதுப்பிக்கப்பட்டது');
+      final failText = context.tr(
+        en: 'Could not save to your account. Check your connection and try again.',
+        si: 'ඔබේ ගිණුමට සුරැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.',
+        ta: 'உங்கள் கணக்கில் சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.',
+      );
+      final saved = await ref.read(userProvider.notifier).saveUserData(updatedUser);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+        content: Text(saved ? savedText : failText),
+        backgroundColor: saved ? AppColors.primary : Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ));
+      if (saved) Navigator.pop(context);
     }
   }
 
@@ -216,7 +219,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: PremiumAppBar(
-        title: Text('Edit Profile', style: AppTextStyles.titleMedium),
+        title: Text(context.tr(en: 'Edit Profile', si: 'පැතිකඩ සංස්කරණය', ta: 'சுயவிவரத்தைத் திருத்து'), style: AppTextStyles.titleMedium),
         actions: const [
           LanguageSelectorButton(),
         ],
@@ -279,13 +282,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _buildCardContainer(
                 child: Column(
                   children: [
-                    _buildTextField(controller: _nameController, label: 'Full Name', icon: Icons.badge_outlined),
+                    _buildTextField(controller: _nameController, label: context.tr(en: 'Full Name', si: 'සම්පූර්ණ නම', ta: 'முழு பெயர்'), icon: Icons.badge_outlined),
                     const Divider(height: 1),
-                    _buildTextField(controller: _phoneController, label: 'Phone Number', icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
+                    _buildTextField(controller: _phoneController, label: context.tr(en: 'Phone Number', si: 'දුරකථන අංකය', ta: 'தொலைபேசி எண்'), icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
                     const Divider(height: 1),
-                    _buildTextField(controller: _emailController, label: 'Email Address', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+                    _buildTextField(controller: _emailController, label: context.tr(en: 'Email Address', si: 'විද්‍යුත් තැපැල් ලිපිනය', ta: 'மின்னஞ்சல் முகவரி'), icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
                     const Divider(height: 1),
-                    _buildDropdownField(label: 'District', icon: Icons.location_on_outlined),
+                    _buildDropdownField(label: context.tr(en: 'District', si: 'දිස්ත්‍රික්කය', ta: 'மாவட்டம்'), icon: Icons.location_on_outlined),
                   ],
                 ),
               ),
@@ -296,16 +299,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _buildCardContainer(
                 child: Column(
                   children: [
-                    _buildTextField(controller: _farmNameController, label: 'Farm Name', icon: Icons.landscape_outlined),
+                    _buildTextField(controller: _farmNameController, label: context.tr(en: 'Farm Name', si: 'ගොවිපලේ නම', ta: 'பண்ணை பெயர்'), icon: Icons.landscape_outlined),
                     const Divider(height: 1),
-                    _buildTextField(controller: _farmSizeController, label: 'Farm Size (Acres)', icon: Icons.square_foot_rounded, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+                    _buildTextField(controller: _farmSizeController, label: context.tr(en: 'Farm Size (Acres)', si: 'ගොවිපලේ ප්‍රමාණය (අක්කර)', ta: 'பண்ணை அளவு (ஏக்கர்)'), icon: Icons.square_foot_rounded, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
               // Crops Section
-              Text('Primary Crops', style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary)),
+              Text(context.tr(en: 'Primary Crops', si: 'ප්‍රධාන බෝග', ta: 'முக்கிய பயிர்கள்'), style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary)),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -342,7 +345,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _buildCardContainer(
                 child: _buildTextField(
                   controller: _bioController, 
-                  label: 'Tell us about your farming journey...', 
+                  label: context.tr(en: 'Tell us about your farming journey...', si: 'ඔබේ ගොවි ගමන ගැන අපට කියන්න...', ta: 'உங்கள் விவசாயப் பயணம் பற்றிச் சொல்லுங்கள்...'), 
                   icon: Icons.edit_note_rounded,
                   maxLines: 4,
                 ),
@@ -365,7 +368,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                   ),
-                  child: Text('Save Changes', style: AppTextStyles.titleMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(context.tr(en: 'Save Changes', si: 'වෙනස්කම් සුරකින්න', ta: 'மாற்றங்களைச் சேமி'), style: AppTextStyles.titleMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 40),

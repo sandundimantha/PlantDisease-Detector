@@ -26,7 +26,7 @@ class TfLiteService {
     final image = img.decodeImage(bytes);
     if (image == null) return null;
 
-    final resizedImage = img.copyResize(image, width: 224, height: 224);
+    final resizedImage = img.copyResize(image, width: 224, height: 224, interpolation: img.Interpolation.linear);
     
     // Normalize and prepare input tensor [1, 224, 224, 3]
     var input = List.generate(

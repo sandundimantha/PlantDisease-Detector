@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/models/outbreak_report.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:plant_disease_detector/core/providers/location_provider.dart';
 
 final outbreakProvider = FutureProvider<List<OutbreakReport>>((ref) async {
   final client = Supabase.instance.client;
-  final response = await client.from('outbreak_reports').select();
-  return (response as List).map((row) => OutbreakReport.fromJson(row)).toList();
+  final pos = ref.watch(locationProvider.select((s) => s.position));
+  final response = await client.from('outbreak_reports').select().order('created_at', ascending: false);
+  return (response as List)
+      .map((row) => OutbreakReport.fromJson(row, fromLat: pos?.latitude, fromLng: pos?.longitude))
+      .toList();
 });
 
 class OutbreakService {
@@ -14,7 +18,7 @@ class OutbreakService {
   Future<void> createOutbreak(Map<String, dynamic> data) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('Not logged in');
-    data['reporter_id'] = user.id;
+    data['reported_by'] = user.id;
     await _client.from('outbreak_reports').insert(data);
   }
 

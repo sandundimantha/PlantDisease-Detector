@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/features/weather/data/weather_model.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -75,10 +76,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.search_rounded, color: Colors.white),
-                        onPressed: () {},
-                      ),
+                      const SizedBox(width: 48), // keeps the title centred
                       const SizedBox(width: 4),
                       const LanguageSelectorButton(isDark: true, isCompact: true),
                     ],
@@ -129,7 +127,11 @@ class WeatherForecastScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          '${context.tr(en: 'Feels like', si: 'දැනෙන උෂ්ණත්වය', ta: 'உணர்வது')} ${currentTemp + 1}°C  |  H: ${currentTemp + 3}°  |  L: ${currentTemp - 4}°',
+                          weatherState.weather == null
+                              ? ''
+                              : '${context.tr(en: 'Feels like', si: 'දැනෙන උෂ්ණත්වය', ta: 'உணர்வது')} ${weatherState.weather!.feelsLike.round()}°C'
+                                  '${weatherState.weather!.daily.isEmpty ? '' : '  |  H: ${weatherState.weather!.daily.first.maxTemp.round()}°  |  L: ${weatherState.weather!.daily.first.minTemp.round()}°'}'
+                                  '  |  ${context.tr(en: 'Humidity', si: 'ආර්ද්‍රතාවය', ta: 'ஈரப்பதம்')} ${weatherState.weather!.humidity}%',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLarge.copyWith(color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w500, fontSize: 16),
                         ),
@@ -170,7 +172,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
                                     physics: const BouncingScrollPhysics(),
-                                    children: _buildDynamicHourly(currentTemp, isDay),
+                                    children: _buildHourly(context, weatherState.weather),
                                   ),
                                 ),
                                 
@@ -179,7 +181,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                 const SizedBox(height: 16),
                                 
                                 // 7-Day List
-                                ..._buildDynamicDaily(currentTemp),
+                                ..._buildDaily(context, weatherState.weather),
                                 ],
                               ),
                             ),
@@ -198,31 +200,54 @@ class WeatherForecastScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _buildDynamicHourly(int currentTemp, bool isDay) {
-    final now = DateTime.now();
-    return List.generate(6, (index) {
-      final hour = (now.hour + index) % 24;
-      final isHourDay = hour > 5 && hour < 18;
-      final timeStr = '${hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)} ${hour >= 12 ? 'PM' : 'AM'}';
-      final tempStr = '${currentTemp + (index == 0 ? 0 : (index % 3 == 0 ? 1 : 0))}°';
-      final icon = isHourDay ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded;
-      final iconColor = isHourDay ? Colors.amber : Colors.indigo.shade300;
-      return _buildHourlyCard(timeStr, icon, tempStr, iconColor, index == 0);
-    });
+  static (IconData, Color) _iconFor(int code, bool isDay) {
+    if (code >= 95) return (Icons.thunderstorm_rounded, Colors.blueGrey.shade200);
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return (Icons.water_drop_rounded, Colors.lightBlue.shade200);
+    if (code == 45 || code == 48) return (Icons.foggy, Colors.grey.shade300);
+    if (code >= 1 && code <= 3) return (Icons.cloud_queue_rounded, Colors.grey.shade300);
+    return isDay ? (Icons.wb_sunny_rounded, Colors.amber) : (Icons.nights_stay_rounded, Colors.indigo.shade300);
   }
 
-  List<Widget> _buildDynamicDaily(int currentTemp) {
-    final now = DateTime.now();
-    final days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-    return List.generate(7, (index) {
-      final dayName = index == 0 ? 'TODAY' : days[(now.weekday - 1 + index) % 7];
-      final isSunny = index % 3 != 0;
-      final icon = isSunny ? Icons.wb_sunny_rounded : Icons.cloud_queue_rounded;
-      final iconColor = isSunny ? Colors.amber : Colors.grey;
-      final high = '${currentTemp + 2 + (index % 2)}°';
-      final low = '${currentTemp - 4 - (index % 2)}°';
-      return _buildDailyRow(dayName, icon, high, low, iconColor);
-    });
+  /// Next six hours from Open-Meteo.
+  List<Widget> _buildHourly(BuildContext context, WeatherModel? w) {
+    final hours = w?.hourly.take(6).toList() ?? const <HourlyForecast>[];
+    if (hours.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(context.tr(en: 'Forecast not available', si: 'අනාවැකිය ලබා ගත නොහැක', ta: 'முன்னறிவிப்பு கிடைக்கவில்லை'), style: const TextStyle(color: Colors.white70)),
+        ),
+      ];
+    }
+    return [
+      for (var i = 0; i < hours.length; i++)
+        () {
+          final h = hours[i];
+          final hour = h.time.hour;
+          final isHourDay = hour > 5 && hour < 18;
+          final timeStr = i == 0
+              ? context.tr(en: 'Now', si: 'දැන්', ta: 'இப்போது')
+              : '${hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)} ${hour >= 12 ? 'PM' : 'AM'}';
+          final (icon, color) = _iconFor(h.weatherCode, isHourDay);
+          return _buildHourlyCard(timeStr, icon, '${h.temperature.round()}°', color, i == 0);
+        }(),
+    ];
+  }
+
+  /// Seven-day forecast from Open-Meteo, with chance of rain.
+  List<Widget> _buildDaily(BuildContext context, WeatherModel? w) {
+    final days = w?.daily ?? const <DailyForecast>[];
+    const names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    return [
+      for (var i = 0; i < days.length; i++)
+        () {
+          final d = days[i];
+          final name = i == 0 ? context.tr(en: 'TODAY', si: 'අද', ta: 'இன்று') : names[d.date.weekday - 1];
+          final (icon, color) = _iconFor(d.weatherCode, true);
+          final label = d.rainChance > 0 ? '$name  💧${d.rainChance}%' : name;
+          return _buildDailyRow(label, icon, '${d.maxTemp.round()}°', '${d.minTemp.round()}°', color);
+        }(),
+    ];
   }
 
   Widget _buildHourlyCard(String time, IconData icon, String temp, Color iconColor, bool isSelected) {

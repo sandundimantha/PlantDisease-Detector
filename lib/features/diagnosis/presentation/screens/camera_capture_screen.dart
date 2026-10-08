@@ -284,8 +284,10 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                         Navigator.pop(context);
                       },
                     ),
-                    // Usability UI-01: Clear text label for flash button
-                    GestureDetector(
+                    // Usability UI-01: Clear text label for flash button.
+                    // Flexible + scale-down so long Sinhala/Tamil labels never overflow.
+                    const SizedBox(width: 8),
+                    Flexible(child: FittedBox(fit: BoxFit.scaleDown, child: GestureDetector(
                       onTap: _toggleFlash,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(30),
@@ -322,7 +324,8 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                           ),
                         ),
                       ),
-                    ),
+                    ))),
+                    const SizedBox(width: 8),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -351,7 +354,7 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                                     const Icon(Icons.help_outline_rounded, color: AppColors.copperLight, size: 16),
                                     const SizedBox(width: 4),
                                     Text(
-                                      context.tr(en: 'GUIDE ?', si: 'මඟපෙන්වීම ?', ta: 'வழிகாட்டி ?'),
+                                      context.tr(en: 'GUIDE', si: 'උපදෙස්', ta: 'வழிகாட்டி'),
                                       style: AppTextStyles.titleSmall.copyWith(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
                                     ),
                                   ],

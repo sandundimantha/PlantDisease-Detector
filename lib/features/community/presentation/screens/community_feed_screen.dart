@@ -5,6 +5,7 @@ import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/providers/user_provider.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:plant_disease_detector/shared/widgets/premium_app_bar.dart';
 import 'package:plant_disease_detector/features/community/application/community_provider.dart';
 import 'package:plant_disease_detector/features/community/data/community_models.dart';
@@ -70,6 +71,58 @@ class CommunityFeedScreen extends ConsumerStatefulWidget {
 
 class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
   int _selectedFilterIndex = 0;
+  bool _searching = false;
+  String _query = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Applies the selected chip and the search text to the feed.
+  /// Trending: most liked/commented first · My Crops: posts about the user's
+  /// crops · Q&A: questions.
+  List<CommunityPost> _visiblePosts(List<CommunityPost> posts, List<String> myCrops) {
+    final q = _query.trim().toLowerCase();
+    Iterable<CommunityPost> list = posts;
+    if (q.isNotEmpty) {
+      list = list.where((p) =>
+          p.content.toLowerCase().contains(q) ||
+          (p.title ?? '').toLowerCase().contains(q) ||
+          (p.author?.fullName ?? '').toLowerCase().contains(q));
+    }
+    switch (_selectedFilterIndex) {
+      case 1:
+        final crops = myCrops.map((c) => c.toLowerCase()).where((c) => c.isNotEmpty).toList();
+        list = list.where((p) {
+          if (p.category == 'My Crops') return true;
+          final text = '${p.title ?? ''} ${p.content}'.toLowerCase();
+          return crops.any(text.contains);
+        });
+      case 2:
+        list = list.where((p) => p.category == 'Q&A' || p.content.contains('?') || (p.title ?? '').contains('?'));
+      default:
+        final sorted = list.toList()
+          ..sort((a, b) {
+            final byEngagement = (b.likesCount + b.commentsCount).compareTo(a.likesCount + a.commentsCount);
+            return byEngagement != 0 ? byEngagement : b.createdAt.compareTo(a.createdAt);
+          });
+        return sorted;
+    }
+    return list.toList();
+  }
+
+  Future<void> _sharePost(CommunityPost post) async {
+    final author = post.author?.fullName ?? 'A farmer';
+    final title = post.title?.isNotEmpty == true ? '${post.title}\n' : '';
+    await SharePlus.instance.share(ShareParams(
+      text: '$title${post.content}\n\n— $author, Lumina farmer community',
+      subject: post.title ?? 'Lumina community post',
+    ));
+  }
+
   final List<Map<String, dynamic>> _filters = [
     {'title': 'Trending', 'icon': Icons.local_fire_department_rounded},
     {'title': 'My Crops', 'icon': Icons.eco_rounded},
@@ -85,16 +138,36 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade200, // Facebook-style grey background behind cards
       appBar: PremiumAppBar(
-        title: Text(context.tr(en: 'Farmer Community', si: 'ගොවි සංසදය', ta: 'விவசாயிகள் மன்றம்')),
+        title: _searching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: (v) => setState(() => _query = v),
+                decoration: InputDecoration(
+                  hintText: context.tr(en: 'Search posts', si: 'පළකිරීම් සොයන්න', ta: 'இடுகைகளைத் தேடு'),
+                  border: InputBorder.none,
+                ),
+              )
+            : Text(context.tr(en: 'Farmer Community', si: 'ගොවි සංසදය', ta: 'விவசாயிகள் மன்றம்')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {}, // Future search feature
+            tooltip: _searching
+                ? context.tr(en: 'Close search', si: 'සෙවීම වසන්න', ta: 'தேடலை மூடு')
+                : context.tr(en: 'Search', si: 'සොයන්න', ta: 'தேடு'),
+            icon: Icon(_searching ? Icons.close_rounded : Icons.search_rounded),
+            onPressed: () => setState(() {
+              _searching = !_searching;
+              if (!_searching) {
+                _query = '';
+                _searchController.clear();
+              }
+            }),
           )
         ],
       ),
       body: postsAsync.when(
-        data: (posts) {
+        data: (allPosts) {
+          final posts = _visiblePosts(allPosts, userData.primaryCrops);
           return RefreshIndicator(
             onRefresh: () => ref.read(communityFeedProvider.notifier).refresh(),
             color: AppColors.primary,
@@ -204,7 +277,9 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                           Icon(Icons.nature_people_rounded, size: 80, color: AppColors.primary.withOpacity(0.3)),
                           const SizedBox(height: 16),
                           Text(
-                            context.tr(en: 'No posts yet', si: 'පළකිරීම් කිසිවක් නැත', ta: 'இடுகைகள் எதுவும் இல்லை'),
+                            allPosts.isEmpty
+                                ? context.tr(en: 'No posts yet', si: 'පළකිරීම් කිසිවක් නැත', ta: 'இடுகைகள் எதுவும் இல்லை')
+                                : context.tr(en: 'No matching posts', si: 'ගැළපෙන පළකිරීම් නැත', ta: 'பொருந்தும் இடுகைகள் இல்லை'),
                             style: AppTextStyles.titleMedium.copyWith(color: Colors.grey.shade800),
                           ),
                           const SizedBox(height: 8),
@@ -279,7 +354,26 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
             );
           },
         ),
-        error: (error, _) => Center(child: Text('Error: \$error')),
+        error: (error, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.textSecondary),
+                const SizedBox(height: 12),
+                Text(
+                  context.tr(en: 'Could not load posts', si: 'පළකිරීම් පූරණය කළ නොහැක', ta: 'இடுகைகளை ஏற்ற முடியவில்லை'),
+                  style: AppTextStyles.titleSmall,
+                ),
+                TextButton(
+                  onPressed: () => ref.invalidate(communityFeedProvider),
+                  child: Text(context.tr(en: 'Retry', si: 'නැවත උත්සාහ කරන්න', ta: 'மீண்டும் முயற்சி')),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/create_post'),
@@ -363,13 +457,13 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                         final confirm = await showDialog<bool>(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: const Text('Delete Post'),
-                            content: const Text('Are you sure you want to delete this post?'),
+                            title: Text(context.tr(en: 'Delete Post', si: 'පළකිරීම මකන්න', ta: 'இடுகையை நீக்கு')),
+                            content: Text(context.tr(en: 'Are you sure you want to delete this post?', si: 'මෙම පළකිරීම මකන්න අවශ්‍ය බව විශ්වාසද?', ta: 'இந்த இடுகையை நீக்க விரும்புகிறீர்களா?')),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr(en: 'Cancel', si: 'අවලංගු කරන්න', ta: 'ரத்து செய்'))),
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, true), 
-                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                child: Text(context.tr(en: 'Delete', si: 'මකන්න', ta: 'நீக்கு'), style: TextStyle(color: Colors.red)),
                               ),
                             ],
                           ),
@@ -380,13 +474,13 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
-                        child: Row(children: [Icon(Icons.edit, size: 20, color: Colors.black87), SizedBox(width: 8), Text('Edit Post')]),
+                        child: Row(children: [Icon(Icons.edit, size: 20, color: Colors.black87), SizedBox(width: 8), Text(context.tr(en: 'Edit Post', si: 'පළකිරීම සංස්කරණය', ta: 'இடுகையைத் திருத்து'))]),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
-                        child: Row(children: [Icon(Icons.delete, size: 20, color: Colors.red), SizedBox(width: 8), Text('Delete Post', style: TextStyle(color: Colors.red))]),
+                        child: Row(children: [Icon(Icons.delete, size: 20, color: Colors.red), SizedBox(width: 8), Text(context.tr(en: 'Delete Post', si: 'පළකිරීම මකන්න', ta: 'இடுகையை நீக்கு'), style: TextStyle(color: Colors.red))]),
                       ),
                     ],
                   ),
@@ -471,7 +565,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
               Expanded(
                 child: _buildInteractionButton(
                   icon: post.isLikedByMe ? Icons.thumb_up : Icons.thumb_up_outlined,
-                  label: 'Like',
+                  label: context.tr(en: 'Like', si: 'කැමතියි', ta: 'விருப்பம்'),
                   color: post.isLikedByMe ? AppColors.primary : Colors.grey.shade700,
                   onTap: () => ref.read(communityFeedProvider.notifier).toggleLike(post.id),
                 ),
@@ -479,7 +573,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
               Expanded(
                 child: _buildInteractionButton(
                   icon: Icons.chat_bubble_outline,
-                  label: 'Comment',
+                  label: context.tr(en: 'Comment', si: 'අදහස්', ta: 'கருத்து'),
                   color: Colors.grey.shade700,
                   onTap: () => context.push('/post_detail', extra: post),
                 ),
@@ -487,9 +581,9 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
               Expanded(
                 child: _buildInteractionButton(
                   icon: Icons.share_outlined,
-                  label: 'Share',
+                  label: context.tr(en: 'Share', si: 'බෙදාගන්න', ta: 'பகிர்'),
                   color: Colors.grey.shade700,
-                  onTap: () {},
+                  onTap: () => _sharePost(post),
                 ),
               ),
             ],
@@ -539,7 +633,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Edit Post', style: AppTextStyles.titleMedium),
+              Text(context.tr(en: 'Edit Post', si: 'පළකිරීම සංස්කරණය', ta: 'இடுகையைத் திருத்து'), style: AppTextStyles.titleMedium),
               const SizedBox(height: 16),
               if (post.title != null) ...[
                 TextField(
@@ -572,7 +666,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Save Changes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(context.tr(en: 'Save Changes', si: 'වෙනස්කම් සුරකින්න', ta: 'மாற்றங்களைச் சேமி'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 20),

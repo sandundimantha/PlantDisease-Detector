@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
@@ -22,8 +23,10 @@ class ExpertConsultScreen extends ConsumerStatefulWidget {
   final String? diseaseName;
   final String? scanId;
   final String? imageUrl;
+  final String? crop;
+  final String? severity;
 
-  const ExpertConsultScreen({super.key, this.diseaseName, this.scanId, this.imageUrl});
+  const ExpertConsultScreen({super.key, this.diseaseName, this.scanId, this.imageUrl, this.crop, this.severity});
 
   @override
   ConsumerState<ExpertConsultScreen> createState() => _ExpertConsultScreenState();
@@ -61,6 +64,8 @@ class _ExpertConsultScreenState extends ConsumerState<ExpertConsultScreen> {
         initialDisease: widget.diseaseName,
         scanId: widget.scanId,
         imageUrl: widget.imageUrl,
+        initialCrop: widget.crop,
+        initialSeverity: widget.severity,
       ),
     );
     if (created == null || !mounted) return;
@@ -366,7 +371,10 @@ class _RequestConsultSheet extends ConsumerStatefulWidget {
   final String? scanId;
   final String? imageUrl;
 
-  const _RequestConsultSheet({this.officer, this.initialDisease, this.scanId, this.imageUrl});
+  final String? initialCrop;
+  final String? initialSeverity;
+
+  const _RequestConsultSheet({this.officer, this.initialDisease, this.scanId, this.imageUrl, this.initialCrop, this.initialSeverity});
 
   @override
   ConsumerState<_RequestConsultSheet> createState() => _RequestConsultSheetState();
@@ -388,6 +396,10 @@ class _RequestConsultSheetState extends ConsumerState<_RequestConsultSheet> {
   void initState() {
     super.initState();
     _problemCtrl = TextEditingController(text: widget.initialDisease ?? '');
+    // Prefill from the scan result when opened from there.
+    final crop = widget.initialCrop;
+    if (crop != null) _crop = _crops.contains(crop) ? crop : 'Other';
+    if (widget.initialSeverity case 'low' || 'medium' || 'high') _severity = widget.initialSeverity!;
     _locationCtrl = TextEditingController(text: ref.read(userProvider).district);
   }
 
@@ -474,6 +486,42 @@ class _RequestConsultSheetState extends ConsumerState<_RequestConsultSheet> {
                   ),
                   const SizedBox(height: 20),
 
+                  if (widget.scanId != null || widget.imageUrl != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              width: 52,
+                              height: 52,
+                              child: widget.imageUrl != null
+                                  ? SmartImage(src: widget.imageUrl!, fit: BoxFit.cover)
+                                  : Container(color: AppColors.primary.withValues(alpha: 0.1), child: const Icon(Icons.eco_rounded, color: AppColors.primary)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context.tr(
+                                en: 'Your scan result and photo are attached, so the officer can see what you saw.',
+                                si: 'ඔබේ ස්කෑන් ප්‍රතිඵලය සහ ඡායාරූපය අමුණා ඇත, එබැවින් නිලධාරියාට ඔබ දුටු දේ දැකිය හැක.',
+                                ta: 'உங்கள் ஸ்கேன் முடிவும் படமும் இணைக்கப்பட்டுள்ளன; அலுவலர் நீங்கள் பார்த்ததைப் பார்க்கலாம்.',
+                              ),
+                              style: AppTextStyles.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Text(context.tr(en: 'Crop', si: 'වගාව', ta: 'பயிர்'), style: AppTextStyles.titleSmall),
                   const SizedBox(height: 8),
                   Wrap(

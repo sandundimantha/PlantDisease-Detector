@@ -69,7 +69,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete this case?'),
+        title: Text(context.tr(en: 'Delete this case?', si: 'මෙම නඩුව මකන්නද?', ta: 'இந்த வழக்கை நீக்கவா?')),
         content: Text(
           'The case from ${c.farmerName ?? 'this farmer'} and its chat history will be '
           'permanently removed. This cannot be undone.',
@@ -77,12 +77,12 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr(en: 'Cancel', si: 'අවලංගු කරන්න', ta: 'ரத்து செய்')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: Text(context.tr(en: 'Delete', si: 'මකන්න', ta: 'நீக்கு')),
           ),
         ],
       ),
@@ -163,15 +163,15 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                   physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
-                      _buildFilterChip(context, label: 'All Cases', filter: 'all'),
+                      _buildFilterChip(context, label: context.tr(en: 'All Cases', si: 'සියලු නඩු', ta: 'அனைத்து வழக்குகள்'), filter: 'all'),
                       const SizedBox(width: 12),
-                      _buildFilterChip(context, label: 'Urgent', filter: 'urgent',
+                      _buildFilterChip(context, label: context.tr(en: 'Urgent', si: 'හදිසි', ta: 'அவசரம்'), filter: 'urgent',
                           color: const Color(0xFFEF4444)),
                       const SizedBox(width: 12),
-                      _buildFilterChip(context, label: 'Pending', filter: 'pending',
+                      _buildFilterChip(context, label: context.tr(en: 'Pending', si: 'පොරොත්තුවෙන්', ta: 'நிலுவையில்'), filter: 'pending',
                           color: const Color(0xFFF59E0B)),
                       const SizedBox(width: 12),
-                      _buildFilterChip(context, label: 'Resolved', filter: 'resolved',
+                      _buildFilterChip(context, label: context.tr(en: 'Resolved', si: 'විසඳා ඇත', ta: 'தீர்க்கப்பட்டது'), filter: 'resolved',
                           color: const Color(0xFF10B981)),
                     ],
                   ),
@@ -183,7 +183,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                     children: [
                       const Icon(Icons.swipe_left_rounded, size: 16, color: AppColors.textSecondary),
                       const SizedBox(width: 6),
-                      Text('Swipe a closed case left to delete it',
+                      Text(context.tr(en: 'Swipe a closed case left to delete it', si: 'වසා දැමූ නඩුවක් මැකීමට වමට ස්වයිප් කරන්න', ta: 'மூடப்பட்ட வழக்கை நீக்க இடதுபுறம் இழுக்கவும்'),
                           style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
                     ],
                   ),
@@ -394,7 +394,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                 color: Color(0xFF0F766E)),
           ),
           const SizedBox(height: 20),
-          Text('No Cases Found',
+          Text(context.tr(en: 'No Cases Found', si: 'නඩු හමු නොවීය', ta: 'வழக்குகள் எதுவும் இல்லை'),
               style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text('No ${_selectedFilter == 'all' ? '' : _selectedFilter} cases at the moment.',
@@ -411,13 +411,13 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
         children: [
           const Icon(Icons.error_outline_rounded, size: 56, color: Color(0xFFEF4444)),
           const SizedBox(height: 16),
-          Text('Failed to load cases',
+          Text(context.tr(en: 'Failed to load cases', si: 'නඩු පූරණය කළ නොහැක', ta: 'வழக்குகளை ஏற்ற முடியவில்லை'),
               style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: () => ref.refresh(consultationsProvider(null)),
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(context.tr(en: 'Retry', si: 'නැවත උත්සාහ කරන්න', ta: 'மீண்டும் முயற்சி')),
           ),
         ],
       ),
@@ -619,12 +619,12 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
         color: const Color(0xFFEF4444),
         borderRadius: BorderRadius.circular(24),
       ),
-      child: const Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.delete_rounded, color: Colors.white, size: 28),
           SizedBox(height: 4),
-          Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(context.tr(en: 'Delete', si: 'මකන්න', ta: 'நீக்கு'), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ],
       ),
     );

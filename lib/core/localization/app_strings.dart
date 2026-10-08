@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
 
 /// Context extension for instant, reactive, multi-language string lookup.
 /// Dynamically updates whenever the app locale changes (en, si, ta).
@@ -254,7 +255,8 @@ class AppStrings {
     if (entry != null && entry.containsKey(code)) {
       return entry[code]!;
     }
-    return name;
+    // Labels from the on-device model (38 classes).
+    return DiseaseCatalog.localizedName(name, code);
   }
 
   static String translateSymptom(String symptom, String code) {

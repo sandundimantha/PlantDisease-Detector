@@ -200,8 +200,8 @@ class _OfficerHomeTab extends ConsumerWidget {
         backgroundColor: const Color(0xFF0F766E),
       ));
     } catch (e) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Status could not be saved. Check your connection.'),
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr(en: 'Status could not be saved. Check your connection.', si: 'තත්ත්වය සුරැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කරන්න.', ta: 'நிலையைச் சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.')),
         backgroundColor: Color(0xFFEF4444),
       ));
     }
@@ -681,8 +681,8 @@ class _OfficerHomeTab extends ConsumerWidget {
               ),
             ),
           ),
-          error: (_, __) => const SizedBox(height: 170,
-            child: Center(child: Text('Failed to load alerts'))),
+          error: (_, __) => SizedBox(height: 170,
+            child: Center(child: Text(context.tr(en: 'Failed to load alerts', si: 'අනතුරු ඇඟවීම් පූරණය කළ නොහැක', ta: 'எச்சரிக்கைகளை ஏற்ற முடியவில்லை')))),
           data: (consultations) {
             final urgent = consultations.where((c) => c.needsUrgentAttention).toList();
             if (urgent.isEmpty) {
@@ -700,7 +700,7 @@ class _OfficerHomeTab extends ConsumerWidget {
                       const Icon(Icons.check_circle_outline_rounded,
                           color: Color(0xFF10B981), size: 36),
                       const SizedBox(height: 8),
-                      Text('No Urgent Alerts',
+                      Text(context.tr(en: 'No Urgent Alerts', si: 'හදිසි අනතුරු ඇඟවීම් නැත', ta: 'அவசர எச்சரிக்கைகள் இல்லை'),
                           style: AppTextStyles.titleSmall.copyWith(
                               fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
                     ],
@@ -753,7 +753,7 @@ class _OfficerHomeTab extends ConsumerWidget {
                                     const Icon(Icons.emergency_rounded,
                                         color: Color(0xFFDC2626), size: 14),
                                     const SizedBox(width: 4),
-                                    Text('URGENT',
+                                    Text(context.tr(en: 'URGENT', si: 'හදිසි', ta: 'அவசரம்'),
                                         style: AppTextStyles.bodySmall.copyWith(
                                             color: const Color(0xFFDC2626),
                                             fontWeight: FontWeight.bold,

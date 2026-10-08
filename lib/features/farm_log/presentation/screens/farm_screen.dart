@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/shared/utils/confirm_delete.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
@@ -175,6 +176,11 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
   }
 
   Widget _buildOverallHealth() {
+    // Real numbers from the farmer's field blocks (average health score and
+    // how many blocks are Healthy / Monitor / At Risk).
+    final fields = ref.watch(fieldBlocksProvider).valueOrNull ?? const <FieldBlock>[];
+    final avg = fields.isEmpty ? 0 : (fields.map((f) => f.healthScore).reduce((a, b) => a + b) / fields.length).round().clamp(0, 100);
+    int count(String status) => fields.where((f) => f.status.toLowerCase() == status).length;
     return GestureDetector(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (_) => const YieldTrackerScreen()));
@@ -205,7 +211,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textSecondary),
                   ],
                 ),
-                Text('72%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.severityDefault, fontWeight: FontWeight.bold)),
+                Text(fields.isEmpty ? '—' : '$avg%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.severityDefault, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
@@ -216,14 +222,14 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      flex: 72,
+                      flex: avg.toInt(),
                       child: Container(
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(colors: [AppColors.healthBarLight, AppColors.severityDefault]),
                         ),
                       ),
                     ),
-                    Expanded(flex: 28, child: Container(color: AppColors.imageLoadingBg)),
+                    Expanded(flex: 100 - avg.toInt(), child: Container(color: AppColors.imageLoadingBg)),
                   ],
                 ),
               ),
@@ -232,9 +238,9 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildHealthStat(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), '2', AppColors.severityDefault),
-                _buildHealthStat(context.tr(en: 'Monitor', si: 'නිරීක්ෂණය', ta: 'கண்காணிப்பு'), '1', AppColors.severityMedium),
-                _buildHealthStat(context.tr(en: 'At Risk', si: 'අවදානමේ', ta: 'ஆபத்தில்'), '2', AppColors.severityHigh),
+                _buildHealthStat(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), '${count('healthy')}', AppColors.severityDefault),
+                _buildHealthStat(context.tr(en: 'Monitor', si: 'නිරීක්ෂණය', ta: 'கண்காணிப்பு'), '${count('monitor')}', AppColors.severityMedium),
+                _buildHealthStat(context.tr(en: 'At Risk', si: 'අවදානමේ', ta: 'ஆபத்தில்'), '${count('at risk')}', AppColors.severityHigh),
               ],
             ),
           ],
@@ -277,18 +283,18 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
         alignment: Alignment.centerRight,
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
+      confirmDismiss: (_) => confirmDelete(context, itemName: field.name),
       onDismissed: (_) async {
+        final messenger = ScaffoldMessenger.of(context);
+        final deleted = context.tr(en: 'Field block deleted', si: 'ක්ෂේත්‍ර කොටස මකා දැමිණි', ta: 'நிலத் தொகுதி நீக்கப்பட்டது');
+        final failed = context.tr(en: 'Could not delete. Check your connection and try again.', si: 'මැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'நீக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
         try {
           await ref.read(farmApiServiceProvider).deleteFieldBlock(field.id);
-          ref.refresh(fieldBlocksProvider);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Field Block deleted')));
-          }
+          messenger.showSnackBar(SnackBar(content: Text(deleted)));
         } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
-          }
+          messenger.showSnackBar(SnackBar(content: Text(failed), backgroundColor: Colors.red));
         }
+        ref.invalidate(fieldBlocksProvider);
       },
       child: GestureDetector(
       onTap: () => setState(() => _selectedFieldId = isExpanded ? null : field.id),
@@ -471,17 +477,16 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       onDismissed: (_) async {
+        final messenger = ScaffoldMessenger.of(context);
+        final deleted = context.tr(en: 'Task deleted', si: 'කාර්යය මකා දැමිණි', ta: 'பணி நீக்கப்பட்டது');
+        final failed = context.tr(en: 'Could not delete. Check your connection and try again.', si: 'මැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'நீக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
         try {
           await ref.read(farmApiServiceProvider).deleteFarmTask(task.id);
-          ref.read(farmTaskNotifierProvider.notifier).refresh();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task deleted')));
-          }
+          messenger.showSnackBar(SnackBar(content: Text(deleted)));
         } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
-          }
+          messenger.showSnackBar(SnackBar(content: Text(failed), backgroundColor: Colors.red));
         }
+        ref.read(farmTaskNotifierProvider.notifier).refresh();
       },
       child: GestureDetector(
       onTap: () {

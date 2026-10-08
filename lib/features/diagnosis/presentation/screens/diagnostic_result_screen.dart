@@ -3,13 +3,13 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
+import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
 import 'package:plant_disease_detector/core/providers/market_provider.dart';
 import 'package:plant_disease_detector/models/market_price.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/main_screen.dart';
 import 'package:plant_disease_detector/features/treatment/presentation/screens/treatment_detail_screen.dart';
 import 'package:plant_disease_detector/features/treatment/presentation/screens/nearest_officer_screen.dart';
-import 'package:plant_disease_detector/models/agri_officer.dart';
 import 'package:plant_disease_detector/core/providers/database_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/confidence_gate.dart';
 import 'package:plant_disease_detector/core/database/app_database.dart';
@@ -19,6 +19,15 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:drift/drift.dart' as drift;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
+import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
+import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
+import 'package:plant_disease_detector/features/home/application/saved_items_provider.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:share_plus/share_plus.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DiagnosticResultScreen — Matches Figma ResultsScreen.tsx
@@ -26,7 +35,11 @@ import 'dart:convert';
 class DiagnosticResultScreen extends ConsumerStatefulWidget {
   final ScanRecord? scan;
 
-  const DiagnosticResultScreen({super.key, this.scan});
+  /// True only when opened straight after a scan. Results opened again from
+  /// Home or History are already saved and must not be stored a second time.
+  final bool isNewScan;
+
+  const DiagnosticResultScreen({super.key, this.scan, this.isNewScan = false});
 
   @override
   ConsumerState<DiagnosticResultScreen> createState() => _DiagnosticResultScreenState();
@@ -36,31 +49,32 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     with SingleTickerProviderStateMixin {
   late final ScanRecord _scan;
   bool _isSymptomsTab = true;
-  bool _showContactModal = false;
   bool _showShareModal = false;
   bool _isSaved = false;
 
   late AnimationController _confCtrl;
   late Animation<double> _confAnim;
 
-  // Mock Data maps based on Figma
-  final Map<String, List<String>> _symptomMap = {
-    "Tomato Early Blight": [
-      "Dark brown concentric rings on leaves",
-      "Yellow halo surrounding lesions",
-      "Premature leaf drop and defoliation",
-      "Affects lower leaves first, spreads upward",
-    ],
-  };
+  /// Catalog entry for the detected disease (null for unknown labels).
+  DiseaseInfo? get _info => DiseaseCatalog.lookup(_scan.diseaseName);
 
-  final Map<String, List<Map<String, String>>> _treatmentMap = {
-    "Tomato Early Blight": [
-      {"step": "01", "title": "Remove Affected Leaves", "desc": "Prune and destroy all visibly infected foliage immediately."},
-      {"step": "02", "title": "Apply Fungicide", "desc": "Use copper-based or chlorothalonil fungicide every 7–10 days."},
-      {"step": "03", "title": "Improve Air Circulation", "desc": "Space plants adequately. Avoid overhead irrigation."},
-      {"step": "04", "title": "Soil Nutrition", "desc": "Boost potassium levels to strengthen plant immunity."},
-    ],
-  };
+  List<String> get _symptoms => _info?.symptoms ?? const [
+        'The disease could not be identified from this photo',
+        'Retake the photo of a single leaf in good daylight',
+        'Ask an agricultural officer to check the plant',
+      ];
+
+  List<Map<String, String>> get _treatments {
+    final steps = _info?.treatments ??
+        const [
+          DiseaseStep('Retake the Photo', 'Photograph one affected leaf, close up, in daylight.'),
+          DiseaseStep('Ask an Officer', 'Use Expert Help to send the problem to your Agriculture Instructor.'),
+        ];
+    return [
+      for (var i = 0; i < steps.length; i++)
+        {'step': (i + 1).toString().padLeft(2, '0'), 'title': steps[i].title, 'desc': steps[i].desc},
+    ];
+  }
 
   @override
   void initState() {
@@ -77,42 +91,51 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     
     _confCtrl.forward();
 
-    _saveDiagnosis();
+    if (widget.isNewScan) _saveDiagnosis();
   }
 
   Future<void> _saveDiagnosis() async {
     final db = ref.read(databaseProvider);
     final confidenceResult = ConfidenceGate.evaluate(_scan.confidenceScore);
+    final userId = Supabase.instance.client.auth.currentUser?.id;
 
-    // Save locally
-    await db.into(db.cachedDiagnoses).insert(
-      CachedDiagnosesCompanion.insert(
-        id: _scan.id.toString(),
-        userId: 'local_user', // Mock user id for now
-        imagePath: drift.Value(_scan.imageUrl),
-        diseaseId: drift.Value(_scan.diseaseName),
-        confidence: drift.Value(_scan.confidenceScore),
-        clientUuid: _scan.id.toString(),
-        status: drift.Value(confidenceResult == ConfidenceResult.escalate ? 'escalated' : 'auto'),
-      ),
-    );
+    try {
+      // Save locally so the result is kept even without internet.
+      await db.into(db.cachedDiagnoses).insert(
+        CachedDiagnosesCompanion.insert(
+          id: _scan.id,
+          userId: userId ?? 'local_user',
+          imagePath: drift.Value(_scan.imageUrl),
+          diseaseId: drift.Value(_scan.diseaseName),
+          confidence: drift.Value(_scan.confidenceScore),
+          clientUuid: _scan.id,
+          cropHint: drift.Value(_scan.cropType),
+          status: drift.Value(confidenceResult == ConfidenceResult.escalate ? 'escalated' : 'auto'),
+        ),
+        mode: drift.InsertMode.insertOrIgnore,
+      );
 
-    // Add to outbox for sync
-    await db.into(db.outbox).insert(
-      OutboxCompanion.insert(
-        clientUuid: _scan.id.toString(),
-        payload: jsonEncode({
-          'id': _scan.id,
-          'disease': _scan.diseaseName,
-          'confidence': _scan.confidenceScore,
-          'image': _scan.imageUrl,
-        }),
-        type: 'diagnosis',
-      ),
-    );
+      // Queue the row for the Supabase `scans` table (same columns).
+      await db.into(db.outbox).insert(
+        OutboxCompanion.insert(
+          clientUuid: _scan.id,
+          payload: jsonEncode({
+            'id': _scan.id,
+            if (userId != null) 'user_id': userId,
+            ..._scan.toJson(),
+            'symptoms': _info?.symptoms,
+          }),
+          type: 'diagnosis',
+        ),
+        mode: drift.InsertMode.insertOrIgnore,
+      );
 
-    // Trigger sync
-    ref.read(outboxProcessorProvider).processOutbox();
+      // Upload now if online, then refresh Home / History with the new scan.
+      await ref.read(outboxProcessorProvider).processOutbox();
+      ref.invalidate(scanHistoryProvider);
+    } catch (e) {
+      debugPrint('Could not save diagnosis: $e');
+    }
 
     if (confidenceResult == ConfidenceResult.escalate && mounted) {
       Future.delayed(const Duration(milliseconds: 800), () {
@@ -161,9 +184,9 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Uncertain AI Diagnosis (<40%)', style: AppTextStyles.titleMedium.copyWith(fontSize: 16)),
+                      Text(context.tr(en: 'Could not identify this leaf', si: 'මෙම කොළය හඳුනාගත නොහැකි විය', ta: 'இந்த இலையை அடையாளம் காண முடியவில்லை'), style: AppTextStyles.titleMedium.copyWith(fontSize: 16)),
                       const SizedBox(height: 2),
-                      Text('Model requires human officer verification', style: AppTextStyles.bodySmall),
+                      Text(context.tr(en: 'Confidence below 40%', si: 'නිශ්චිතභාවය 40% ට අඩුයි', ta: 'நம்பகத்தன்மை 40% க்கும் குறைவு'), style: AppTextStyles.bodySmall),
                     ],
                   ),
                 ),
@@ -171,20 +194,21 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'The AI model could not identify the disease with high confidence. We recommend connecting with your assigned Agricultural Extension Officer for expert advice.',
+              context.tr(
+                en: 'The photo may be blurry, too dark, or not a crop leaf the app knows. Retake a close photo of one leaf in daylight, or ask an agricultural officer.',
+                si: 'ඡායාරූපය බොඳ, අඳුරු හෝ යෙදුම නොදන්නා බෝග කොළයක් විය හැක. දිවා ආලෝකයේ එක් කොළයක් ළඟින් නැවත ඡායාරූප ගන්න, නැතහොත් කෘෂිකර්ම නිලධාරියෙකුගෙන් විමසන්න.',
+                ta: 'புகைப்படம் மங்கலாக, இருட்டாக அல்லது பயன்பாட்டுக்குத் தெரியாத இலையாக இருக்கலாம். பகல் வெளிச்சத்தில் ஒரு இலையை அருகில் மீண்டும் படம் எடுக்கவும், அல்லது வேளாண் அலுவலரிடம் கேளுங்கள்.',
+              ),
               style: AppTextStyles.bodyMedium.copyWith(height: 1.4),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(ctx);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const NearestOfficerScreen()),
-                );
+                _sendToOfficer();
               },
               icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
-              label: const Text('Contact Assigned Officer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: Text(context.tr(en: 'Ask an Officer', si: 'නිලධාරියෙකුගෙන් විමසන්න', ta: 'அலுவலரிடம் கேளுங்கள்'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -192,9 +216,23 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
               ),
             ),
             const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const CameraCaptureScreen()));
+              },
+              icon: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
+              label: Text(context.tr(en: 'Retake Photo', si: 'නැවත ඡායාරූප ගන්න', ta: 'மீண்டும் படம் எடு'), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: AppColors.primary),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 6),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Continue Viewing Result', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+              child: Text(context.tr(en: 'View Result Anyway', si: 'ප්‍රතිඵලය බලන්න', ta: 'முடிவைப் பார்க்கவும்'), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
             ),
           ],
         ),
@@ -202,8 +240,58 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     );
   }
 
-  void _showVoiceHelp() {
-    showModalBottomSheet(
+  final FlutterTts _tts = FlutterTts();
+
+  /// Short spoken summary of the result in the app's language.
+  String _spokenSummary() {
+    final pct = (_scan.confidenceScore * 100).round();
+    final name = context.trDisease(_scan.diseaseName);
+    final steps = _treatments.take(2).map((t) => context.trTreatment(t['title']!)).join('. ');
+    if (_info?.isHealthy == true) {
+      return context.tr(
+        en: 'The leaf looks healthy. Confidence $pct percent. Keep checking your crop every week.',
+        si: 'කොළය නිරෝගී බව පෙනේ. නිශ්චිතභාවය සියයට $pct. සෑම සතියකම ඔබේ වගාව පරීක්ෂා කරන්න.',
+        ta: 'இலை ஆரோக்கியமாகத் தெரிகிறது. நம்பகத்தன்மை $pct சதவீதம். ஒவ்வொரு வாரமும் பயிரைச் சரிபார்க்கவும்.',
+      );
+    }
+    return context.tr(
+      en: 'Detected $name. Confidence $pct percent. What to do: $steps.',
+      si: '$name හඳුනාගෙන ඇත. නිශ්චිතභාවය සියයට $pct. කළ යුතු දේ: $steps.',
+      ta: '$name கண்டறியப்பட்டது. நம்பகத்தன்மை $pct சதவீதம். செய்ய வேண்டியவை: $steps.',
+    );
+  }
+
+  String _englishSummary() {
+    final pct = (_scan.confidenceScore * 100).round();
+    final steps = _treatments.take(2).map((t) => t['title']).join('. ');
+    return 'Detected ${_scan.diseaseName}. Confidence $pct percent. What to do: $steps.';
+  }
+
+  Future<void> _showVoiceHelp() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final code = AppStrings.currentLocaleCode;
+    final text = _spokenSummary();
+    final noVoiceText = context.tr(
+      en: 'This phone has no voice for this language, so it will be read in English.',
+      si: 'මෙම දුරකථනයේ සිංහල හඬක් නොමැති බැවින් ඉංග්‍රීසියෙන් කියවනු ලැබේ.',
+      ta: 'இந்தத் தொலைபேசியில் தமிழ் குரல் இல்லாததால் ஆங்கிலத்தில் படிக்கப்படும்.',
+    );
+    var spoken = text;
+    try {
+      final lang = switch (code) { 'si' => 'si-LK', 'ta' => 'ta-IN', _ => 'en-US' };
+      final available = code == 'en' || (await _tts.isLanguageAvailable(lang)) == true;
+      await _tts.setLanguage(available ? lang : 'en-US');
+      await _tts.setSpeechRate(0.45);
+      if (!available) {
+        spoken = _englishSummary();
+        messenger.showSnackBar(SnackBar(content: Text(noVoiceText)));
+      }
+      await _tts.speak(spoken);
+    } catch (e) {
+      debugPrint('Text-to-speech failed: $e');
+    }
+    if (!mounted) return;
+    await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
@@ -219,43 +307,32 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.tabInactiveBg,
-                  borderRadius: BorderRadius.circular(50),
-                ),
+                decoration: BoxDecoration(color: AppColors.tabInactiveBg, borderRadius: BorderRadius.circular(50)),
               ),
             ),
             const SizedBox(height: 20),
             Container(
               width: 64,
               height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.copperLight.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.mic_rounded, color: AppColors.copper, size: 36),
+              decoration: BoxDecoration(color: AppColors.copperLight.withValues(alpha: 0.2), shape: BoxShape.circle),
+              child: const Icon(Icons.volume_up_rounded, color: AppColors.copper, size: 36),
             ),
             const SizedBox(height: 16),
-            Text('Audio Guidance Active', style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
+            Text(context.tr(en: 'Reading the result aloud', si: 'ප්‍රතිඵලය හඬින් කියවමින්', ta: 'முடிவை உரக்கப் படிக்கிறது'),
+                style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
             const SizedBox(height: 8),
-            Text(
-              'Reading diagnosis aloud for ${_scan.diseaseName}. "Fungal infection detected with ${_scan.severityLabel} severity. Immediate action: Prune infected lower leaves and spray copper fungicide."',
-              style: AppTextStyles.bodyMedium.copyWith(height: 1.5),
-              textAlign: TextAlign.center,
-            ),
+            Text(text, style: AppTextStyles.bodyMedium.copyWith(height: 1.5), textAlign: TextAlign.center),
             const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Playing Sinhala / English voice explanation...')),
-                      );
+                    onPressed: () async {
+                      await _tts.stop();
+                      await _tts.speak(spoken);
                     },
-                    icon: const Icon(Icons.volume_up_rounded, color: Colors.white),
-                    label: const Text('Replay Voice', style: TextStyle(color: Colors.white)),
+                    icon: const Icon(Icons.replay_rounded, color: Colors.white),
+                    label: Text(context.tr(en: 'Play Again', si: 'නැවත අසන්න', ta: 'மீண்டும் கேள்'), style: const TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -271,7 +348,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Close Audio'),
+                    child: Text(context.tr(en: 'Stop', si: 'නවත්වන්න', ta: 'நிறுத்து')),
                   ),
                 ),
               ],
@@ -280,10 +357,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
         ),
       ),
     );
+    await _tts.stop();
   }
 
   @override
   void dispose() {
+    _tts.stop();
     _confCtrl.dispose();
     super.dispose();
   }
@@ -312,6 +391,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                     child: Column(
                       children: [
                         _buildHeroCard(),
+                        _buildConfidenceNotice(),
                         _buildTabSelector(),
                         _buildContentList(),
                       ],
@@ -331,7 +411,6 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           ),
 
           // Modals
-          if (_showContactModal) _buildContactModal(),
           if (_showShareModal) _buildShareModal(),
         ],
       ),
@@ -403,6 +482,70 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
   }
 
   // ── Hero Card ──────────────────────────────────────────────────────────────
+  // 40–70%: the model is unsure. Below 40% the popup already offers a retake.
+  Widget _buildConfidenceNotice() {
+    final gate = ConfidenceGate.evaluate(_scan.confidenceScore);
+    if (gate == ConfidenceResult.show) return const SizedBox.shrink();
+    final low = gate == ConfidenceResult.escalate;
+    final color = low ? AppColors.severityHigh : AppColors.severityMedium;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline_rounded, color: color),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    low
+                        ? context.tr(en: 'Could not identify this leaf', si: 'මෙම කොළය හඳුනාගත නොහැකි විය', ta: 'இந்த இலையை அடையாளம் காண முடியவில்லை')
+                        : context.tr(en: 'The app is not sure', si: 'යෙදුමට විශ්වාස නැත', ta: 'பயன்பாட்டுக்கு உறுதியில்லை'),
+                    style: AppTextStyles.titleSmall.copyWith(color: color, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    context.tr(
+                      en: 'Compare the symptoms below with your plant. Retake a clear photo of one leaf, or ask an officer before buying chemicals.',
+                      si: 'පහත රෝග ලක්ෂණ ඔබේ පැලය සමඟ සසඳන්න. එක් කොළයක පැහැදිලි ඡායාරූපයක් නැවත ගන්න, නැතහොත් රසායන මිලදී ගැනීමට පෙර නිලධාරියෙකුගෙන් විමසන්න.',
+                      ta: 'கீழே உள்ள அறிகுறிகளை உங்கள் செடியுடன் ஒப்பிடுங்கள். ஒரு இலையின் தெளிவான படத்தை மீண்டும் எடுக்கவும், அல்லது இரசாயனம் வாங்கும் முன் அலுவலரிடம் கேளுங்கள்.',
+                    ),
+                    style: AppTextStyles.bodySmall.copyWith(height: 1.4),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(Icons.camera_alt_outlined, size: 16),
+                        label: Text(context.tr(en: 'Retake', si: 'නැවත ගන්න', ta: 'மீண்டும் எடு')),
+                        onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const CameraCaptureScreen())),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.support_agent_rounded, size: 16),
+                        label: Text(context.tr(en: 'Ask an Officer', si: 'නිලධාරියෙකුගෙන් විමසන්න', ta: 'அலுவலரிடம் கேள்')),
+                        onPressed: _sendToOfficer,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeroCard() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -642,19 +785,23 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                         context: context,
                         builder: (ctx) => AlertDialog(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          title: const Row(
+                          title: Row(
                             children: [
-                              Icon(Icons.verified_rounded, color: AppColors.severityDefault),
-                              SizedBox(width: 8),
-                              Text('AI Verification v2.4', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Icon(Icons.memory_rounded, color: AppColors.severityDefault),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(context.tr(en: 'How this result was made', si: 'මෙම ප්‍රතිඵලය සෑදුණු ආකාරය', ta: 'இந்த முடிவு எப்படி உருவானது'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
                             ],
                           ),
-                          content: const Text(
-                            'Lumina uses a dual-engine architecture: on-device lightweight TFLite inference + localized Sri Lankan wet-zone climate models for high accuracy.',
-                            style: TextStyle(fontSize: 13, height: 1.4),
+                          content: Text(
+                            context.tr(
+                              en: 'An AI model on your phone (MobileNetV2, trained on 70,000 leaf photos of 38 crop diseases) compared your photo with what it learned. It works without internet. It can be wrong, especially for crops it was not trained on — confirm with an officer before spraying.',
+                              si: 'ඔබේ දුරකථනයේ ඇති AI ආකෘතියක් (MobileNetV2, බෝග රෝග 38 ක කොළ ඡායාරූප 70,000 කින් පුහුණු කළ) ඔබේ ඡායාරූපය සසඳා බැලීය. එය අන්තර්ජාලය නැතිව ක්‍රියා කරයි. එය වැරදි විය හැක — ඉසීමට පෙර නිලධාරියෙකුගෙන් තහවුරු කරගන්න.',
+                              ta: 'உங்கள் தொலைபேசியில் உள்ள AI மாதிரி (MobileNetV2, 38 பயிர் நோய்களின் 70,000 இலைப் படங்களில் பயிற்றுவிக்கப்பட்டது) உங்கள் படத்தை ஒப்பிட்டது. இது இணையம் இல்லாமல் வேலை செய்யும். இது தவறாக இருக்கலாம் — தெளிப்பதற்கு முன் அலுவலரிடம் உறுதிப்படுத்தவும்.',
+                            ),
+                            style: const TextStyle(fontSize: 13, height: 1.4),
                           ),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.tr(en: 'OK', si: 'හරි', ta: 'சரி'))),
                           ],
                         ),
                       );
@@ -671,7 +818,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                           const Icon(Icons.verified_user_rounded, size: 12, color: AppColors.settingsIcon),
                           const SizedBox(width: 4),
                           Text(
-                            context.tr(en: 'AI Verified (v2.4)', si: 'AI මඟින් තහවුරු කළා', ta: 'AI சரிபார்க்கப்பட்டது'),
+                            context.tr(en: 'On-device AI', si: 'දුරකථනයේ AI', ta: 'சாதன AI'),
                             style: const TextStyle(
                               color: AppColors.settingsIcon,
                               fontSize: 10,
@@ -763,7 +910,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
   Widget _buildContentList() {
     final locationState = ref.watch(locationProvider);
     if (_isSymptomsTab) {
-      final symptoms = _symptomMap[_scan.diseaseName] ?? _symptomMap["Tomato Early Blight"] ?? [];
+      final symptoms = _symptoms;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         child: Column(
@@ -779,7 +926,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
         ),
       );
     } else {
-      final treatments = _treatmentMap[_scan.diseaseName] ?? _treatmentMap["Tomato Early Blight"] ?? [];
+      final treatments = _treatments;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         child: Column(
@@ -788,7 +935,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             const SizedBox(height: 16),
             GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const TreatmentDetailScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => TreatmentDetailScreen(diseaseName: _scan.diseaseName, cropName: _scan.cropType)));
               },
               child: Container(
                 width: double.infinity,
@@ -863,7 +1010,20 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     );
   }
 
+  // How serious the detected disease usually is (from the disease catalog).
+  // Replaces an "affected area" figure the app cannot actually measure.
   Widget _buildAreaEstimateCard() {
+    final level = _info?.severity ?? _scan.severity;
+    final (fraction, color, label, hint) = switch (level) {
+      'high' => (1.0, AppColors.severityHigh, context.tr(en: 'High', si: 'ඉහළ', ta: 'அதிகம்'),
+          context.tr(en: 'Spreads fast and can destroy the crop. Act today.', si: 'වේගයෙන් පැතිරී වගාව විනාශ කළ හැක. අදම ක්‍රියා කරන්න.', ta: 'வேகமாகப் பரவி பயிரை அழிக்கலாம். இன்றே செயல்படுங்கள்.')),
+      'medium' => (0.66, AppColors.severityMedium, context.tr(en: 'Medium', si: 'මධ්‍යම', ta: 'நடுத்தரம்'),
+          context.tr(en: 'Reduces yield if not treated within a week.', si: 'සතියක් තුළ ප්‍රතිකාර නොකළහොත් අස්වැන්න අඩු වේ.', ta: 'ஒரு வாரத்திற்குள் சிகிச்சை இல்லையெனில் விளைச்சல் குறையும்.')),
+      'low' => (0.33, AppColors.severityLow, context.tr(en: 'Low', si: 'අඩු', ta: 'குறைவு'),
+          context.tr(en: 'Usually mild. Keep watching the plants.', si: 'සාමාන්‍යයෙන් මෘදුයි. පැල නිරීක්ෂණය කරන්න.', ta: 'பொதுவாக லேசானது. செடிகளைக் கவனித்து வாருங்கள்.')),
+      _ => (0.0, AppColors.severityDefault, context.tr(en: 'None', si: 'නැත', ta: 'இல்லை'),
+          context.tr(en: 'No disease found on this leaf.', si: 'මෙම කොළයේ රෝගයක් හමු නොවීය.', ta: 'இந்த இலையில் நோய் இல்லை.')),
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -880,10 +1040,10 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                context.tr(en: 'Affected Area Estimate', si: 'බලපෑමට ලක්වූ ප්‍රදේශයේ ඇස්තමේන්තුව', ta: 'பாதிக்கப்பட்ட பகுதி மதிப்பீடு'),
+                context.tr(en: 'Disease Severity', si: 'රෝගයේ බරපතලකම', ta: 'நோயின் தீவிரம்'),
                 style: AppTextStyles.titleSmall,
               ),
-              Text('~35%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              Text(label, style: AppTextStyles.titleSmall.copyWith(color: color, fontWeight: FontWeight.w700)),
             ],
           ),
           const SizedBox(height: 8),
@@ -896,26 +1056,14 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             ),
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.35,
+              widthFactor: fraction,
               child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.avatarGradEnd, AppColors.avatarGradStart],
-                  ),
-                ),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: color),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            context.tr(
-              en: 'Based on visible leaf surface analysis',
-              si: 'දෘශ්‍යමාන පත්‍ර පෘෂ්ඨ විශ්ලේෂණය මත පදනම්ව',
-              ta: 'தெரியும் இலை மேற்பரப்பு பகுப்பாய்வின் அடிப்படையில்',
-            ),
-            style: AppTextStyles.bodySmall.copyWith(fontSize: 11),
-          ),
+          Text(hint, style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
         ],
       ),
     );
@@ -971,7 +1119,6 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
 
   // ── FAB ────────────────────────────────────────────────────────────────────
   Widget _buildBottomFAB() {
-    final locationState = ref.watch(locationProvider);
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: BoxDecoration(
@@ -1004,14 +1151,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 ),
                 child: Builder(
                   builder: (context) {
-                    final officer = getNearestOfficer(locationState.address);
-                    final officerLabel = locationState.isLoading
-                        ? context.tr(en: 'Call Nearest Officer', si: 'ළඟම නිලධාරියා අමතන්න', ta: 'அருகிலுள்ள அதிகாரியை அழைக்கவும்')
-                        : context.tr(
-                            en: 'Officer ${officer.name.split(' ').first} · ${officer.distanceKm}km',
-                            si: 'නිලධාරී ${officer.name.split(' ').first} · ${officer.distanceKm}km',
-                            ta: 'அதிகாரி ${officer.name.split(' ').first} · ${officer.distanceKm}km',
-                          );
+                    final officerLabel = context.tr(en: 'Find Nearest Officer', si: 'ළඟම නිලධාරියා සොයන්න', ta: 'அருகிலுள்ள அலுவலரைக் கண்டறி');
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Row(
@@ -1067,7 +1207,44 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
   }
 
   // ── Climate Context Card ────────────────────────────────────────────────────
+  // Today's weather where the farmer is, and what it means for spread.
   Widget _buildClimateContextCard(LocationState locationState) {
+    final weather = ref.watch(weatherProvider).weather;
+    final humidity = weather?.humidity;
+    final rain = (weather?.daily.isNotEmpty ?? false) ? weather!.daily.first.rainChance : null;
+    final risk = (humidity == null)
+        ? null
+        : (humidity >= 80 || (rain ?? 0) >= 60)
+            ? 'high'
+            : (humidity >= 65 || (rain ?? 0) >= 30)
+                ? 'medium'
+                : 'low';
+    final riskLabel = switch (risk) {
+      'high' => context.tr(en: 'HIGH', si: 'ඉහළ', ta: 'அதிகம்'),
+      'medium' => context.tr(en: 'MEDIUM', si: 'මධ්‍යම', ta: 'நடுத்தரம்'),
+      'low' => context.tr(en: 'LOW', si: 'අඩු', ta: 'குறைவு'),
+      _ => '—',
+    };
+    final riskColor = switch (risk) {
+      'high' => AppColors.severityHigh,
+      'medium' => AppColors.severityMedium,
+      _ => AppColors.severityDefault,
+    };
+    final advice = switch (risk) {
+      'high' => context.tr(
+          en: 'Humid or rainy weather today. Leaf diseases spread fastest when leaves stay wet — treat early and avoid wetting the leaves.',
+          si: 'අද තෙත් හෝ වැසි සහිත කාලගුණයකි. කොළ තෙත්ව පවතින විට රෝග වේගයෙන් පැතිරේ — කලින් ප්‍රතිකාර කර කොළ තෙත් කිරීමෙන් වළකින්න.',
+          ta: 'இன்று ஈரமான அல்லது மழை வானிலை. இலைகள் ஈரமாக இருக்கும்போது நோய்கள் வேகமாகப் பரவும் — முன்கூட்டியே சிகிச்சை செய்யுங்கள்.'),
+      'medium' => context.tr(
+          en: 'Moderate humidity. Check nearby plants for the same signs over the next few days.',
+          si: 'මධ්‍යම ආර්ද්‍රතාවය. ඉදිරි දින කිහිපය තුළ අවට පැලවල එම ලක්ෂණ පරීක්ෂා කරන්න.',
+          ta: 'மிதமான ஈரப்பதம். அடுத்த சில நாட்களில் அருகிலுள்ள செடிகளைச் சரிபார்க்கவும்.'),
+      'low' => context.tr(
+          en: 'Dry weather slows most leaf diseases. A good time to spray if needed.',
+          si: 'වියළි කාලගුණය බොහෝ කොළ රෝග මන්දගාමී කරයි. අවශ්‍ය නම් ඉසීමට හොඳ කාලයකි.',
+          ta: 'வறண்ட வானிலை பெரும்பாலான இலை நோய்களை மெதுவாக்கும். தேவைப்பட்டால் தெளிக்க நல்ல நேரம்.'),
+      _ => context.tr(en: 'Weather for your area is not available right now.', si: 'ඔබේ ප්‍රදේශයේ කාලගුණය දැන් ලබා ගත නොහැක.', ta: 'உங்கள் பகுதியின் வானிலை இப்போது கிடைக்கவில்லை.'),
+    };
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -1093,7 +1270,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                   color: AppColors.severityDefault.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(child: Text('🧠', style: TextStyle(fontSize: 18))),
+                child: const Center(child: Text('🌦️', style: TextStyle(fontSize: 18))),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1101,29 +1278,17 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.tr(en: 'Climate-Aware AI Context', si: 'දේශගුණ-හිතකාමී AI විශ්ලේෂණය', ta: 'காலநிலை விழிப்புணர்வு AI பகுப்பாய்வு'),
+                      context.tr(en: 'Weather & Spread Risk', si: 'කාලගුණය සහ පැතිරීමේ අවදානම', ta: 'வானிலை & பரவல் அபாயம்'),
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
                     ),
                     Text(
                       locationState.isLoading
-                          ? context.tr(en: 'Analyzing location...', si: 'ස්ථානය විශ්ලේෂණය කරමින්...', ta: 'இருப்பிடம் பகுப்பாய்வு செய்யப்படுகிறது...')
+                          ? context.tr(en: 'Finding your location...', si: 'ස්ථානය සොයමින්...', ta: 'இருப்பிடம் கண்டறியப்படுகிறது...')
                           : locationState.address,
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.severityDefault.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: AppColors.severityDefault.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  context.tr(en: 'WET ZONE', si: 'තෙත් කලාපය', ta: 'ஈர மண்டலம்'),
-                  style: const TextStyle(color: AppColors.severityDefault, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8),
                 ),
               ),
             ],
@@ -1135,35 +1300,18 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
               color: Colors.white.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              children: [
-                const Text('🔬', style: TextStyle(fontSize: 20)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, height: 1.5),
-                      children: [
-                        TextSpan(
-                          text: '+12% probability boost — ',
-                          style: TextStyle(color: AppColors.severityHigh, fontWeight: FontWeight.w700),
-                        ),
-                        const TextSpan(text: 'Fungal diseases are highly active in high-humidity wet zones. Your location history confirms elevated risk.'),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: Text(advice, style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12, height: 1.5)),
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              _buildClimateChip('💧', 'High Humidity', '78%'),
+              _buildClimateChip('💧', context.tr(en: 'Humidity', si: 'ආර්ද්‍රතාවය', ta: 'ஈரப்பதம்'), humidity == null ? '—' : '$humidity%'),
               const SizedBox(width: 8),
-              _buildClimateChip('🌡️', 'Temp', '28°C'),
+              _buildClimateChip('🌡️', context.tr(en: 'Temp', si: 'උෂ්ණත්වය', ta: 'வெப்பம்'), weather == null ? '—' : '${weather.temperature.round()}°C'),
               const SizedBox(width: 8),
-              _buildClimateChip('🌧️', 'Monsoon Risk', 'HIGH'),
+              _buildClimateChip('🌧️', context.tr(en: 'Rain today', si: 'අද වැසි', ta: 'இன்று மழை'), rain == null ? '—' : '$rain%'),
+              const SizedBox(width: 8),
+              _buildClimateChip('⚠️', context.tr(en: 'Spread risk', si: 'පැතිරීමේ අවදානම', ta: 'பரவல் அபாயம்'), riskLabel, valueColor: riskColor),
             ],
           ),
         ],
@@ -1171,7 +1319,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     );
   }
 
-  Widget _buildClimateChip(String emoji, String label, String val) {
+  Widget _buildClimateChip(String emoji, String label, String val, {Color valueColor = Colors.white}) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1183,8 +1331,8 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           children: [
             Text(emoji, style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 2),
-            Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11)),
-            Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 9)),
+            Text(val, style: TextStyle(color: valueColor, fontWeight: FontWeight.w700, fontSize: 11)),
+            Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 9)),
           ],
         ),
       ),
@@ -1205,11 +1353,12 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
       ),
       child: marketAsync.when(
         loading: () => const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
-        error: (e, st) => const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('Failed to load market prices'))),
+        error: (e, st) => Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(context.tr(en: 'Could not load market prices', si: 'වෙළඳපොළ මිල පූරණය කළ නොහැක', ta: 'சந்தை விலைகளை ஏற்ற முடியவில்லை')))),
         data: (market) {
-          if (market == null) {
-            return const Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No market data available yet.')));
+          if (market == null || market.prices.isEmpty) {
+            return Padding(padding: const EdgeInsets.all(24), child: Center(child: Text(context.tr(en: 'No market prices available yet.', si: 'තවම වෙළඳපොළ මිල නොමැත.', ta: 'இன்னும் சந்தை விலைகள் இல்லை.'))));
           }
+          final isSample = market.lastUpdated.toLowerCase().contains('sample');
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1223,8 +1372,8 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Today\'s Market Prices', style: AppTextStyles.titleSmall),
-                          Text('${market.name} · ${market.distanceKm} km · ${market.lastUpdated}',
+                          Text(context.tr(en: 'Market Prices', si: 'වෙළඳපොළ මිල', ta: 'சந்தை விலைகள்'), style: AppTextStyles.titleSmall),
+                          Text('${market.name}${market.distanceKm > 0 ? ' · ${market.distanceKm} km' : ''} · ${market.lastUpdated}',
                               style: AppTextStyles.bodySmall.copyWith(fontSize: 10)),
                         ],
                       ),
@@ -1232,10 +1381,10 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.severityDefault.withValues(alpha: 0.1),
+                        color: (isSample ? AppColors.severityMedium : AppColors.severityDefault).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(50),
                       ),
-                      child: const Text('LIVE', style: TextStyle(color: AppColors.severityDefault, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
+                      child: Text(isSample ? 'SAMPLE' : 'LIVE', style: TextStyle(color: isSample ? AppColors.severityMedium : AppColors.severityDefault, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.8)),
                     ),
                   ],
                 ),
@@ -1269,7 +1418,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                 color: AppColors.severityHigh.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(50),
               ),
-              child: const Text('BEST', style: TextStyle(color: AppColors.primary, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+              child: Text(context.tr(en: 'BEST', si: 'හොඳම', ta: 'சிறந்த'), style: TextStyle(color: AppColors.primary, fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
             ),
           Text(
             'Rs. ${price.pricePerKg.toStringAsFixed(0)}/kg',
@@ -1307,161 +1456,79 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
   }
 
   // ── Modals ─────────────────────────────────────────────────────────────────
-  Widget _buildContactModal() {
-    return GestureDetector(
-      onTap: () => setState(() => _showContactModal = false),
-      child: Container(
-        color: AppColors.overlayDark.withValues(alpha: 0.4),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: () {}, // consume tap
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: AppColors.tabInactiveBg,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text('Contact Officer', style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Your assigned agricultural officer for ${_scan.fieldLocation}',
-                        style: AppTextStyles.bodySmall,
-                      ),
-                      const SizedBox(height: 24),
-                      // Card
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardSurface,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=96&h=96&fit=crop&auto=format',
-                                width: 56,
-                                height: 56,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Rajitha Perera', style: AppTextStyles.titleSmall),
-                                  Text('Senior Field Officer · Zone 4', style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      ...List.generate(4, (_) => const Icon(Icons.star_rounded, color: AppColors.starActive, size: 14)),
-                                      const Icon(Icons.star_rounded, color: AppColors.tabInactiveBg, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text('4.8', style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: AppColors.severityDefault.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.emeraldDeep,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(child: _buildModalActionBtn('Call Now', Icons.phone_rounded, true)),
-                          const SizedBox(width: 12),
-                          Expanded(child: _buildModalActionBtn('Message', Icons.chat_bubble_outline_rounded, false)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(child: _buildModalActionBtn('Send Report', Icons.description_outlined, false)),
-                          const SizedBox(width: 12),
-                          Expanded(child: _buildModalActionBtn('Schedule Visit', Icons.calendar_today_rounded, false)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  String _shareText() {
+    final pct = (_scan.confidenceScore * 100).round();
+    final steps = _treatments.map((t) => '• ${t['title']}: ${t['desc']}').join('\n');
+    return 'Lumina crop scan — ${_scan.dateLabel} ${_scan.timeLabel}\n'
+        'Result: ${_scan.diseaseName} ($pct% confidence)\n'
+        'Crop: ${_scan.cropType} · Location: ${_scan.fieldLocation}\n\n'
+        'Recommended steps:\n$steps\n\n'
+        'Please confirm with an agricultural officer before spraying.';
   }
 
-  Widget _buildModalActionBtn(String label, IconData icon, bool isPrimary) {
-    return GestureDetector(
-      onTap: () => setState(() => _showContactModal = false),
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          gradient: isPrimary ? AppGradients.primary : null,
-          color: isPrimary ? null : AppColors.achievementInactive,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: isPrimary
-              ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))]
-              : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 16, color: isPrimary ? Colors.white : AppColors.textPrimary),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isPrimary ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ],
+  Future<void> _shareReport() async {
+    setState(() => _showShareModal = false);
+    await SharePlus.instance.share(ShareParams(text: _shareText(), subject: 'Lumina scan: ${_scan.diseaseName}'));
+  }
+
+  Future<void> _saveToSavedItems() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final savedText = context.tr(en: 'Saved to Saved Items', si: 'සුරැකි අයිතම වලට සුරැකුණා', ta: 'சேமிக்கப்பட்டவையில் சேர்க்கப்பட்டது');
+    final alreadyText = context.tr(en: 'Already in Saved Items', si: 'දැනටමත් සුරැකි අයිතම තුළ ඇත', ta: 'ஏற்கனவே சேமிக்கப்பட்டுள்ளது');
+    final offlineText = context.tr(
+      en: 'This scan has not uploaded yet. Connect to the internet and try again.',
+      si: 'මෙම ස්කෑන් එක තවම උඩුගත වී නැත. අන්තර්ජාලයට සම්බන්ධ වී නැවත උත්සාහ කරන්න.',
+      ta: 'இந்த ஸ்கேன் இன்னும் பதிவேற்றப்படவில்லை. இணையத்துடன் இணைத்து மீண்டும் முயற்சிக்கவும்.',
+    );
+    setState(() => _showShareModal = false);
+    final notifier = ref.read(savedItemsProvider.notifier);
+    try {
+      await ref.read(savedItemsProvider.future);
+    } catch (_) {}
+    if (notifier.itemForScan(_scan.id) != null) {
+      if (mounted) setState(() => _isSaved = true);
+      messenger.showSnackBar(SnackBar(content: Text(alreadyText)));
+      return;
+    }
+    try {
+      await notifier.saveScan(_scan);
+      if (mounted) setState(() => _isSaved = true);
+      messenger.showSnackBar(SnackBar(content: Text(savedText), backgroundColor: AppColors.primary));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(offlineText), backgroundColor: AppColors.severityMedium));
+    }
+  }
+
+  /// Opens Expert Consult with this scan attached. The scan id and photo link
+  /// are only attached once the scan has reached Supabase (the consultation
+  /// table links to it); offline, the disease name and crop are still filled in.
+  Future<void> _sendToOfficer() async {
+    if (_showShareModal) setState(() => _showShareModal = false);
+    String? scanId;
+    String? imageUrl;
+    try {
+      await ref.read(outboxProcessorProvider).processOutbox();
+      final row = await Supabase.instance.client
+          .from('scans')
+          .select('id, image_url')
+          .eq('id', _scan.id)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 6));
+      if (row != null) {
+        scanId = row['id'] as String?;
+        imageUrl = row['image_url'] as String?;
+      }
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExpertConsultScreen(
+          diseaseName: _scan.diseaseName,
+          scanId: scanId,
+          imageUrl: imageUrl,
+          crop: _scan.cropType,
+          severity: _info?.severity ?? _scan.severity,
         ),
       ),
     );
@@ -1478,7 +1545,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               GestureDetector(
-                onTap: () {},
+                onTap: () {}, // keep taps inside the sheet from closing it
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
@@ -1493,27 +1560,32 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
                         child: Container(
                           width: 40,
                           height: 4,
-                          decoration: BoxDecoration(
-                            color: AppColors.tabInactiveBg,
-                            borderRadius: BorderRadius.circular(50),
-                          ),
+                          decoration: BoxDecoration(color: AppColors.tabInactiveBg, borderRadius: BorderRadius.circular(50)),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text('Save & Share Diagnosis', style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
+                      Text(context.tr(en: 'Save & Share', si: 'සුරකින්න සහ බෙදාගන්න', ta: 'சேமி & பகிர்'),
+                          style: AppTextStyles.headlineMedium.copyWith(fontSize: 18)),
                       const SizedBox(height: 8),
                       Text(
-                        'Usability UI-04: Attach diagnosis report directly to WhatsApp or SMS for extension officers.',
+                        context.tr(
+                          en: 'Send this result by WhatsApp, SMS or email, keep it in Saved Items, or ask an officer.',
+                          si: 'මෙම ප්‍රතිඵලය WhatsApp, SMS හෝ ඊමේල් මගින් යවන්න, සුරකින්න, හෝ නිලධාරියෙකුගෙන් විමසන්න.',
+                          ta: 'இந்த முடிவை WhatsApp, SMS அல்லது மின்னஞ்சல் மூலம் அனுப்பவும், சேமிக்கவும், அல்லது அலுவலரிடம் கேட்கவும்.',
+                        ),
                         style: AppTextStyles.bodySmall,
                       ),
                       const SizedBox(height: 20),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildShareIconBtn('Save PDF', Icons.picture_as_pdf_rounded),
-                          _buildShareIconBtn('SMS Report', Icons.sms_rounded),
-                          _buildShareIconBtn('WhatsApp', Icons.chat_rounded),
-                          _buildShareIconBtn('Email', Icons.email_rounded),
+                          _buildShareIconBtn(context.tr(en: 'Share', si: 'බෙදාගන්න', ta: 'பகிர்'), Icons.share_rounded, _shareReport),
+                          _buildShareIconBtn(
+                            _isSaved ? context.tr(en: 'Saved', si: 'සුරැකුණා', ta: 'சேமிக்கப்பட்டது') : context.tr(en: 'Save', si: 'සුරකින්න', ta: 'சேமி'),
+                            _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                            _saveToSavedItems,
+                          ),
+                          _buildShareIconBtn(context.tr(en: 'Ask Officer', si: 'නිලධාරියාගෙන් විමසන්න', ta: 'அலுவலரிடம் கேள்'), Icons.support_agent_rounded, _sendToOfficer),
                         ],
                       ),
                     ],
@@ -1527,12 +1599,9 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
     );
   }
 
-  Widget _buildShareIconBtn(String label, IconData icon) {
+  Widget _buildShareIconBtn(String label, IconData icon, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => setState(() {
-        _isSaved = true;
-        _showShareModal = false;
-      }),
+      onTap: onTap,
       child: Column(
         children: [
           Container(
@@ -1548,10 +1617,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
             child: Icon(icon, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500),
-          ),
+          Text(label, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w500)),
         ],
       ),
     );

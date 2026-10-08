@@ -103,7 +103,10 @@ class UserNotifier extends StateNotifier<UserData> {
     state = UserData();
   }
 
-  Future<void> saveUserData(UserData user) async {
+  /// Saves the profile to Supabase. Returns false if it could not be saved
+  /// (the local copy is still updated so the screen shows the new values).
+  Future<bool> saveUserData(UserData user) async {
+    var saved = false;
     final client = Supabase.instance.client;
     final authUser = client.auth.currentUser;
     
@@ -121,6 +124,7 @@ class UserNotifier extends StateNotifier<UserData> {
           'avatar_url': user.imagePath,
           'updated_at': DateTime.now().toIso8601String(),
         }).eq('id', authUser.id);
+        saved = true;
       } catch (e) {
         debugPrint('Error saving profile to Supabase: $e');
       }
@@ -129,6 +133,7 @@ class UserNotifier extends StateNotifier<UserData> {
     }
 
     state = user; // Update the Riverpod state
+    return saved;
   }
 
   // Permanently deletes the signed-in account (see delete_my_account() in

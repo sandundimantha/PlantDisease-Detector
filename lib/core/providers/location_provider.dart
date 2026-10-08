@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/location_service.dart';
 
 final locationServiceProvider = Provider<LocationService>((ref) {
@@ -43,6 +44,12 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   Future<void> fetchLocation() async {
     state = state.copyWith(isLoading: true, error: null);
+    // Respect Profile → Location switch: no GPS lookup when it is off.
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('settings_location') == false) {
+      state = LocationState(isLoading: false, address: 'Sri Lanka', error: 'Location turned off');
+      return;
+    }
     try {
       final position = await _locationService.getCurrentPosition();
       if (position != null) {

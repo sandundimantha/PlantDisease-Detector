@@ -50,6 +50,8 @@ class WeatherNotifier extends StateNotifier<WeatherState> {
     final locState = _ref.read(locationProvider);
     if (locState.position != null) {
        fetchWeather(locState.position!.latitude, locState.position!.longitude);
+    } else if (locState.error != null) {
+       fetchWeather(6.9271, 79.8612); // Location off or unavailable: Colombo
     }
   }
 

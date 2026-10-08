@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
 import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/camera_capture_screen.dart';
@@ -12,18 +11,18 @@ import 'package:plant_disease_detector/features/treatment/presentation/screens/d
 import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
 import 'package:plant_disease_detector/features/community/presentation/screens/community_feed_screen.dart';
 import 'package:plant_disease_detector/features/community/presentation/screens/disease_radar_screen.dart';
+import 'package:plant_disease_detector/features/tips/presentation/screens/tips_feed_screen.dart';
 import 'package:plant_disease_detector/core/providers/user_provider.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
-import 'package:plant_disease_detector/l10n/app_localizations.dart';
 import 'package:plant_disease_detector/l10n/app_localizations.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/presentation/screens/diagnostic_result_screen.dart';
 import 'package:plant_disease_detector/features/home/application/saved_items_provider.dart';
+import 'package:plant_disease_detector/features/home/presentation/screens/main_screen.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 // ── Ultra Premium Tokens ───────────────────────────────────────────────────────
@@ -84,9 +83,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     if (hr < 12) greet = l10n?.goodMorning ?? 'Good Morning';
     else if (hr < 17) greet = l10n?.goodAfternoon ?? 'Good Afternoon';
 
-    double health = 0.85;
+    // Share of the last 10 scanned leaves that were healthy (-1 = no scans yet).
+    double health = -1;
     if (scans.isNotEmpty) {
-      health = (scans.map((s) => s.confidenceScore as double).reduce((a, b) => a + b) / scans.length).clamp(0.0, 1.0);
+      final recent = scans.take(10).toList();
+      final healthy = recent.where((s) => s.severity == 'none' || s.diseaseName.toLowerCase().startsWith('healthy')).length;
+      health = healthy / recent.length;
     }
 
     return Scaffold(
@@ -129,7 +131,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   )),
                   error: (error, stack) => Center(child: Padding(
                     padding: EdgeInsets.all(24.0),
-                    child: Text('Error loading scans', style: TextStyle(color: Colors.red)),
+                    child: Text(context.tr(en: 'Error loading scans', si: 'ස්කෑන් පූරණය කළ නොහැක', ta: 'ஸ்கேன்களை ஏற்ற முடியவில்லை'), style: TextStyle(color: Colors.red)),
                   )),
                 ),
               ],
@@ -391,10 +393,12 @@ class _HealthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = (health * 100).round();
-    final Color glowC = pct >= 80 ? const Color(0xFF238E50)
+    final noScans = health < 0;
+    final pct = noScans ? 0 : (health * 100).round();
+    final Color glowC = noScans ? const Color(0xFF9AA79F) : pct >= 80 ? const Color(0xFF238E50)
         : pct >= 60 ? const Color(0xFFF5C842) : const Color(0xFFFF6B6B);
-    final String lbl  = pct >= 80 ? context.tr(en: 'Excellent', si: 'විශිෂ්ටයි', ta: 'சிறப்பு')
+    final String lbl  = noScans ? context.tr(en: 'Scan a leaf to start', si: 'ආරම්භ කිරීමට කොළයක් ස්කෑන් කරන්න', ta: 'தொடங்க ஒரு இலையை ஸ்கேன் செய்யவும்')
+        : pct >= 80 ? context.tr(en: 'Excellent', si: 'විශිෂ්ටයි', ta: 'சிறப்பு')
         : pct >= 60 ? context.tr(en: 'Moderate', si: 'මධ්‍යම', ta: 'நடுத்தரம்') : context.tr(en: 'At Risk', si: 'අවදානම්', ta: 'ஆபத்தில்');
 
     return Container(
@@ -441,7 +445,7 @@ class _HealthCard extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('$pct',
+                        Text(noScans ? '—' : '$pct',
                           style: const TextStyle(
                             color: Colors.white, fontSize: 68,
                             fontWeight: FontWeight.w900, height: 1,
@@ -665,7 +669,7 @@ class _BentoActions extends StatelessWidget {
         const SizedBox(height: 13),
         Row(children: [
           Expanded(flex: 4, child: _LuxTile(
-            icon: Icons.menu_book_rounded, label: context.tr(en: 'Disease\nLibrary', si: 'රෝග\nනාමාවලිය', ta: 'நோய்\nநூலகம்'), sub: context.tr(en: '200+ entries', si: 'රෝග 200+', ta: '200+ உள்ளீடுகள்'),
+            icon: Icons.menu_book_rounded, label: context.tr(en: 'Disease\nLibrary', si: 'රෝග\nනාමාවලිය', ta: 'நோய்\nநூலகம்'), sub: context.tr(en: 'Symptoms & cures', si: 'ලක්ෂණ සහ ප්‍රතිකාර', ta: 'அறிகுறிகள் & சிகிச்சை'),
             accent: const Color(0xFF4A86D4),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseCatalogueScreen())),
           )),
@@ -676,6 +680,12 @@ class _BentoActions extends StatelessWidget {
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
           )),
         ]),
+        const SizedBox(height: 13),
+        _LuxTile(
+          icon: Icons.lightbulb_outline_rounded, label: context.tr(en: 'Farming Tips', si: 'ගොවි උපදෙස්', ta: 'விவசாய குறிப்புகள்'), sub: context.tr(en: 'Seasonal advice for your crops', si: 'ඔබේ බෝග සඳහා සෘතුමය උපදෙස්', ta: 'உங்கள் பயிர்களுக்கான பருவகால ஆலோசனை'),
+          accent: const Color(0xFF8A6FD4),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TipsFeedScreen())),
+        ),
       ],
     );
   }
@@ -780,7 +790,7 @@ class _RecentScans extends StatelessWidget {
             children: [
               Text(context.tr(en: 'RECENT SCANS', si: 'මෑතකාලීන ස්කෑන්', ta: 'சமீபத்திய ஸ்கேன்கள்'), style: const TextStyle(color: _textMute, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
               GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseCatalogueScreen())),
+                onTap: () => ProviderScope.containerOf(context).read(mainTabProvider.notifier).state = 2,
                 child: Text(context.tr(en: 'See All', si: 'සියල්ල බලන්න', ta: 'அனைத்தையும் காண்க'), style: const TextStyle(color: _copper, fontSize: 13, fontWeight: FontWeight.w800)),
               ),
             ],

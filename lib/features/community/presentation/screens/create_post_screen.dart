@@ -42,14 +42,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error picking image: \$e');
+      debugPrint('Error picking image: $e');
     }
   }
 
   Future<void> _submitPost() async {
     if (_contentController.text.trim().isEmpty && _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add some text or an image to post.')),
+        SnackBar(content: Text(context.tr(en: 'Please add some text or a photo to post.', si: 'පළ කිරීමට පෙළක් හෝ ඡායාරූපයක් එක් කරන්න.', ta: 'இடுகையிட உரை அல்லது படத்தைச் சேர்க்கவும்.'))),
       );
       return;
     }
@@ -63,7 +63,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         // Determine mime type from extension
         final extension = _selectedImage!.name.split('.').last.toLowerCase();
         final mimeType = extension == 'png' ? 'image/png' : 'image/jpeg';
-        base64Image = 'data:\$mimeType;base64,\$base64String';
+        base64Image = 'data:$mimeType;base64,$base64String';
       }
 
       await ref.read(communityFeedProvider.notifier).createPost(
@@ -73,15 +73,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         category: _selectedCategory,
       );
       if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        final posted = context.tr(en: 'Post shared with the community', si: 'පළකිරීම ප්‍රජාව සමඟ බෙදාගන්නා ලදී', ta: 'இடுகை சமூகத்துடன் பகிரப்பட்டது');
         context.pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post created successfully!')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(posted), backgroundColor: AppColors.primary));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create post: \$e')),
+          SnackBar(
+            content: Text(context.tr(en: 'Could not post. Check your connection and try again.', si: 'පළ කළ නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'இடுகையிட முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -99,7 +102,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PremiumAppBar(
-        title: const Text('Create Post'),
+        title: Text(context.tr(en: 'Create Post', si: 'පළ කරන්න', ta: 'இடுகையை உருவாக்கு')),
         actions: [
           _isLoading
               ? const Padding(
@@ -120,7 +123,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: const Text('Post', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    child: Text(context.tr(en: 'Post', si: 'පළ කරන්න', ta: 'இடுகை'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ),
                 )
         ],
@@ -264,7 +267,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             child: SafeArea(
               child: Row(
                 children: [
-                  Text('Add to your post', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                  Text(context.tr(en: 'Add to your post', si: 'ඔබේ පළකිරීමට එක් කරන්න', ta: 'உங்கள் இடுகையில் சேர்க்கவும்'), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                   const Spacer(),
                   _buildToolIcon(
                     icon: Icons.photo_library_rounded,

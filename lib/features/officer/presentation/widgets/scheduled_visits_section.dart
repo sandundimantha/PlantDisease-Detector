@@ -85,14 +85,14 @@ class _ScheduledVisitsSectionState extends ConsumerState<ScheduledVisitsSection>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Decline this request?'),
+        title: Text(context.tr(en: 'Decline this request?', si: 'මෙම ඉල්ලීම ප්‍රතික්ෂේප කරන්නද?', ta: 'இந்தக் கோரிக்கையை நிராகரிக்கவா?')),
         content: Text('${v.farmerName} will see that the visit was declined.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr(en: 'Keep', si: 'තබා ගන්න', ta: 'வைத்திரு'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Decline'),
+            child: Text(context.tr(en: 'Decline', si: 'ප්‍රතික්ෂේප කරන්න', ta: 'நிராகரி')),
           ),
         ],
       ),
@@ -115,16 +115,16 @@ class _ScheduledVisitsSectionState extends ConsumerState<ScheduledVisitsSection>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Cancel this visit?'),
+        title: Text(context.tr(en: 'Cancel this visit?', si: 'මෙම සංචාරය අවලංගු කරන්නද?', ta: 'இந்த வருகையை ரத்து செய்யவா?')),
         content: Text(v.farmerId != null
             ? 'The visit to ${v.farmerName} will be cancelled and the farmer will see it as cancelled.'
             : 'The visit to ${v.farmerName} will be removed from your schedule.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep visit')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr(en: 'Keep visit', si: 'සංචාරය තබා ගන්න', ta: 'வருகையை வைத்திரு'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Cancel visit'),
+            child: Text(context.tr(en: 'Cancel visit', si: 'සංචාරය අවලංගු කරන්න', ta: 'வருகையை ரத்து செய்')),
           ),
         ],
       ),
@@ -175,7 +175,7 @@ class _ScheduledVisitsSectionState extends ConsumerState<ScheduledVisitsSection>
             'Could not load visits.',
             action: TextButton(
               onPressed: () => ref.invalidate(officerVisitsProvider),
-              child: const Text('Retry'),
+              child: Text(context.tr(en: 'Retry', si: 'නැවත උත්සාහ කරන්න', ta: 'மீண்டும் முயற்சி')),
             ),
           ),
           data: (all) {
@@ -273,8 +273,8 @@ Future<DateTime?> pickVisitDateTime(BuildContext context, {DateTime? initial}) a
   if (time == null || !context.mounted) return null;
   final picked = DateTime(date.year, date.month, date.day, time.hour, time.minute);
   if (picked.isBefore(DateTime.now())) {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('That time has already passed. Please choose a future time.'),
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(context.tr(en: 'That time has already passed. Please choose a future time.', si: 'එම වේලාව දැනටමත් ගතවී ඇත. අනාගත වේලාවක් තෝරන්න.', ta: 'அந்த நேரம் ஏற்கனவே கடந்துவிட்டது. எதிர்கால நேரத்தைத் தேர்வு செய்யவும்.')),
       backgroundColor: Color(0xFFEF4444),
     ));
     return null;
@@ -389,7 +389,7 @@ class _VisitTile extends StatelessWidget {
                           side: const BorderSide(color: Color(0xFFEF4444)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Decline'),
+                        child: Text(context.tr(en: 'Decline', si: 'ප්‍රතික්ෂේප කරන්න', ta: 'நிராகரி')),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -400,7 +400,7 @@ class _VisitTile extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           icon: const Icon(Icons.event_available_rounded, size: 18),
-                          label: const Text('Accept'),
+                          label: Text(context.tr(en: 'Accept', si: 'පිළිගන්න', ta: 'ஏற்கவும்')),
                         ),
                       ),
                     ],
@@ -429,21 +429,21 @@ class _VisitTile extends StatelessWidget {
                 }
               },
               itemBuilder: (_) => [
-                if (!v.isCompleted) ...const [
+                if (!v.isCompleted) ...[
                   PopupMenuItem(
                     value: 'reschedule',
-                    child: ListTile(leading: Icon(Icons.edit_calendar_rounded), title: Text('Reschedule')),
+                    child: ListTile(leading: Icon(Icons.edit_calendar_rounded), title: Text(context.tr(en: 'Reschedule', si: 'නැවත සැලසුම් කරන්න', ta: 'மாற்றி அமை'))),
                   ),
                   PopupMenuItem(
                     value: 'complete',
-                    child: ListTile(leading: Icon(Icons.task_alt_rounded), title: Text('Mark completed')),
+                    child: ListTile(leading: Icon(Icons.task_alt_rounded), title: Text(context.tr(en: 'Mark completed', si: 'සම්පූර්ණ ලෙස සලකුණු කරන්න', ta: 'முடிந்ததாகக் குறி'))),
                   ),
                 ],
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'cancel',
                   child: ListTile(
                     leading: Icon(Icons.event_busy_rounded, color: Color(0xFFEF4444)),
-                    title: Text('Cancel visit', style: TextStyle(color: Color(0xFFEF4444))),
+                    title: Text(context.tr(en: 'Cancel visit', si: 'සංචාරය අවලංගු කරන්න', ta: 'வருகையை ரத்து செய்'), style: TextStyle(color: Color(0xFFEF4444))),
                   ),
                 ),
               ],
@@ -528,8 +528,8 @@ class _ScheduleVisitSheetState extends ConsumerState<_ScheduleVisitSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Visit could not be saved. Check your connection and try again.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context.tr(en: 'Visit could not be saved. Check your connection and try again.', si: 'සංචාරය සුරැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'வருகையைச் சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')),
         backgroundColor: Color(0xFFEF4444),
       ));
     }
@@ -566,9 +566,9 @@ class _ScheduleVisitSheetState extends ConsumerState<_ScheduleVisitSheet> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Schedule Field Visit', style: AppTextStyles.headlineMedium),
+                  Text(context.tr(en: 'Schedule Field Visit', si: 'ක්ෂේත්‍ර සංචාරය සැලසුම් කරන්න', ta: 'வயல் வருகையைத் திட்டமிடு'), style: AppTextStyles.headlineMedium),
                   const SizedBox(height: 4),
-                  Text('Plan an on-site inspection. It appears under Scheduled Visits.',
+                  Text(context.tr(en: 'Plan an on-site inspection. It appears under Scheduled Visits.', si: 'ස්ථානීය පරීක්ෂාවක් සැලසුම් කරන්න. එය සැලසුම් කළ සංචාර යටතේ දිස්වේ.', ta: 'நேரடி ஆய்வைத் திட்டமிடுங்கள். இது திட்டமிட்ட வருகைகளில் தோன்றும்.'),
                       style: AppTextStyles.bodyMedium),
                   const SizedBox(height: 20),
 
@@ -582,7 +582,7 @@ class _ScheduleVisitSheetState extends ConsumerState<_ScheduleVisitSheet> {
                         border: OutlineInputBorder(),
                       ),
                       items: [
-                        const DropdownMenuItem<Consultation?>(value: null, child: Text('No linked case')),
+                        DropdownMenuItem<Consultation?>(value: null, child: Text(context.tr(en: 'No linked case', si: 'සම්බන්ධිත නඩුවක් නැත', ta: 'இணைக்கப்பட்ட வழக்கு இல்லை'))),
                         ...myCases.map((c) => DropdownMenuItem<Consultation?>(
                               value: c,
                               child: Text('${c.farmerName ?? 'Farmer'} — ${c.diseaseName ?? 'Case'}',

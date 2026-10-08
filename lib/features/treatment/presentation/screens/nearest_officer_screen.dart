@@ -102,14 +102,14 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Withdraw this request?'),
-        content: const Text('The officer will no longer see it. You can send a new request at any time.'),
+        title: Text(context.tr(en: 'Withdraw this request?', si: 'මෙම ඉල්ලීම ඉවත් කර ගන්නද?', ta: 'இந்தக் கோரிக்கையைத் திரும்பப் பெறவா?')),
+        content: Text(context.tr(en: 'The officer will no longer see it. You can send a new request at any time.', si: 'නිලධාරියාට එය තවදුරටත් නොපෙනේ. ඕනෑම වේලාවක නව ඉල්ලීමක් යැවිය හැක.', ta: 'அலுவலர் இனி இதைப் பார்க்க மாட்டார். எப்போது வேண்டுமானாலும் புதிய கோரிக்கையை அனுப்பலாம்.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep request')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.tr(en: 'Keep request', si: 'ඉල්ලීම තබා ගන්න', ta: 'கோரிக்கையை வைத்திரு'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Withdraw'),
+            child: Text(context.tr(en: 'Withdraw', si: 'ඉවත් කර ගන්න', ta: 'திரும்பப் பெறு')),
           ),
         ],
       ),
@@ -140,7 +140,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
           'Could not load officers.',
           action: TextButton(
             onPressed: () => ref.invalidate(agriOfficersProvider),
-            child: const Text('Retry'),
+            child: Text(context.tr(en: 'Retry', si: 'නැවත උත්සාහ කරන්න', ta: 'மீண்டும் முயற்சி')),
           ),
         ),
         data: (all) {
@@ -323,7 +323,7 @@ class _NearestOfficerScreenState extends ConsumerState<NearestOfficerScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (isNearest)
-                      Text('NEAREST TO YOU',
+                      Text(context.tr(en: 'NEAREST TO YOU', si: 'ඔබට ළඟම', ta: 'உங்களுக்கு அருகில்'),
                           style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.primary, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                     Text(o.name, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w800)),
@@ -655,8 +655,8 @@ class _RequestVisitSheetState extends ConsumerState<_RequestVisitSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Request could not be sent. Check your connection and try again.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(context.tr(en: 'Request could not be sent. Check your connection and try again.', si: 'ඉල්ලීම යැවිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'கோரிக்கையை அனுப்ப முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')),
         backgroundColor: Color(0xFFEF4444),
       ));
     }
@@ -688,7 +688,7 @@ class _RequestVisitSheetState extends ConsumerState<_RequestVisitSheet> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Request a Field Visit', style: AppTextStyles.headlineMedium),
+                  Text(context.tr(en: 'Request a Field Visit', si: 'ක්ෂේත්‍ර සංචාරයක් ඉල්ලන්න', ta: 'வயல் வருகையைக் கோருங்கள்'), style: AppTextStyles.headlineMedium),
                   const SizedBox(height: 4),
                   Text(
                     'Ask ${widget.officer.name} (${widget.officer.center}) to inspect your crop on site.',

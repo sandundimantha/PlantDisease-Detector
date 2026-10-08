@@ -66,8 +66,8 @@ class _SignupScreenState extends State<SignupScreen> {
         setState(() => _isLoading = false);
         if (response.session == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration successful! Please check your email to confirm your account.'),
+            SnackBar(
+              content: Text(context.tr(en: 'Registration successful! Please check your email to confirm your account.', si: 'ලියාපදිංචිය සාර්ථකයි! ගිණුම තහවුරු කිරීමට ඔබේ විද්‍යුත් තැපෑල පරීක්ෂා කරන්න.', ta: 'பதிவு வெற்றிகரமானது! கணக்கை உறுதிப்படுத்த உங்கள் மின்னஞ்சலைச் சரிபார்க்கவும்.')),
               backgroundColor: Colors.blue,
               duration: Duration(seconds: 5),
             ),
@@ -76,7 +76,7 @@ class _SignupScreenState extends State<SignupScreen> {
           context.go('/login');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account Created Successfully!'), backgroundColor: Colors.green),
+            SnackBar(content: Text(context.tr(en: 'Account Created Successfully!', si: 'ගිණුම සාර්ථකව සෑදිණි!', ta: 'கணக்கு வெற்றிகரமாக உருவாக்கப்பட்டது!')), backgroundColor: Colors.green),
           );
           context.go('/main');
         }
@@ -269,28 +269,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               style: AppTextStyles.titleMedium.copyWith(color: Colors.white, fontSize: 16),
                             ),
                       ),
-                      const SizedBox(height: 24),
-                      
-                      Row(
-                        children: [
-                          Expanded(child: Container(height: 1, color: AppColors.divider)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(context.tr(en: 'OR', si: 'හෝ', ta: 'அல்லது'), style: AppTextStyles.bodySmall),
-                          ),
-                          Expanded(child: Container(height: 1, color: AppColors.divider)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildSmallSocialButton(Icons.g_mobiledata_rounded, Colors.white, Colors.black87),
-                          _buildSmallSocialButton(Icons.facebook_rounded, AppColors.facebook, Colors.white),
-                          _buildSmallSocialButton(Icons.apple_rounded, Colors.black, Colors.white),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -337,30 +315,5 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildSmallSocialButton(IconData icon, Color bgColor, Color iconColor) {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: bgColor == Colors.white ? Border.all(color: Colors.grey.shade300) : null,
-        boxShadow: [
-          if (bgColor == Colors.white)
-            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {},
-          child: Center(
-            child: Icon(icon, color: iconColor, size: 32),
-          ),
-        ),
-      ),
-    );
-  }
 }
 

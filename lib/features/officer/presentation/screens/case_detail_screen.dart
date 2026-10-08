@@ -8,6 +8,7 @@ import 'package:plant_disease_detector/features/officer/application/chat_notifie
 import 'package:plant_disease_detector/features/officer/data/consultation_repository.dart';
 import 'package:plant_disease_detector/models/consultation.dart';
 import 'dart:ui';
+import 'package:url_launcher/url_launcher.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CaseDetailScreen — Real-time chat with Supabase Realtime
@@ -60,6 +61,30 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
     _chatController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  // Looks up the farmer's phone number on their profile and opens the dialer.
+  Future<void> _callFarmer(Consultation? c) async {
+    if (c == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final noPhone = context.tr(
+      en: 'This farmer has not added a phone number. Use the chat below.',
+      si: 'මෙම ගොවියා දුරකථන අංකයක් එක් කර නැත. පහත චැට් භාවිතා කරන්න.',
+      ta: 'இந்த விவசாயி தொலைபேசி எண்ணைச் சேர்க்கவில்லை. கீழே உள்ள அரட்டையைப் பயன்படுத்தவும்.',
+    );
+    try {
+      final row = await Supabase.instance.client.from('profiles').select('phone').eq('id', c.farmerId).maybeSingle();
+      final phone = (row?['phone'] as String?)?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
+      if (phone.isEmpty) {
+        messenger.showSnackBar(SnackBar(content: Text(noPhone)));
+        return;
+      }
+      if (!await launchUrl(Uri(scheme: 'tel', path: phone))) {
+        messenger.showSnackBar(SnackBar(content: Text(phone)));
+      }
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(noPhone)));
+    }
   }
 
   @override
@@ -156,11 +181,11 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
     try {
       await ref.read(chatProvider(_consultation!.id).notifier).markResolved();
       _refreshCaseLists();
-      messenger.showSnackBar(const SnackBar(content: Text('✅ Case marked as resolved!')));
+      messenger.showSnackBar(SnackBar(content: Text(context.tr(en: '✅ Case marked as resolved!', si: '✅ නඩුව විසඳූ ලෙස සලකුණු කළා!', ta: '✅ வழக்கு தீர்க்கப்பட்டதாகக் குறிக்கப்பட்டது!'))));
       if (mounted && context.canPop()) context.pop();
     } catch (e) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('Case could not be resolved. Check your connection and try again.'),
+      messenger.showSnackBar(SnackBar(
+        content: Text(context.tr(en: 'Case could not be resolved. Check your connection and try again.', si: 'නඩුව විසඳිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'வழக்கைத் தீர்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')),
         backgroundColor: Color(0xFFEF4444),
       ));
     }
@@ -211,12 +236,12 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                     borderRadius: BorderRadius.circular(10))),
             ListTile(
               leading: const Icon(Icons.medical_services_rounded, color: Color(0xFFD9734E)),
-              title: const Text('Suggest Treatment'),
+              title: Text(context.tr(en: 'Suggest Treatment', si: 'ප්‍රතිකාර යෝජනා කරන්න', ta: 'சிகிச்சையைப் பரிந்துரை')),
               onTap: () { Navigator.pop(context); _showPesticideSuggestion(context); },
             ),
             ListTile(
               leading: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981)),
-              title: const Text('Mark as Resolved'),
+              title: Text(context.tr(en: 'Mark as Resolved', si: 'විසඳූ ලෙස සලකුණු කරන්න', ta: 'தீர்க்கப்பட்டதாகக் குறி')),
               onTap: () async {
                 Navigator.pop(context);
                 if (_canAct) {
@@ -254,7 +279,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             Center(child: Container(width: 40, height: 5, margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(10)))),
-            Text('Treatment Recommendation',
+            Text(context.tr(en: 'Treatment Recommendation', si: 'ප්‍රතිකාර නිර්දේශය', ta: 'சிகிச்சைப் பரிந்துரை'),
                 style: AppTextStyles.headlineMedium.copyWith(fontWeight: FontWeight.w900)),
             const SizedBox(height: 8),
             Text(_consultation?.diseaseName ?? 'Disease',
@@ -455,7 +480,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {}, // TODO: launch phone dialer
+                        onTap: () => _callFarmer(c),
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -542,7 +567,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                 const Icon(Icons.chat_bubble_outline_rounded,
                     color: Color(0xFF0F766E), size: 18),
                 const SizedBox(width: 8),
-                Text('Consultation Chat',
+                Text(context.tr(en: 'Consultation Chat', si: 'උපදේශන චැට්', ta: 'ஆலோசனை அரட்டை'),
                     style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.w800,
                         color: const Color(0xFF0F766E))),
@@ -553,7 +578,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                       shape: BoxShape.circle, color: Color(0xFF10B981)),
                 ),
                 const SizedBox(width: 6),
-                Text('Live', style: AppTextStyles.bodySmall.copyWith(
+                Text(context.tr(en: 'Live', si: 'සජීවී', ta: 'நேரலை'), style: AppTextStyles.bodySmall.copyWith(
                     color: const Color(0xFF10B981), fontWeight: FontWeight.bold)),
               ],
             ),
@@ -611,7 +636,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                       onPressed: () => _showPesticideSuggestion(context),
                       icon: const Icon(Icons.medical_services_rounded,
                           color: Colors.white, size: 20),
-                      label: Text('Suggest Treatment',
+                      label: Text(context.tr(en: 'Suggest Treatment', si: 'ප්‍රතිකාර යෝජනා කරන්න', ta: 'சிகிச்சையைப் பரிந்துரை'),
                           style: AppTextStyles.titleMedium.copyWith(
                               color: Colors.white, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
@@ -634,10 +659,10 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
   }
 
   Widget _buildNoCaseState() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.all(32),
       child: Center(
-        child: Text('No case selected', style: TextStyle(color: Colors.grey)),
+        child: Text(context.tr(en: 'No case selected', si: 'නඩුවක් තෝරා නැත', ta: 'வழக்கு தேர்ந்தெடுக்கப்படவில்லை'), style: TextStyle(color: Colors.grey)),
       ),
     );
   }
@@ -650,10 +675,10 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
           const Icon(Icons.chat_bubble_outline_rounded,
               size: 48, color: Color(0xFF0F766E)),
           const SizedBox(height: 12),
-          Text('No messages yet',
+          Text(context.tr(en: 'No messages yet', si: 'තවම පණිවිඩ නැත', ta: 'இன்னும் செய்திகள் இல்லை'),
               style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text('Start the consultation by sending a message.',
+          Text(context.tr(en: 'Start the consultation by sending a message.', si: 'පණිවිඩයක් යවා උපදේශනය ආරම්භ කරන්න.', ta: 'ஒரு செய்தியை அனுப்பி ஆலோசனையைத் தொடங்குங்கள்.'),
               style: AppTextStyles.bodySmall, textAlign: TextAlign.center),
         ],
       ),
@@ -745,7 +770,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                     const Icon(Icons.check_circle_rounded,
                         color: Color(0xFF10B981), size: 22),
                     const SizedBox(width: 8),
-                    Text('MARK AS RESOLVED',
+                    Text(context.tr(en: 'MARK AS RESOLVED', si: 'විසඳූ ලෙස සලකුණු කරන්න', ta: 'தீர்க்கப்பட்டதாகக் குறி'),
                         style: AppTextStyles.titleMedium.copyWith(
                             color: const Color(0xFF10B981),
                             fontWeight: FontWeight.w800, letterSpacing: 1.2)),

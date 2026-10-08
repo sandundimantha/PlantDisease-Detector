@@ -10,9 +10,12 @@ class WeatherApiService {
     try {
       // Free Open-Meteo API - no API key required
       final url = Uri.parse(
-          'https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current_weather=true&hourly=relative_humidity_2m');
+          'https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current_weather=true'
+          '&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode'
+          '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+          '&timezone=auto&forecast_days=7');
           
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

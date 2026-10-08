@@ -5,6 +5,7 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:plant_disease_detector/features/treatment/presentation/screens/treatment_reminder_screen.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
 
 class TreatmentDetailScreen extends StatefulWidget {
   final String diseaseName;
@@ -12,7 +13,7 @@ class TreatmentDetailScreen extends StatefulWidget {
 
   const TreatmentDetailScreen({
     super.key,
-    this.diseaseName = 'Early Blight',
+    this.diseaseName = 'Tomato Early Blight',
     this.cropName = 'Tomato',
   });
 
@@ -174,6 +175,74 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
     ],
   };
 
+  Widget _buildDiseaseSpecificPlan(DiseaseInfo info) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(info.isHealthy ? Icons.eco_rounded : Icons.healing_rounded, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  info.isHealthy
+                      ? context.tr(en: 'Keep your crop healthy', si: 'ඔබේ වගාව නිරෝගීව තබා ගන්න', ta: 'உங்கள் பயிரை ஆரோக்கியமாக வைத்திருங்கள்')
+                      : context.tr(en: 'Recommended for this disease', si: 'මෙම රෝගය සඳහා නිර්දේශිත', ta: 'இந்த நோய்க்கு பரிந்துரைக்கப்படுகிறது'),
+                  style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(info.pathogen, style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic)),
+          const SizedBox(height: 12),
+          for (var i = 0; i < info.treatments.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                    child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(context.trTreatment(info.treatments[i].title), style: AppTextStyles.titleSmall.copyWith(fontSize: 14)),
+                        const SizedBox(height: 2),
+                        Text(context.trTreatment(info.treatments[i].desc), style: AppTextStyles.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Text(
+            context.tr(
+              en: 'Follow the dose on the product label and check with your Agriculture Instructor before spraying.',
+              si: 'නිෂ්පාදන ලේබලයේ මාත්‍රාව අනුගමනය කර ඉසීමට පෙර ඔබේ කෘෂිකර්ම උපදේශකගෙන් විමසන්න.',
+              ta: 'தயாரிப்பு லேபிளில் உள்ள அளவைப் பின்பற்றி, தெளிப்பதற்கு முன் உங்கள் வேளாண் போதனாசிரியரிடம் உறுதிப்படுத்தவும்.',
+            ),
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tasks = _treatmentTasks[_selectedTabIndex] ?? [];
@@ -238,6 +307,16 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Steps specific to the detected disease (from the catalog)
+                      if (DiseaseCatalog.lookup(widget.diseaseName) case final info?) ...[
+                        _buildDiseaseSpecificPlan(info),
+                        const SizedBox(height: 24),
+                        Text(
+                          context.tr(en: 'General good practice', si: 'සාමාන්‍ය හොඳ පිළිවෙත්', ta: 'பொதுவான நல்ல நடைமுறைகள்'),
+                          style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       // Overview / Estimated Cost Banner
                       Container(
                         padding: const EdgeInsets.all(20),
@@ -283,7 +362,7 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    '${context.tr(en: 'Crop', si: 'බෝගය', ta: 'பயிர்')}: ${context.trCrop(widget.cropName)} • ${context.tr(en: 'Complete Recovery ~14 days', si: 'සම්පූර්ණ සුවය ~දින 14', ta: 'முழுமையான மீட்பு ~14 நாட்கள்')}',
+                                    '${context.tr(en: 'Crop', si: 'බෝගය', ta: 'பயிர்')}: ${context.trCrop(widget.cropName)} • ${context.tr(en: 'Indicative prices', si: 'ආසන්න මිල', ta: 'தோராயமான விலைகள்')}',
                                     style: AppTextStyles.bodySmall.copyWith(
                                       color: AppColors.textSecondary,
                                     ),
@@ -460,7 +539,7 @@ class _TreatmentDetailScreenState extends State<TreatmentDetailScreen> {
                             context.tr(en: 'Recommended Inputs (LKR)', si: 'නිර්දේශිත ද්‍රව්‍ය (රු.)', ta: 'பரிந்துரைக்கப்பட்ட பொருட்கள் (ரூ.)'),
                             style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
                           ),
-                          Text('Sri Lanka Ag', style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                          Text(context.tr(en: 'Indicative', si: 'ආසන්න', ta: 'தோராயம்'), style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(height: 14),

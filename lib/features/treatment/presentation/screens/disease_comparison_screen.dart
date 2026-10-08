@@ -170,7 +170,7 @@ class DiseaseComparisonScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const TreatmentDetailScreen()),
+                    MaterialPageRoute(builder: (_) => TreatmentDetailScreen(diseaseName: a.name, cropName: a.cropName)),
                   );
                 },
                 icon: const Icon(Icons.medication_rounded, color: Colors.white),
