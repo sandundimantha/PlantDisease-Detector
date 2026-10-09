@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/shared/utils/confirm_delete.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
@@ -12,9 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/features/farm_log/data/farm_models.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FarmScreen — Matches Figma FarmScreen.tsx
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// FarmScreen â€” Matches Figma FarmScreen.tsx
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class FarmScreen extends ConsumerStatefulWidget {
   const FarmScreen({super.key});
 
@@ -53,15 +53,15 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          context.tr(en: 'My Farm', si: 'මගේ ගොවිපල', ta: 'என் பண்ணை'),
+                          context.tr(en: 'My Farm', si: 'à¶¸à¶œà·š à¶œà·œà·€à·’à¶´à¶½', ta: 'à®Žà®©à¯ à®ªà®£à¯à®£à¯ˆ'),
                           style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5, fontSize: 24),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           context.tr(
-                            en: '8.5 total acres · 4 blocks',
-                            si: 'අක්කර 8.5 · කොටස් 4ක්',
-                            ta: '8.5 மொத்த ஏக்கர் · 4 தொகுதிகள்',
+                            en: '8.5 total acres Â· 4 blocks',
+                            si: 'à¶…à¶šà·Šà¶šà¶» 8.5 Â· à¶šà·œà¶§à·ƒà·Š 4à¶šà·Š',
+                            ta: '8.5 à®®à¯Šà®¤à¯à®¤ à®à®•à¯à®•à®°à¯ Â· 4 à®¤à¯Šà®•à¯à®¤à®¿à®•à®³à¯',
                           ),
                           style: AppTextStyles.bodySmall.copyWith(color: AppColors.settingsIcon),
                         ),
@@ -82,7 +82,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                         ],
                       ),
                       child: Text(
-                        context.tr(en: '+ Scan Field', si: '+ ක්ෂේත්‍රය ස්කෑන්', ta: '+ பயிர் ஸ்கேன்'),
+                        context.tr(en: '+ Scan Field', si: '+ à¶šà·Šà·‚à·šà¶­à·Šâ€à¶»à¶º à·ƒà·Šà¶šà·‘à¶±à·Š', ta: '+ à®ªà®¯à®¿à®°à¯ à®¸à¯à®•à¯‡à®©à¯'),
                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -104,7 +104,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
 
                     // Field Blocks
                     Text(
-                      context.tr(en: 'Field Blocks', si: 'ක්ෂේත්‍ර කොටස්', ta: 'பண்ணை தொகுதிகள்'),
+                      context.tr(en: 'Field Blocks', si: 'à¶šà·Šà·‚à·šà¶­à·Šâ€à¶» à¶šà·œà¶§à·ƒà·Š', ta: 'à®ªà®£à¯à®£à¯ˆ à®¤à¯Šà®•à¯à®¤à®¿à®•à®³à¯'),
                       style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 12),
@@ -123,7 +123,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          context.tr(en: "Today's Tasks", si: 'අද දවසේ කාර්යයන්', ta: 'இன்றைய பணிகள்'),
+                          context.tr(en: "Today's Tasks", si: 'à¶…à¶¯ à¶¯à·€à·ƒà·š à¶šà·à¶»à·Šà¶ºà¶ºà¶±à·Š', ta: 'à®‡à®©à¯à®±à¯ˆà®¯ à®ªà®£à®¿à®•à®³à¯'),
                           style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary),
                         ),
                         GestureDetector(
@@ -144,7 +144,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                                 const Icon(Icons.add_rounded, size: 14, color: AppColors.primary),
                                 const SizedBox(width: 4),
                                 Text(
-                                  context.tr(en: 'Add Log', si: 'සටහනක් එක්කරන්න', ta: 'பதிவு சேர்க்க'),
+                                  context.tr(en: 'Add Log', si: 'à·ƒà¶§à·„à¶±à¶šà·Š à¶‘à¶šà·Šà¶šà¶»à¶±à·Šà¶±', ta: 'à®ªà®¤à®¿à®µà¯ à®šà¯‡à®°à¯à®•à¯à®•'),
                                   style: const TextStyle(
                                     color: AppColors.primary,
                                     fontSize: 11,
@@ -202,8 +202,8 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     Text(
                       context.tr(
                         en: 'Overall Farm Health & Yield',
-                        si: 'ගොවිපල සමස්ත සෞඛ්‍යය හා අස්වැන්න',
-                        ta: 'ஒட்டுமொத்த பண்ணை நலம் & விளைச்சல்',
+                        si: 'à¶œà·œà·€à·’à¶´à¶½ à·ƒà¶¸à·ƒà·Šà¶­ à·ƒà·žà¶›à·Šâ€à¶ºà¶º à·„à· à¶…à·ƒà·Šà·€à·à¶±à·Šà¶±',
+                        ta: 'à®’à®Ÿà¯à®Ÿà¯à®®à¯Šà®¤à¯à®¤ à®ªà®£à¯à®£à¯ˆ à®¨à®²à®®à¯ & à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯',
                       ),
                       style: AppTextStyles.titleSmall,
                     ),
@@ -211,7 +211,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textSecondary),
                   ],
                 ),
-                Text(fields.isEmpty ? '—' : '$avg%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.severityDefault, fontWeight: FontWeight.bold)),
+                Text(fields.isEmpty ? 'â€”' : '$avg%', style: AppTextStyles.titleSmall.copyWith(color: AppColors.severityDefault, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
@@ -238,9 +238,9 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildHealthStat(context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியமானது'), '${count('healthy')}', AppColors.severityDefault),
-                _buildHealthStat(context.tr(en: 'Monitor', si: 'නිරීක්ෂණය', ta: 'கண்காணிப்பு'), '${count('monitor')}', AppColors.severityMedium),
-                _buildHealthStat(context.tr(en: 'At Risk', si: 'අවදානමේ', ta: 'ஆபத்தில்'), '${count('at risk')}', AppColors.severityHigh),
+                _buildHealthStat(context.tr(en: 'Healthy', si: 'à¶±à·’à¶»à·à¶œà·“', ta: 'à®†à®°à¯‹à®•à¯à®•à®¿à®¯à®®à®¾à®©à®¤à¯'), '${count('healthy')}', AppColors.severityDefault),
+                _buildHealthStat(context.tr(en: 'Monitor', si: 'à¶±à·’à¶»à·“à¶šà·Šà·‚à¶«à¶º', ta: 'à®•à®£à¯à®•à®¾à®£à®¿à®ªà¯à®ªà¯'), '${count('monitor')}', AppColors.severityMedium),
+                _buildHealthStat(context.tr(en: 'At Risk', si: 'à¶…à·€à¶¯à·à¶±à¶¸à·š', ta: 'à®†à®ªà®¤à¯à®¤à®¿à®²à¯'), '${count('at risk')}', AppColors.severityHigh),
               ],
             ),
           ],
@@ -286,8 +286,8 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
       confirmDismiss: (_) => confirmDelete(context, itemName: field.name),
       onDismissed: (_) async {
         final messenger = ScaffoldMessenger.of(context);
-        final deleted = context.tr(en: 'Field block deleted', si: 'ක්ෂේත්‍ර කොටස මකා දැමිණි', ta: 'நிலத் தொகுதி நீக்கப்பட்டது');
-        final failed = context.tr(en: 'Could not delete. Check your connection and try again.', si: 'මැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'நீக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
+        final deleted = context.tr(en: 'Field block deleted', si: 'à¶šà·Šà·‚à·šà¶­à·Šâ€à¶» à¶šà·œà¶§à·ƒ à¶¸à¶šà· à¶¯à·à¶¸à·’à¶«à·’', ta: 'à®¨à®¿à®²à®¤à¯ à®¤à¯Šà®•à¯à®¤à®¿ à®¨à¯€à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
+        final failed = context.tr(en: 'Could not delete. Check your connection and try again.', si: 'à¶¸à·à¶šà·’à¶º à¶±à·œà·„à·à¶š. à·ƒà¶¸à·Šà¶¶à¶±à·Šà¶°à¶­à·à·€à¶º à¶´à¶»à·“à¶šà·Šà·‚à· à¶šà¶» à¶±à·à·€à¶­ à¶‹à¶­à·Šà·ƒà·à·„ à¶šà¶»à¶±à·Šà¶±.', ta: 'à®¨à¯€à®•à¯à®• à®®à¯à®Ÿà®¿à®¯à®µà®¿à®²à¯à®²à¯ˆ. à®‡à®£à¯ˆà®ªà¯à®ªà¯ˆà®šà¯ à®šà®°à®¿à®ªà®¾à®°à¯à®¤à¯à®¤à¯ à®®à¯€à®£à¯à®Ÿà¯à®®à¯ à®®à¯à®¯à®±à¯à®šà®¿à®•à¯à®•à®µà¯à®®à¯.');
         try {
           await ref.read(farmApiServiceProvider).deleteFieldBlock(field.id);
           messenger.showSnackBar(SnackBar(content: Text(deleted)));
@@ -303,7 +303,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(
           children: [
@@ -324,7 +324,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
                         ),
                         alignment: Alignment.center,
@@ -354,13 +354,13 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(field.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.titleSmall.copyWith(fontSize: 14)),
-                                  Text('${field.crop} · ${field.area}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
+                                  Text('${field.crop} Â· ${field.area}', maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.bodySmall.copyWith(fontSize: 11)),
                                 ],
                               ),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(color: statusColor.withOpacity(0.15), borderRadius: BorderRadius.circular(50)),
+                              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(50)),
                               child: Text(
                                 field.status,
                                 style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
@@ -478,8 +478,8 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
       ),
       onDismissed: (_) async {
         final messenger = ScaffoldMessenger.of(context);
-        final deleted = context.tr(en: 'Task deleted', si: 'කාර්යය මකා දැමිණි', ta: 'பணி நீக்கப்பட்டது');
-        final failed = context.tr(en: 'Could not delete. Check your connection and try again.', si: 'මැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'நீக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
+        final deleted = context.tr(en: 'Task deleted', si: 'à¶šà·à¶»à·Šà¶ºà¶º à¶¸à¶šà· à¶¯à·à¶¸à·’à¶«à·’', ta: 'à®ªà®£à®¿ à®¨à¯€à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
+        final failed = context.tr(en: 'Could not delete. Check your connection and try again.', si: 'à¶¸à·à¶šà·’à¶º à¶±à·œà·„à·à¶š. à·ƒà¶¸à·Šà¶¶à¶±à·Šà¶°à¶­à·à·€à¶º à¶´à¶»à·“à¶šà·Šà·‚à· à¶šà¶» à¶±à·à·€à¶­ à¶‹à¶­à·Šà·ƒà·à·„ à¶šà¶»à¶±à·Šà¶±.', ta: 'à®¨à¯€à®•à¯à®• à®®à¯à®Ÿà®¿à®¯à®µà®¿à®²à¯à®²à¯ˆ. à®‡à®£à¯ˆà®ªà¯à®ªà¯ˆà®šà¯ à®šà®°à®¿à®ªà®¾à®°à¯à®¤à¯à®¤à¯ à®®à¯€à®£à¯à®Ÿà¯à®®à¯ à®®à¯à®¯à®±à¯à®šà®¿à®•à¯à®•à®µà¯à®®à¯.');
         try {
           await ref.read(farmApiServiceProvider).deleteFarmTask(task.id);
           messenger.showSnackBar(SnackBar(content: Text(deleted)));
@@ -498,7 +498,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Opacity(
           opacity: task.isDone ? 0.6 : 1.0,
@@ -508,7 +508,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: task.isDone ? AppColors.severityDefault : color.withOpacity(0.1),
+                  color: task.isDone ? AppColors.severityDefault : color.withValues(alpha: 0.1),
                   border: task.isDone ? null : Border.all(color: color, width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -536,7 +536,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(50),
                 ),
                 child: Text(
@@ -552,3 +552,4 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
     );
   }
 }
+
