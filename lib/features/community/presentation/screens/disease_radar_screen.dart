@@ -204,8 +204,13 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
             mapController: _mapController,
             options: MapOptions(
               initialCenter: userLocation,
-              initialZoom: locationState.position != null ? 11.0 : 7.0, // Zoom out if fallback
+              initialZoom: locationState.position != null ? 14.0 : 7.0, // Zoom out if fallback
               onTap: (_, _) => setState(() => _selectedOutbreak = null), // Dismiss card on map tap
+              onMapReady: () {
+                if (locationState.position != null) {
+                  _mapController.move(userLocation, 14.0);
+                }
+              },
             ),
             children: [
               // Standard Light Map Tiles (OpenStreetMap) with fallback
@@ -447,21 +452,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
               ),
             ),
 
-          // ── Map Controls (Center Map) ───────────────────────────────────────
-          if (locationState.position != null)
-            Positioned(
-              right: 20,
-              bottom: _selectedOutbreak != null ? 300 : 120,
-              child: FloatingActionButton(
-                heroTag: 'center_map',
-                backgroundColor: AppColors.radarChipBg,
-                mini: true,
-                onPressed: () {
-                  _mapController.move(userLocation, 12.0);
-                },
-                child: const Icon(Icons.my_location_rounded, color: Colors.white),
-              ),
-            ),
+
 
           // ── Legend (bottom-left) ──────────────────────────────────────────
           Positioned(
@@ -509,20 +500,33 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
           ),
 
           // ── My Location Button ────────────────────────────────────────────
-          if (locationState.position != null)
-            Positioned(
-              bottom: _selectedOutbreak != null ? 150 : 120, 
-              right: 20,
-              child: FloatingActionButton(
-                heroTag: 'my_location_btn',
-                backgroundColor: AppColors.primary,
-                mini: true,
-                onPressed: () {
+          Positioned(
+            bottom: _selectedOutbreak != null ? 150 : 120, 
+            right: 20,
+            child: FloatingActionButton(
+              heroTag: 'my_location_btn',
+              backgroundColor: AppColors.primary,
+              mini: true,
+              onPressed: () {
+                if (locationState.position != null) {
                   _mapController.move(userLocation, 14.0);
-                },
-                child: const Icon(Icons.my_location_rounded, color: Colors.white),
-              ),
+                } else {
+                  ref.read(locationProvider.notifier).fetchLocation();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.tr(
+                        en: 'Fetching location...', 
+                        si: 'ස්ථානය ලබා ගනිමින්...', 
+                        ta: 'இருப்பிடத்தை பெறுகிறது...'
+                      )),
+                      behavior: SnackBarBehavior.floating,
+                    )
+                  );
+                }
+              },
+              child: const Icon(Icons.my_location_rounded, color: Colors.white),
             ),
+          ),
         ],
       ),
     );
