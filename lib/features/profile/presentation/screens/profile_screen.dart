@@ -10,7 +10,6 @@ import 'package:plant_disease_detector/core/providers/locale_provider.dart';
 import 'package:plant_disease_detector/features/profile/presentation/screens/language_selection_screen.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
-import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/core/auth/user_role.dart';

@@ -193,7 +193,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
                 Expanded(
                   child: consultationsAsync.when(
                     loading: () => _buildLoadingList(),
-                    error: (_, __) => _buildErrorState(context),
+                    error: (_, _e) => _buildErrorState(context),
                     data: (consultations) {
                       final filtered = _applyFilter(consultations);
                       if (filtered.isEmpty) return _buildEmptyState(context);
@@ -335,7 +335,7 @@ class _CaseInboxScreenState extends ConsumerState<CaseInboxScreen> {
     return ListView.builder(
       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
       itemCount: 5,
-      itemBuilder: (_, __) => Padding(
+      itemBuilder: (_, _i) => Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: _buildSkeletonTile(),
       ),

@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,9 +22,8 @@ import 'package:plant_disease_detector/features/home/application/saved_items_pro
 import 'package:plant_disease_detector/features/home/presentation/screens/main_screen.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
-import 'package:flutter/foundation.dart';
 
-// ── Ultra Premium Tokens ───────────────────────────────────────────────────────
+// â”€â”€ Ultra Premium Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _bg = Color(0xFFF4F6F5); // Cool, luxury off-white
 const _white = Colors.white;
 const _emLight = Color(0xFF1E7045);
@@ -77,8 +76,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
     final hr = DateTime.now().hour;
     String greet = l10n?.goodEvening ?? 'Good Evening';
-    if (hr < 12) greet = l10n?.goodMorning ?? 'Good Morning';
-    else if (hr < 17) greet = l10n?.goodAfternoon ?? 'Good Afternoon';
+    if (hr < 12) { greet = l10n?.goodMorning ?? 'Good Morning'; }
+    else if (hr < 17) { greet = l10n?.goodAfternoon ?? 'Good Afternoon'; }
 
     // Share of the last 10 scanned leaves that were healthy (-1 = no scans yet).
     double health = -1;
@@ -100,26 +99,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ① STUNNING HERO WITH GLASS HEALTH CARD
+                // â‘  STUNNING HERO WITH GLASS HEALTH CARD
                 _HeroSection(user: user, greet: greet, loc: loc, wx: wx, float: _float, health: health, scanCount: scans.length, cropCount: user.primaryCrops.length),
                 
                 const SizedBox(height: 65), // Spacing for straddling card
 
-                // ③ GLOWING SCAN CTA
+                // â‘¢ GLOWING SCAN CTA
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: _ScanCTA(pulse: _pulse),
                 ),
                 const SizedBox(height: 32),
 
-                // ④ BENTO GRID ACTIONS
+                // â‘£ BENTO GRID ACTIONS
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: _BentoActions(),
                 ),
                 const SizedBox(height: 32),
 
-                // ⑤ RECENT SCANS
+                // â‘¤ RECENT SCANS
                 scansAsync.when(
                   data: (data) => _RecentScans(scans: data.take(3).toList()),
                   loading: () => const Center(child: Padding(
@@ -128,7 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   )),
                   error: (error, stack) => Center(child: Padding(
                     padding: EdgeInsets.all(24.0),
-                    child: Text(context.tr(en: 'Error loading scans', si: 'ස්කෑන් පූරණය කළ නොහැක', ta: 'ஸ்கேன்களை ஏற்ற முடியவில்லை'), style: TextStyle(color: Colors.red)),
+                    child: Text(context.tr(en: 'Error loading scans', si: 'à·ƒà·Šà¶šà·‘à¶±à·Š à¶´à·–à¶»à¶«à¶º à¶šà·… à¶±à·œà·„à·à¶š', ta: 'à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯ˆ à®à®±à¯à®± à®®à¯à®Ÿà®¿à®¯à®µà®¿à®²à¯à®²à¯ˆ'), style: TextStyle(color: Colors.red)),
                   )),
                 ),
               ],
@@ -140,9 +139,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ① HERO & TRUE GLASS WEATHER CARD
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â‘  HERO & TRUE GLASS WEATHER CARD
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _HeroSection extends StatelessWidget {
   final dynamic user, greet, loc, wx;
   final AnimationController float;
@@ -190,7 +189,7 @@ class _HeroSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
-                        colors: [const Color(0xFF2E8B57).withOpacity(0.4), Colors.transparent],
+                        colors: [const Color(0xFF2E8B57).withValues(alpha: 0.4), Colors.transparent],
                       ),
                     ),
                   ),
@@ -204,7 +203,7 @@ class _HeroSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
-                        colors: [const Color(0xFFF5C842).withOpacity(0.15), Colors.transparent],
+                        colors: [const Color(0xFFF5C842).withValues(alpha: 0.15), Colors.transparent],
                       ),
                     ),
                   ),
@@ -216,14 +215,14 @@ class _HeroSection extends StatelessWidget {
                       // Floating Glows
                       AnimatedBuilder(
                         animation: float,
-                        builder: (_, __) => Positioned(
+                        builder: (_, _child) => Positioned(
                           right: 20, top: 40 + (float.value * 15),
                           child: Container(
                             width: 100, height: 100,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
-                                colors: [_gold.withOpacity(0.2), Colors.transparent],
+                                colors: [_gold.withValues(alpha: 0.2), Colors.transparent],
                               ),
                             ),
                           ),
@@ -278,8 +277,8 @@ class _HeroSection extends StatelessWidget {
                                 width: 38, height: 38,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: _gold.withOpacity(0.8), width: 1.5),
-                                  boxShadow: [BoxShadow(color: _gold.withOpacity(0.3), blurRadius: 10)],
+                                  border: Border.all(color: _gold.withValues(alpha: 0.8), width: 1.5),
+                                  boxShadow: [BoxShadow(color: _gold.withValues(alpha: 0.3), blurRadius: 10)],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
@@ -315,13 +314,13 @@ class _HeroSection extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
+                              colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
                               begin: Alignment.topLeft, end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.2),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.2),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFFF5C842).withOpacity(0.15), blurRadius: 15, spreadRadius: 1)
+                              BoxShadow(color: const Color(0xFFF5C842).withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 1)
                             ],
                           ),
                           child: Row(
@@ -335,7 +334,7 @@ class _HeroSection extends StatelessWidget {
                               const SizedBox(width: 12),
                               Icon(wx.weather?.isDay != false ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded, color: wx.weather?.isDay != false ? Colors.orangeAccent : Colors.indigo.shade200, size: 14),
                               const SizedBox(width: 4),
-                              Text('$temp°C', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+                              Text('$tempÂ°C', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
                               const SizedBox(width: 12),
                               Container(width: 1, height: 12, color: Colors.white30),
                               const SizedBox(width: 12),
@@ -343,7 +342,7 @@ class _HeroSection extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(timeStr, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
                               const SizedBox(width: 10),
-                              Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.9), size: 18),
+                              Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.9), size: 18),
                             ],
                           ),
                         ),
@@ -379,9 +378,9 @@ class _HeroSection extends StatelessWidget {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ② ULTRA-PREMIUM HEALTH CARD — Editorial Light Theme Layout
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â‘¡ ULTRA-PREMIUM HEALTH CARD â€” Editorial Light Theme Layout
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _HealthCard extends StatelessWidget {
   final double health;
   final int count;
@@ -394,16 +393,16 @@ class _HealthCard extends StatelessWidget {
     final pct = noScans ? 0 : (health * 100).round();
     final Color glowC = noScans ? const Color(0xFF9AA79F) : pct >= 80 ? const Color(0xFF238E50)
         : pct >= 60 ? const Color(0xFFF5C842) : const Color(0xFFFF6B6B);
-    final String lbl  = noScans ? context.tr(en: 'Scan a leaf to start', si: 'ආරම්භ කිරීමට කොළයක් ස්කෑන් කරන්න', ta: 'தொடங்க ஒரு இலையை ஸ்கேன் செய்யவும்')
-        : pct >= 80 ? context.tr(en: 'Excellent', si: 'විශිෂ්ටයි', ta: 'சிறப்பு')
-        : pct >= 60 ? context.tr(en: 'Moderate', si: 'මධ්‍යම', ta: 'நடுத்தரம்') : context.tr(en: 'At Risk', si: 'අවදානම්', ta: 'ஆபத்தில்');
+    final String lbl  = noScans ? context.tr(en: 'Scan a leaf to start', si: 'à¶†à¶»à¶¸à·Šà¶· à¶šà·’à¶»à·“à¶¸à¶§ à¶šà·œà·…à¶ºà¶šà·Š à·ƒà·Šà¶šà·‘à¶±à·Š à¶šà¶»à¶±à·Šà¶±', ta: 'à®¤à¯Šà®Ÿà®™à¯à®• à®’à®°à¯ à®‡à®²à¯ˆà®¯à¯ˆ à®¸à¯à®•à¯‡à®©à¯ à®šà¯†à®¯à¯à®¯à®µà¯à®®à¯')
+        : pct >= 80 ? context.tr(en: 'Excellent', si: 'à·€à·’à·à·’à·‚à·Šà¶§à¶ºà·’', ta: 'à®šà®¿à®±à®ªà¯à®ªà¯')
+        : pct >= 60 ? context.tr(en: 'Moderate', si: 'à¶¸à¶°à·Šâ€à¶ºà¶¸', ta: 'à®¨à®Ÿà¯à®¤à¯à®¤à®°à®®à¯') : context.tr(en: 'At Risk', si: 'à¶…à·€à¶¯à·à¶±à¶¸à·Š', ta: 'à®†à®ªà®¤à¯à®¤à®¿à®²à¯');
 
     return Container(
       height: 118,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 30, offset: const Offset(0, 15)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 30, offset: const Offset(0, 15)),
         ],
       ),
       child: ClipRRect(
@@ -413,12 +412,12 @@ class _HealthCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
+                colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFE2A066).withOpacity(0.4), width: 1.2),
+              border: Border.all(color: const Color(0xFFE2A066).withValues(alpha: 0.4), width: 1.2),
             ),
             child: Stack(
               children: [
@@ -428,7 +427,7 @@ class _HealthCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    glowC.withOpacity(0.08), Colors.transparent,
+                    glowC.withValues(alpha: 0.08), Colors.transparent,
                   ]),
                 ))),
             // Layout: big number LEFT | hairline | info RIGHT
@@ -442,7 +441,7 @@ class _HealthCard extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(noScans ? '—' : '$pct',
+                        Text(noScans ? 'â€”' : '$pct',
                           style: const TextStyle(
                             color: Colors.white, fontSize: 68,
                             fontWeight: FontWeight.w900, height: 1,
@@ -463,7 +462,7 @@ class _HealthCard extends StatelessWidget {
                 // Hairline vertical divider
                 Container(width: 1,
                     margin: const EdgeInsets.symmetric(vertical: 22),
-                    color: Colors.white.withOpacity(0.12)),
+                    color: Colors.white.withValues(alpha: 0.12)),
                 // Right panel: label + status + badges
                 Expanded(
                   child: Padding(
@@ -472,7 +471,7 @@ class _HealthCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(context.tr(en: 'FARM HEALTH SCORE', si: 'ගොවිපල සෞඛ්‍ය දර්ශකය', ta: 'பண்ணை ஆரோக்கிய மதிப்பெண்').toUpperCase(),
+                        Text(context.tr(en: 'FARM HEALTH SCORE', si: 'à¶œà·œà·€à·’à¶´à¶½ à·ƒà·žà¶›à·Šâ€à¶º à¶¯à¶»à·Šà·à¶šà¶º', ta: 'à®ªà®£à¯à®£à¯ˆ à®†à®°à¯‹à®•à¯à®•à®¿à®¯ à®®à®¤à®¿à®ªà¯à®ªà¯†à®£à¯').toUpperCase(),
                           style: const TextStyle(
                             color: Color(0xFFF5C842),
                             fontSize: 9.5, fontWeight: FontWeight.w900,
@@ -483,7 +482,7 @@ class _HealthCard extends StatelessWidget {
                           Container(width: 8, height: 8,
                             decoration: BoxDecoration(
                               color: glowC, shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: glowC.withOpacity(0.4),
+                              boxShadow: [BoxShadow(color: glowC.withValues(alpha: 0.4),
                                   blurRadius: 6, spreadRadius: 1)],
                             )),
                           const SizedBox(width: 8),
@@ -494,9 +493,9 @@ class _HealthCard extends StatelessWidget {
                         ]),
                         Row(children: [
                           _Chip(icon: Icons.document_scanner_rounded,
-                              text: context.tr(en: '$count Scans', si: 'ස්කෑන් $count', ta: '$count ஸ்கேன்கள்')),
+                              text: context.tr(en: '$count Scans', si: 'à·ƒà·Šà¶šà·‘à¶±à·Š $count', ta: '$count à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯')),
                           const SizedBox(width: 8),
-                          _Chip(icon: Icons.eco_rounded, text: context.tr(en: '$cropCount Crops', si: 'වගාවන් $cropCount', ta: '$cropCount பயிர்கள்')),
+                          _Chip(icon: Icons.eco_rounded, text: context.tr(en: '$cropCount Crops', si: 'à·€à¶œà·à·€à¶±à·Š $cropCount', ta: '$cropCount à®ªà®¯à®¿à®°à¯à®•à®³à¯')),
                         ]),
                       ],
                     ),
@@ -521,9 +520,9 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
     decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.08),
+      color: Colors.white.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
     ),
     child: Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, color: const Color(0xFFF5C842), size: 12),
@@ -534,9 +533,9 @@ class _Chip extends StatelessWidget {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ③ REFINED SCAN CTA — Light Premium Glow
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â‘¢ REFINED SCAN CTA â€” Light Premium Glow
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _ScanCTA extends StatelessWidget {
   final Animation<double> pulse;
   const _ScanCTA({required this.pulse});
@@ -560,7 +559,7 @@ class _ScanCTA extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
-              BoxShadow(color: const Color(0xFF238E50).withOpacity(0.12),
+              BoxShadow(color: const Color(0xFF238E50).withValues(alpha: 0.12),
                   blurRadius: 20, offset: const Offset(0, 8)),
             ],
           ),
@@ -569,7 +568,7 @@ class _ScanCTA extends StatelessWidget {
               // Ghost watermark
               Positioned(right: 12, top: 0, bottom: 0,
                 child: Icon(Icons.qr_code_scanner_rounded,
-                    size: 90, color: const Color(0xFF238E50).withOpacity(0.06)),
+                    size: 90, color: const Color(0xFF238E50).withValues(alpha: 0.06)),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -577,14 +576,14 @@ class _ScanCTA extends StatelessWidget {
                   // Icon with pulsing border ring
                   AnimatedBuilder(
                     animation: pulse,
-                    builder: (_, __) => Container(
+                    builder: (_, _child) => Container(
                       width: 54, height: 54,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF238E50).withOpacity(0.15 + pulse.value * 0.1),
+                            color: const Color(0xFF238E50).withValues(alpha: 0.15 + pulse.value * 0.1),
                             blurRadius: 16, spreadRadius: pulse.value * 2,
                           )
                         ]
@@ -600,12 +599,12 @@ class _ScanCTA extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(context.tr(en: 'Scan Your Crop', si: 'ඔබේ වගාව පරීක්ෂා කරන්න', ta: 'உங்கள் பயிரை ஸ்கேன் செய்யவும்'),
+                        Text(context.tr(en: 'Scan Your Crop', si: 'à¶”à¶¶à·š à·€à¶œà·à·€ à¶´à¶»à·“à¶šà·Šà·‚à· à¶šà¶»à¶±à·Šà¶±', ta: 'à®‰à®™à¯à®•à®³à¯ à®ªà®¯à®¿à®°à¯ˆ à®¸à¯à®•à¯‡à®©à¯ à®šà¯†à®¯à¯à®¯à®µà¯à®®à¯'),
                           style: const TextStyle(color: Color(0xFF0A1C11), fontSize: 20,
                               fontWeight: FontWeight.w900, letterSpacing: -0.4, height: 1.1)),
                         const SizedBox(height: 5),
-                        Text(context.tr(en: 'AI-powered diagnosis in seconds', si: 'තත්පර කිහිපයකින් AI මඟින් රෝග විනිශ්චය', ta: 'சில வினாடிகளில் AI மூலம் நோய் கண்டறிதல்'),
-                          style: TextStyle(color: const Color(0xFF0A1C11).withOpacity(0.55),
+                        Text(context.tr(en: 'AI-powered diagnosis in seconds', si: 'à¶­à¶­à·Šà¶´à¶» à¶šà·’à·„à·’à¶´à¶ºà¶šà·’à¶±à·Š AI à¶¸à¶Ÿà·’à¶±à·Š à¶»à·à¶œ à·€à·’à¶±à·’à·à·Šà¶ à¶º', ta: 'à®šà®¿à®² à®µà®¿à®©à®¾à®Ÿà®¿à®•à®³à®¿à®²à¯ AI à®®à¯‚à®²à®®à¯ à®¨à¯‹à®¯à¯ à®•à®£à¯à®Ÿà®±à®¿à®¤à®²à¯'),
+                          style: TextStyle(color: const Color(0xFF0A1C11).withValues(alpha: 0.55),
                               fontSize: 11.5, fontWeight: FontWeight.w600)),
                       ],
                     ),
@@ -620,7 +619,7 @@ class _ScanCTA extends StatelessWidget {
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: const Color(0xFF145730).withOpacity(0.40),
+                        BoxShadow(color: const Color(0xFF145730).withValues(alpha: 0.40),
                             blurRadius: 12, offset: const Offset(0, 4)),
                       ],
                     ),
@@ -637,28 +636,28 @@ class _ScanCTA extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ④ LUXURY ACTIONS — Unified dark base + colored top accent
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â‘£ LUXURY ACTIONS â€” Unified dark base + colored top accent
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _BentoActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(context.tr(en: 'QUICK ACTIONS', si: 'ඉක්මන් ක්‍රියා', ta: 'விரைவான செயல்கள்'),
+        Text(context.tr(en: 'QUICK ACTIONS', si: 'à¶‰à¶šà·Šà¶¸à¶±à·Š à¶šà·Šâ€à¶»à·’à¶ºà·', ta: 'à®µà®¿à®°à¯ˆà®µà®¾à®© à®šà¯†à®¯à®²à¯à®•à®³à¯'),
             style: TextStyle(color: _textMute, fontSize: 10.5,
                 fontWeight: FontWeight.w800, letterSpacing: 1.6)),
         const SizedBox(height: 14),
         Row(children: [
           Expanded(flex: 5, child: _LuxTile(
-            icon: Icons.radar_rounded, label: context.tr(en: 'Disease\nRadar', si: 'රෝග\nරේඩාර්', ta: 'நோய்\nரேடார்'), sub: context.tr(en: 'Nearby alerts', si: 'අවට අනතුරු ඇඟවීම්', ta: 'அருகிலுள்ள எச்சரிக்கைகள்'),
+            icon: Icons.radar_rounded, label: context.tr(en: 'Disease\nRadar', si: 'à¶»à·à¶œ\nà¶»à·šà¶©à·à¶»à·Š', ta: 'à®¨à¯‹à®¯à¯\nà®°à¯‡à®Ÿà®¾à®°à¯'), sub: context.tr(en: 'Nearby alerts', si: 'à¶…à·€à¶§ à¶…à¶±à¶­à·”à¶»à·” à¶‡à¶Ÿà·€à·“à¶¸à·Š', ta: 'à®…à®°à¯à®•à®¿à®²à¯à®³à¯à®³ à®Žà®šà¯à®šà®°à®¿à®•à¯à®•à¯ˆà®•à®³à¯'),
             accent: const Color(0xFFD4637A),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseRadarScreen())),
           )),
           const SizedBox(width: 13),
           Expanded(flex: 4, child: _LuxTile(
-            icon: Icons.support_agent_rounded, label: context.tr(en: 'Expert\nHelp', si: 'විශේෂඥ\nසහය', ta: 'நிபுணர்\nஉதவி'), sub: context.tr(en: 'Ask a pro', si: 'විශේෂඥයෙකුගෙන් විමසන්න', ta: 'ஒரு நிபுணரிடம் கேளுங்கள்'),
+            icon: Icons.support_agent_rounded, label: context.tr(en: 'Expert\nHelp', si: 'à·€à·’à·à·šà·‚à¶¥\nà·ƒà·„à¶º', ta: 'à®¨à®¿à®ªà¯à®£à®°à¯\nà®‰à®¤à®µà®¿'), sub: context.tr(en: 'Ask a pro', si: 'à·€à·’à·à·šà·‚à¶¥à¶ºà·™à¶šà·”à¶œà·™à¶±à·Š à·€à·’à¶¸à·ƒà¶±à·Šà¶±', ta: 'à®’à®°à¯ à®¨à®¿à®ªà¯à®£à®°à®¿à®Ÿà®®à¯ à®•à¯‡à®³à¯à®™à¯à®•à®³à¯'),
             accent: const Color(0xFFD4943A),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
           )),
@@ -666,20 +665,20 @@ class _BentoActions extends StatelessWidget {
         const SizedBox(height: 13),
         Row(children: [
           Expanded(flex: 4, child: _LuxTile(
-            icon: Icons.menu_book_rounded, label: context.tr(en: 'Disease\nLibrary', si: 'රෝග\nනාමාවලිය', ta: 'நோய்\nநூலகம்'), sub: context.tr(en: 'Symptoms & cures', si: 'ලක්ෂණ සහ ප්‍රතිකාර', ta: 'அறிகுறிகள் & சிகிச்சை'),
+            icon: Icons.menu_book_rounded, label: context.tr(en: 'Disease\nLibrary', si: 'à¶»à·à¶œ\nà¶±à·à¶¸à·à·€à¶½à·’à¶º', ta: 'à®¨à¯‹à®¯à¯\nà®¨à¯‚à®²à®•à®®à¯'), sub: context.tr(en: 'Symptoms & cures', si: 'à¶½à¶šà·Šà·‚à¶« à·ƒà·„ à¶´à·Šâ€à¶»à¶­à·’à¶šà·à¶»', ta: 'à®…à®±à®¿à®•à¯à®±à®¿à®•à®³à¯ & à®šà®¿à®•à®¿à®šà¯à®šà¯ˆ'),
             accent: const Color(0xFF4A86D4),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseCatalogueScreen())),
           )),
           const SizedBox(width: 13),
           Expanded(flex: 5, child: _LuxTile(
-            icon: Icons.people_rounded, label: context.tr(en: 'Community\nForum', si: 'ප්‍රජා\nසංසදය', ta: 'சமூக\nமன்றம்'), sub: context.tr(en: 'Share & learn', si: 'බෙදාගන්න සහ ඉගෙන ගන්න', ta: 'பகிரவும் கற்கவும்'),
+            icon: Icons.people_rounded, label: context.tr(en: 'Community\nForum', si: 'à¶´à·Šâ€à¶»à¶¢à·\nà·ƒà¶‚à·ƒà¶¯à¶º', ta: 'à®šà®®à¯‚à®•\nà®®à®©à¯à®±à®®à¯'), sub: context.tr(en: 'Share & learn', si: 'à¶¶à·™à¶¯à·à¶œà¶±à·Šà¶± à·ƒà·„ à¶‰à¶œà·™à¶± à¶œà¶±à·Šà¶±', ta: 'à®ªà®•à®¿à®°à®µà¯à®®à¯ à®•à®±à¯à®•à®µà¯à®®à¯'),
             accent: const Color(0xFF3CAF70),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
           )),
         ]),
         const SizedBox(height: 13),
         _LuxTile(
-          icon: Icons.lightbulb_outline_rounded, label: context.tr(en: 'Farming Tips', si: 'ගොවි උපදෙස්', ta: 'விவசாய குறிப்புகள்'), sub: context.tr(en: 'Seasonal advice for your crops', si: 'ඔබේ බෝග සඳහා සෘතුමය උපදෙස්', ta: 'உங்கள் பயிர்களுக்கான பருவகால ஆலோசனை'),
+          icon: Icons.lightbulb_outline_rounded, label: context.tr(en: 'Farming Tips', si: 'à¶œà·œà·€à·’ à¶‹à¶´à¶¯à·™à·ƒà·Š', ta: 'à®µà®¿à®µà®šà®¾à®¯ à®•à¯à®±à®¿à®ªà¯à®ªà¯à®•à®³à¯'), sub: context.tr(en: 'Seasonal advice for your crops', si: 'à¶”à¶¶à·š à¶¶à·à¶œ à·ƒà¶³à·„à· à·ƒà·˜à¶­à·”à¶¸à¶º à¶‹à¶´à¶¯à·™à·ƒà·Š', ta: 'à®‰à®™à¯à®•à®³à¯ à®ªà®¯à®¿à®°à¯à®•à®³à¯à®•à¯à®•à®¾à®© à®ªà®°à¯à®µà®•à®¾à®² à®†à®²à¯‹à®šà®©à¯ˆ'),
           accent: const Color(0xFF8A6FD4),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TipsFeedScreen())),
         ),
@@ -710,10 +709,10 @@ class _LuxTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Colors.white, width: 2),
           boxShadow: [
-            BoxShadow(color: const Color(0xFF042211).withOpacity(0.04),
+            BoxShadow(color: const Color(0xFF042211).withValues(alpha: 0.04),
                 blurRadius: 24, offset: const Offset(0, 10)),
             // Faint colored shadow for that Apple-like glow
-            BoxShadow(color: accent.withOpacity(0.08),
+            BoxShadow(color: accent.withValues(alpha: 0.08),
                 blurRadius: 12, offset: const Offset(0, 4)),
           ],
         ),
@@ -721,10 +720,10 @@ class _LuxTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              // Ghost icon watermark — right side
+              // Ghost icon watermark â€” right side
               Positioned(right: -10, bottom: -10,
                   child: Icon(icon, size: 75,
-                      color: accent.withOpacity(0.04))),
+                      color: accent.withValues(alpha: 0.04))),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
                 child: Column(
@@ -735,7 +734,7 @@ class _LuxTile extends StatelessWidget {
                     Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.12),
+                        color: accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, color: accent, size: 20),
@@ -752,7 +751,7 @@ class _LuxTile extends StatelessWidget {
                               height: 1.25, letterSpacing: 0.1)),
                         const SizedBox(height: 3),
                         Text(sub, maxLines: 1,
-                          style: TextStyle(color: const Color(0xFF0A1C11).withOpacity(0.45),
+                          style: TextStyle(color: const Color(0xFF0A1C11).withValues(alpha: 0.45),
                               fontSize: 9.5, fontWeight: FontWeight.w600,
                               letterSpacing: 0.2)),
                       ],
@@ -768,9 +767,9 @@ class _LuxTile extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ⑤ RECENT SCANS
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â‘¤ RECENT SCANS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _RecentScans extends StatelessWidget {
   final List<dynamic> scans;
   const _RecentScans({required this.scans});
@@ -785,10 +784,10 @@ class _RecentScans extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(context.tr(en: 'RECENT SCANS', si: 'මෑතකාලීන ස්කෑන්', ta: 'சமீபத்திய ஸ்கேன்கள்'), style: const TextStyle(color: _textMute, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+              Text(context.tr(en: 'RECENT SCANS', si: 'à¶¸à·‘à¶­à¶šà·à¶½à·“à¶± à·ƒà·Šà¶šà·‘à¶±à·Š', ta: 'à®šà®®à¯€à®ªà®¤à¯à®¤à®¿à®¯ à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯'), style: const TextStyle(color: _textMute, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
               GestureDetector(
                 onTap: () => ProviderScope.containerOf(context).read(mainTabProvider.notifier).state = 2,
-                child: Text(context.tr(en: 'See All', si: 'සියල්ල බලන්න', ta: 'அனைத்தையும் காண்க'), style: const TextStyle(color: _copper, fontSize: 13, fontWeight: FontWeight.w800)),
+                child: Text(context.tr(en: 'See All', si: 'à·ƒà·’à¶ºà¶½à·Šà¶½ à¶¶à¶½à¶±à·Šà¶±', ta: 'à®…à®©à¯ˆà®¤à¯à®¤à¯ˆà®¯à¯à®®à¯ à®•à®¾à®£à¯à®•'), style: const TextStyle(color: _copper, fontSize: 13, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
@@ -800,7 +799,7 @@ class _RecentScans extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(color: _white, borderRadius: BorderRadius.circular(24)),
-              child: Center(child: Text(context.tr(en: 'No recent scans found.', si: 'මෑතකාලීන ස්කෑන් හමුවූයේ නැත.', ta: 'சமீபத்திய ஸ்கேன்கள் எதுவும் காணப்படவில்லை.'), style: const TextStyle(color: _textMute))),
+              child: Center(child: Text(context.tr(en: 'No recent scans found.', si: 'à¶¸à·‘à¶­à¶šà·à¶½à·“à¶± à·ƒà·Šà¶šà·‘à¶±à·Š à·„à¶¸à·”à·€à·–à¶ºà·š à¶±à·à¶­.', ta: 'à®šà®®à¯€à®ªà®¤à¯à®¤à®¿à®¯ à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯ à®Žà®¤à¯à®µà¯à®®à¯ à®•à®¾à®£à®ªà¯à®ªà®Ÿà®µà®¿à®²à¯à®²à¯ˆ.'), style: const TextStyle(color: _textMute))),
             ),
           )
         else
@@ -842,7 +841,7 @@ class _ScanCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -859,9 +858,9 @@ class _ScanCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _white.withOpacity(0.95),
+                    color: _white.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -899,7 +898,7 @@ class _ScanCard extends StatelessWidget {
   }
 }
 
-// Saved Items — Create (save) and Delete (unsave) straight from a recent scan.
+// Saved Items â€” Create (save) and Delete (unsave) straight from a recent scan.
 class _BookmarkButton extends ConsumerStatefulWidget {
   final ScanRecord scan;
   const _BookmarkButton({required this.scan});
@@ -916,10 +915,10 @@ class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
     final notifier = ref.read(savedItemsProvider.notifier);
     final existing = notifier.itemForScan(widget.scan.id);
     final messenger = ScaffoldMessenger.of(context);
-    final savedText = context.tr(en: 'Saved to Saved Items', si: 'සුරැකි අයිතම වලට සුරැකුණා', ta: 'சேமிக்கப்பட்டவையில் சேர்க்கப்பட்டது');
-    final removedText = context.tr(en: 'Removed from saved items', si: 'සුරැකි අයිතම වලින් ඉවත් කළා', ta: 'சேமிக்கப்பட்டவையிலிருந்து நீக்கப்பட்டது');
-    final viewText = context.tr(en: 'View', si: 'බලන්න', ta: 'பார்');
-    final errorText = context.tr(en: 'Something went wrong. Please try again.', si: 'යමක් වැරදුණා. නැවත උත්සාහ කරන්න.', ta: 'ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.');
+    final savedText = context.tr(en: 'Saved to Saved Items', si: 'à·ƒà·”à¶»à·à¶šà·’ à¶…à¶ºà·’à¶­à¶¸ à·€à¶½à¶§ à·ƒà·”à¶»à·à¶šà·”à¶«à·', ta: 'à®šà¯‡à®®à®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®µà¯ˆà®¯à®¿à®²à¯ à®šà¯‡à®°à¯à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
+    final removedText = context.tr(en: 'Removed from saved items', si: 'à·ƒà·”à¶»à·à¶šà·’ à¶…à¶ºà·’à¶­à¶¸ à·€à¶½à·’à¶±à·Š à¶‰à·€à¶­à·Š à¶šà·…à·', ta: 'à®šà¯‡à®®à®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®µà¯ˆà®¯à®¿à®²à®¿à®°à¯à®¨à¯à®¤à¯ à®¨à¯€à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
+    final viewText = context.tr(en: 'View', si: 'à¶¶à¶½à¶±à·Šà¶±', ta: 'à®ªà®¾à®°à¯');
+    final errorText = context.tr(en: 'Something went wrong. Please try again.', si: 'à¶ºà¶¸à¶šà·Š à·€à·à¶»à¶¯à·”à¶«à·. à¶±à·à·€à¶­ à¶‹à¶­à·Šà·ƒà·à·„ à¶šà¶»à¶±à·Šà¶±.', ta: 'à®à®¤à¯‹ à®¤à®µà®±à¯ à®¨à®Ÿà®¨à¯à®¤à®¤à¯. à®®à¯€à®£à¯à®Ÿà¯à®®à¯ à®®à¯à®¯à®±à¯à®šà®¿à®•à¯à®•à®µà¯à®®à¯.');
 
     setState(() => _busy = true);
     try {
@@ -943,7 +942,7 @@ class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
         messenger.showSnackBar(SnackBar(content: Text(removedText)));
       }
     } catch (_) {
-      // e.g. saved from another device meanwhile — resync with the database.
+      // e.g. saved from another device meanwhile â€” resync with the database.
       ref.invalidate(savedItemsProvider);
       messenger.showSnackBar(SnackBar(content: Text(errorText), backgroundColor: Colors.red));
     } finally {
@@ -981,3 +980,4 @@ class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
     );
   }
 }
+

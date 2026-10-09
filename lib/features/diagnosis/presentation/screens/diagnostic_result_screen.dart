@@ -19,7 +19,6 @@ import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:drift/drift.dart' as drift;
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:plant_disease_detector/features/diagnosis/application/scan_history_provider.dart';
 import 'package:plant_disease_detector/features/diagnosis/domain/disease_catalog.dart';
@@ -121,7 +120,7 @@ class _DiagnosticResultScreenState extends ConsumerState<DiagnosticResultScreen>
           clientUuid: _scan.id,
           payload: jsonEncode({
             'id': _scan.id,
-            if (userId != null) 'user_id': userId,
+            'user_id': userId,
             ..._scan.toJson(),
             'symptoms': _info?.symptoms,
           }),

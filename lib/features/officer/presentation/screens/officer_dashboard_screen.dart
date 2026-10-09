@@ -189,6 +189,7 @@ class _OfficerHomeTab extends ConsumerWidget {
   // ── Update: persist Online / Offline to profiles.is_on_duty ──────────────
   Future<void> _toggleStatus(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
+    final failMsg = context.tr(en: 'Status could not be saved. Check your connection.', si: 'තත්ත්වය සුරැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කරන්න.', ta: 'நிலையைச் சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.');
     try {
       if (!await ref.read(onDutyProvider.notifier).toggle()) return;
       final onDuty = ref.read(onDutyProvider).valueOrNull ?? true;
@@ -201,7 +202,7 @@ class _OfficerHomeTab extends ConsumerWidget {
       ));
     } catch (e) {
       messenger.showSnackBar(SnackBar(
-        content: Text(context.tr(en: 'Status could not be saved. Check your connection.', si: 'තත්ත්වය සුරැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කරන්න.', ta: 'நிலையைச் சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.')),
+        content: Text(failMsg),
         backgroundColor: Color(0xFFEF4444),
       ));
     }
@@ -280,8 +281,8 @@ class _OfficerHomeTab extends ConsumerWidget {
       AppLocalizations? l10n, bool isOnline, VoidCallback onToggleStatus) {
     final hr = DateTime.now().hour;
     String greet = l10n?.goodEvening ?? 'Good Evening';
-    if (hr < 12) greet = l10n?.goodMorning ?? 'Good Morning';
-    else if (hr < 17) greet = l10n?.goodAfternoon ?? 'Good Afternoon';
+    if (hr < 12) { greet = l10n?.goodMorning ?? 'Good Morning'; }
+    else if (hr < 17) { greet = l10n?.goodAfternoon ?? 'Good Afternoon'; }
 
     final temp = wx.isLoading ? '--' : '${wx.weather?.temperature.toStringAsFixed(0) ?? 24}';
     final city = loc.isLoading ? 'Locating...' : (loc.address.isNotEmpty ? loc.address.split(',').first : 'Unknown');
@@ -671,7 +672,7 @@ class _OfficerHomeTab extends ConsumerWidget {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: 3,
-              itemBuilder: (_, __) => Container(
+              itemBuilder: (_, _i) => Container(
                 width: 280, height: 170,
                 margin: const EdgeInsets.only(right: 20),
                 decoration: BoxDecoration(
@@ -681,7 +682,7 @@ class _OfficerHomeTab extends ConsumerWidget {
               ),
             ),
           ),
-          error: (_, __) => SizedBox(height: 170,
+          error: (_, _e) => SizedBox(height: 170,
             child: Center(child: Text(context.tr(en: 'Failed to load alerts', si: 'අනතුරු ඇඟවීම් පූරණය කළ නොහැක', ta: 'எச்சரிக்கைகளை ஏற்ற முடியவில்லை')))),
           data: (consultations) {
             final urgent = consultations.where((c) => c.needsUrgentAttention).toList();

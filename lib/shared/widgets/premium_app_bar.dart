@@ -65,7 +65,7 @@ class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
       actions: [
-        if (actions != null) ...actions!,
+        ...?actions,
         const SizedBox(width: 8),
       ],
     );
