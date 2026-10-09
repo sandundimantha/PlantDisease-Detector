@@ -23,7 +23,8 @@ export function FeedbackPage() {
       const { error } = await supabase.from('feedback').update({ status: updates.status }).eq('id', updates.id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['feedback'] }); setEditTarget(null); toast.success('Status updated'); }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['feedback'] }); setEditTarget(null); toast.success('Status updated'); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const deleteMutation = useMutation({
@@ -58,7 +59,7 @@ export function FeedbackPage() {
           <div className="space-y-4">
             <div>
               <label className="lumina-label">Status</label>
-              <select className="lumina-input" defaultValue={editTarget.status} onChange={e => editTarget.status = e.target.value}>
+              <select className="lumina-input" value={editTarget.status} onChange={e => setEditTarget({ ...editTarget, status: e.target.value })}>
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>

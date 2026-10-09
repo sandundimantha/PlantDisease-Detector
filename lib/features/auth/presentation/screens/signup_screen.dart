@@ -85,7 +85,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          SnackBar(content: Text(context.trAuthError(e.message)), backgroundColor: Colors.red),
         );
       }
     } catch (e) {

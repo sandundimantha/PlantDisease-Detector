@@ -29,7 +29,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       await ref.read(postCommentsProvider(widget.post.id).notifier).addComment(_commentController.text.trim());
       if (!mounted) return;
       _commentController.clear();
-      FocusScope.of(context).unfocus();
+      if (mounted) FocusScope.of(context).unfocus();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding comment: $e')));

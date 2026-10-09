@@ -224,41 +224,7 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                 },
               ),
               
-              // Disease Outbreak Markers
-              if (_liveOutbreaks != null)
-                MarkerLayer(
-                  markers: _liveOutbreaks!.map((outbreak) {
-                    final isSelected = _selectedOutbreak?.id == outbreak.id;
-                    final baseSize = 40.0 + (outbreak.severity * 40.0);
-                    
-                    return Marker(
-                      point: LatLng(outbreak.latitude, outbreak.longitude),
-                      width: baseSize * 2,
-                      height: baseSize * 2,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => _selectedOutbreak = isSelected ? null : outbreak);
-                          _mapController.move(LatLng(outbreak.latitude, outbreak.longitude), _mapController.camera.zoom);
-                        },
-                        child: AnimatedBuilder(
-                          animation: _pulseAnim,
-                          builder: (_, _) {
-                            final pulse = isSelected ? _pulseAnim.value : 1.0;
-                            return CustomPaint(
-                              painter: _HeatZonePainter(
-                                color: outbreak.color,
-                                pulse: pulse,
-                                severity: outbreak.severity,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              
-              // User Location Marker
+              // User Location Marker (drawn first so outbreak markers on top stay tappable)
               if (locationState.position != null)
                 MarkerLayer(
                   markers: [
@@ -307,6 +273,40 @@ class _DiseaseRadarScreenState extends ConsumerState<DiseaseRadarScreen> with Ti
                     ),
                   ],
                 ),
+              // Disease Outbreak Markers
+              if (_liveOutbreaks != null)
+                MarkerLayer(
+                  markers: _liveOutbreaks!.map((outbreak) {
+                    final isSelected = _selectedOutbreak?.id == outbreak.id;
+                    final baseSize = 40.0 + (outbreak.severity * 40.0);
+                    
+                    return Marker(
+                      point: LatLng(outbreak.latitude, outbreak.longitude),
+                      width: baseSize * 2,
+                      height: baseSize * 2,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _selectedOutbreak = isSelected ? null : outbreak);
+                          _mapController.move(LatLng(outbreak.latitude, outbreak.longitude), _mapController.camera.zoom);
+                        },
+                        child: AnimatedBuilder(
+                          animation: _pulseAnim,
+                          builder: (_, _) {
+                            final pulse = isSelected ? _pulseAnim.value : 1.0;
+                            return CustomPaint(
+                              painter: _HeatZonePainter(
+                                color: outbreak.color,
+                                pulse: pulse,
+                                severity: outbreak.severity,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              
             ],
           ),
 

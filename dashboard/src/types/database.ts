@@ -22,8 +22,7 @@ export interface Disease {
   name_ta?: string;
   crop: string;
   model_label: string;
-  description_en?: string;
-  created_at: string;
+  description?: string;
   updated_at: string;
 }
 

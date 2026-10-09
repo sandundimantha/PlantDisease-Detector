@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          SnackBar(content: Text(context.trAuthError(e.message)), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -368,7 +368,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         alignment: Alignment.center,
         child: Text(
-          role,
+          role == 'Officer'
+              ? context.tr(en: 'Officer', si: 'නිලධාරී', ta: 'அலுவலர்')
+              : context.tr(en: 'Farmer', si: 'ගොවියා', ta: 'விவசாயி'),
           style: AppTextStyles.titleSmall.copyWith(
             color: isSelected ? AppColors.primary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

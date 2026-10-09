@@ -60,6 +60,30 @@ extension AppLocalizationContext on BuildContext {
     return crop;
   }
 
+  /// Supabase sign-in / sign-up errors in the app language.
+  String trAuthError(String message) {
+    final m = message.toLowerCase();
+    if (m.contains('invalid login credentials')) {
+      return tr(en: 'Wrong email or password.', si: 'ඊමේල් හෝ මුරපදය වැරදියි.', ta: 'மின்னஞ்சல் அல்லது கடவுச்சொல் தவறு.');
+    }
+    if (m.contains('email not confirmed')) {
+      return tr(en: 'Please confirm your email first. Check your inbox.', si: 'කරුණාකර පළමුව ඔබේ ඊමේල් තහවුරු කරන්න. ඔබේ inbox එක බලන්න.', ta: 'முதலில் உங்கள் மின்னஞ்சலை உறுதிப்படுத்தவும். உங்கள் இன்பாக்ஸைப் பார்க்கவும்.');
+    }
+    if (m.contains('already registered') || m.contains('already exists')) {
+      return tr(en: 'An account with this email already exists. Please log in.', si: 'මෙම ඊමේල් සමඟ ගිණුමක් දැනටමත් ඇත. කරුණාකර ලොග් වන්න.', ta: 'இந்த மின்னஞ்சலுடன் ஏற்கனவே கணக்கு உள்ளது. உள்நுழையவும்.');
+    }
+    if (m.contains('password') && (m.contains('at least') || m.contains('characters') || m.contains('weak'))) {
+      return tr(en: 'Password is too short. Use at least 6 characters.', si: 'මුරපදය කෙටි වැඩියි. අවම අක්ෂර 6ක් භාවිතා කරන්න.', ta: 'கடவுச்சொல் மிகவும் குறுகியது. குறைந்தது 6 எழுத்துகளைப் பயன்படுத்தவும்.');
+    }
+    if (m.contains('invalid') && m.contains('email')) {
+      return tr(en: 'Please enter a valid email address.', si: 'කරුණාකර වලංගු ඊමේල් ලිපිනයක් ඇතුළත් කරන්න.', ta: 'சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்.');
+    }
+    if (m.contains('rate limit') || m.contains('too many')) {
+      return tr(en: 'Too many attempts. Please wait a minute and try again.', si: 'උත්සාහයන් වැඩියි. මිනිත්තුවක් රැඳී නැවත උත්සාහ කරන්න.', ta: 'அதிக முயற்சிகள். ஒரு நிமிடம் காத்திருந்து மீண்டும் முயற்சிக்கவும்.');
+    }
+    return message;
+  }
+
   /// Sri Lankan cultivation seasons
   String trSeason(String season) {
     final s = season.trim().toLowerCase();

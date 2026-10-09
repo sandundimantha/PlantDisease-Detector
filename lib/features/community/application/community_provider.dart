@@ -75,14 +75,16 @@ class CommunityFeedNotifier extends AsyncNotifier<List<CommunityPost>> {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('Not logged in');
 
-    await _client.from('community_posts').update({
+    final rows = await _client.from('community_posts').update({
       'title': title,
       'content': content,
       'image_url': imageUrl,
       'category': category,
-    }).eq('id', postId).eq('user_id', user.id);
+    }).eq('id', postId).eq('user_id', user.id).select('id');
 
     ref.invalidateSelf();
+    // RLS returns no rows instead of an error when the edit is not allowed.
+    if ((rows as List).isEmpty) throw Exception('Post was not updated');
   }
 
   Future<void> deletePost(String postId) async {
@@ -95,9 +97,11 @@ class CommunityFeedNotifier extends AsyncNotifier<List<CommunityPost>> {
     }
 
     try {
-      await _client.from('community_posts').delete().eq('id', postId).eq('user_id', user.id);
+      final rows = await _client.from('community_posts').delete().eq('id', postId).eq('user_id', user.id).select('id');
+      if ((rows as List).isEmpty) throw Exception('Post was not deleted');
     } catch (e) {
-      ref.invalidateSelf();
+      ref.invalidateSelf(); // bring the post back
+      rethrow;
     }
   }
 

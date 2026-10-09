@@ -28,12 +28,14 @@ export function CasesPage() {
       const { error } = await supabase.from('consultations').update({ status: updates.status }).eq('id', updates.id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['consultations'] }); setEditTarget(null); toast.success('Status updated'); }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['consultations'] }); setEditTarget(null); toast.success('Status updated'); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('consultations').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['consultations'] }); setDeleteTarget(null); toast.success('Deleted'); }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['consultations'] }); setDeleteTarget(null); toast.success('Deleted'); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (

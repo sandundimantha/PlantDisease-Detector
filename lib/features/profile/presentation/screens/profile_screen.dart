@@ -62,7 +62,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _Setting(
         icon: "🔔",
         label: context.tr(en: "Notifications", si: "දැනුම්දීම්", ta: "அறிவிப்புகள்"),
-        sub: context.tr(en: "Announcements & treatment reminders", si: "නිවේදන සහ ප්‍රතිකාර මතක් කිරීම්", ta: "அறிவிப்புகள் & சிகிச்சை நினைவூட்டல்கள்"),
+        sub: context.tr(en: 'Case updates, messages, announcements and reminders', si: 'සිද්ධි යාවත්කාලීන, පණිවිඩ, නිවේදන සහ මතක් කිරීම්', ta: 'வழக்கு புதுப்பிப்புகள், செய்திகள், அறிவிப்புகள் மற்றும் நினைவூட்டல்கள்'),
         toggle: true,
         on: appSettings.notifications,
         onTap: () => ref.read(appSettingsProvider.notifier).setNotifications(!appSettings.notifications),

@@ -6,6 +6,7 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
+import 'package:plant_disease_detector/features/farm_log/presentation/widgets/farm_forms.dart';
 import 'package:intl/intl.dart';
 import 'package:plant_disease_detector/features/farm_log/data/farm_models.dart';
 
@@ -64,6 +65,19 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
     return months.length > 6 ? months.sublist(months.length - 6) : months;
   }
 
+  /// A harvest belongs to a field, so a farmer with no fields is asked to add one first.
+  Future<void> _addHarvest() async {
+    List<FieldBlock> fields = ref.read(fieldBlocksProvider).valueOrNull ?? await ref.read(fieldBlocksProvider.future);
+    if (!mounted) return;
+    if (fields.isEmpty) {
+      final added = await showAddFieldSheet(context, ref);
+      if (!added || !mounted) return;
+      fields = await ref.read(fieldBlocksProvider.future);
+      if (!mounted || fields.isEmpty) return;
+    }
+    await showAddHarvestSheet(context, ref, fields);
+  }
+
   // Colors
   final Color _goldAccent = const Color(0xFFF5C842);
   final Color _darkGreen = const Color(0xFF0F3820);
@@ -74,6 +88,15 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
 
     return Scaffold(
       backgroundColor: _darkGreen,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addHarvest,
+        backgroundColor: _goldAccent,
+        icon: const Icon(Icons.add_rounded, color: Color(0xFF0F3820)),
+        label: Text(
+          context.tr(en: 'Add Harvest', si: 'අස්වැන්න එක්කරන්න', ta: 'அறுவடை சேர்க்க'),
+          style: const TextStyle(color: Color(0xFF0F3820), fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

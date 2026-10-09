@@ -11,6 +11,7 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/features/farm_log/data/farm_models.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
+import 'package:plant_disease_detector/features/farm_log/presentation/widgets/farm_forms.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // FarmScreen â€” Matches Figma FarmScreen.tsx
@@ -109,9 +110,18 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     ),
                     const SizedBox(height: 12),
                     fieldsAsync.when(
-                      data: (fields) => Column(
-                        children: fields.map((f) => _buildFieldCard(f)).toList(),
-                      ),
+                      data: (fields) => fields.isEmpty
+                          ? _emptyCard(
+                              Icons.grid_view_rounded,
+                              context.tr(
+                                en: 'Add your fields to track their health and harvests.',
+                                si: 'ඒවායේ සෞඛ්‍යය සහ අස්වැන්න සොයා බැලීමට ඔබේ ක්ෂේත්‍ර එක් කරන්න.',
+                                ta: 'அவற்றின் ஆரோக்கியத்தையும் அறுவடையையும் கண்காணிக்க உங்கள் வயல்களைச் சேர்க்கவும்.',
+                              ),
+                            )
+                          : Column(
+                              children: fields.map((f) => _buildFieldCard(f)).toList(),
+                            ),
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Text('Error loading fields: $err'),
                     ),
@@ -159,9 +169,18 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     ),
                     const SizedBox(height: 12),
                     tasksAsync.when(
-                      data: (tasks) => Column(
-                        children: tasks.map((t) => _buildTaskCard(t)).toList(),
-                      ),
+                      data: (tasks) => tasks.isEmpty
+                          ? _emptyCard(
+                              Icons.event_note_rounded,
+                              context.tr(
+                                en: 'No tasks yet. Tap Add Log to record watering, spraying or harvesting.',
+                                si: 'තවම කාර්යයන් නැත. ජලය දැමීම, ඉසීම හෝ අස්වනු නෙළීම සටහන් කිරීමට සටහනක් එක්කරන්න ඔබන්න.',
+                                ta: 'இன்னும் பணிகள் இல்லை. நீர்ப்பாசனம், தெளிப்பு அல்லது அறுவடையைப் பதிவுசெய்ய பதிவு சேர்க்க என்பதைத் தட்டவும்.',
+                              ),
+                            )
+                          : Column(
+                              children: tasks.map((t) => _buildTaskCard(t)).toList(),
+                            ),
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Text('Error loading tasks: $err'),
                     ),
@@ -171,6 +190,45 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _smallAction(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.add_rounded, size: 14, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(label, style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyCard(IconData icon, String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, height: 1.4))),
+        ],
       ),
     );
   }
@@ -362,7 +420,12 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(50)),
                               child: Text(
-                                field.status,
+                                switch (field.status.toLowerCase()) {
+                                  'healthy' => context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியம்'),
+                                  'monitor' => context.tr(en: 'Monitor', si: 'නිරීක්ෂණය', ta: 'கண்காணி'),
+                                  'at risk' => context.tr(en: 'At Risk', si: 'අවදානමේ', ta: 'ஆபத்து'),
+                                  _ => field.status,
+                                },
                                 style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                             ),

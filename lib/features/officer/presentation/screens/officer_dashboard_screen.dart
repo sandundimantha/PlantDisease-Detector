@@ -1,3 +1,4 @@
+import 'package:plant_disease_detector/core/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
@@ -27,6 +28,12 @@ class OfficerDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _OfficerDashboardScreenState extends ConsumerState<OfficerDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => NotificationService().requestPermission());
+  }
+
   int _currentIndex = 0;
 
   @override
@@ -234,7 +241,7 @@ class _OfficerHomeTab extends ConsumerWidget {
                 const SizedBox(height: 20),
                 statsAsync.when(
                   loading: () => _buildAnalyticsCards(context, ref, 0, 0, 0),
-                  error: (_, __) => _buildAnalyticsCards(context, ref, 0, 0, 0),
+                  error: (_, _) => _buildAnalyticsCards(context, ref, 0, 0, 0),
                   data: (stats) => _buildAnalyticsCards(
                     context, ref,
                     stats['pending'] ?? 0,

@@ -113,6 +113,7 @@ class _ScanningScreenState extends ConsumerState<ScanningScreen>
         treatable: info?.treatable ?? false,
       );
 
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => DiagnosticResultScreen(scan: scan, isNewScan: true),

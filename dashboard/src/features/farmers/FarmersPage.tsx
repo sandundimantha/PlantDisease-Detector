@@ -25,16 +25,19 @@ export function FarmersPage() {
   const { data, isLoading } = useQuery({ queryKey: ['farmers', page], queryFn: () => fetchFarmers(page) });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from('profiles').delete().eq('id', id); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['farmers'] }); setDeleteTarget(null); toast.success('Deleted'); }
+    mutationFn: async (id: string) => { const { error } = await supabase.rpc('admin_delete_user', { target: id }); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['farmers'] }); setDeleteTarget(null); toast.success('Farmer and their data deleted'); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const upsertMutation = useMutation({
     mutationFn: async (updates: Partial<Profile>) => {
-      const { error } = await supabase.from('profiles').update(updates).eq('id', updates.id);
+      const { data, error } = await supabase.from('profiles').update(updates).eq('id', updates.id).select('id');
       if (error) throw error;
+      if (!data?.length) throw new Error('Not saved: you do not have permission to edit this user.');
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['farmers'] }); setEditTarget(null); toast.success('Updated'); }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['farmers'] }); setEditTarget(null); toast.success('Updated'); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
@@ -81,7 +84,7 @@ export function FarmersPage() {
         )}
       </Modal>
 
-      <ConfirmModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)} title="Delete?" message="Delete farmer?" />
+      <ConfirmModal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)} title="Delete farmer?" message={`Delete ${deleteTarget?.full_name ?? 'this farmer'} and all their scans and farm records? This cannot be undone.`} loading={deleteMutation.isPending} />
     </AppLayout>
   );
 }

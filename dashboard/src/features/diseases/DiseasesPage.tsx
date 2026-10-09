@@ -24,7 +24,7 @@ async function fetchDiseases(page: number, search: string) {
   return { data: (data ?? []) as Disease[], count: count ?? 0 };
 }
 
-const EMPTY_FORM: Partial<Disease> = { name_en: '', name_si: '', name_ta: '', crop: '', model_label: '', description_en: '' };
+const EMPTY_FORM: Partial<Disease> = { name_en: '', name_si: '', name_ta: '', crop: '', model_label: '', description: '' };
 
 export function DiseasesPage() {
   const queryClient = useQueryClient();
@@ -40,14 +40,23 @@ export function DiseasesPage() {
 
   const upsertMutation = useMutation({
     mutationFn: async (f: Partial<Disease>) => {
-      const payload = { ...f, updated_at: new Date().toISOString() };
-      if (editTarget) {
-        const { error } = await supabase.from('diseases').update(payload).eq('id', editTarget.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('diseases').insert({ ...payload, created_at: new Date().toISOString() });
-        if (error) throw error;
+      if (!f.name_en?.trim() || !f.name_si?.trim() || !f.crop?.trim() || !f.model_label?.trim()) {
+        throw new Error('Name (EN), Name (SI), Crop and ML Model Label are required.');
       }
+      // Only send real columns of the diseases table
+      const payload = {
+        name_en: f.name_en.trim(),
+        name_si: f.name_si.trim(),
+        name_ta: f.name_ta?.trim() || null,
+        crop: f.crop.trim(),
+        model_label: f.model_label.trim(),
+        description: f.description?.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = editTarget
+        ? await supabase.from('diseases').update(payload).eq('id', editTarget.id)
+        : await supabase.from('diseases').insert(payload);
+      if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['diseases'] }); toast.success('Saved!'); setModalOpen(false); setEditTarget(null); setForm(EMPTY_FORM); },
     onError: (e: Error) => toast.error(e.message),
@@ -110,14 +119,14 @@ export function DiseasesPage() {
           </div>
           <div><label className="lumina-label">Name (EN) *</label><input className="lumina-input" value={form.name_en ?? ''} onChange={(e) => set('name_en', e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="lumina-label">Name (SI)</label><input className="lumina-input" value={form.name_si ?? ''} onChange={(e) => set('name_si', e.target.value)} /></div>
+            <div><label className="lumina-label">Name (SI) *</label><input className="lumina-input" value={form.name_si ?? ''} onChange={(e) => set('name_si', e.target.value)} /></div>
             <div><label className="lumina-label">Name (TA)</label><input className="lumina-input" value={form.name_ta ?? ''} onChange={(e) => set('name_ta', e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><label className="lumina-label">Crop *</label><input className="lumina-input" value={form.crop ?? ''} onChange={(e) => set('crop', e.target.value)} placeholder="e.g. Tomato" /></div>
             <div><label className="lumina-label">ML Model Label *</label><input className="lumina-input font-mono" value={form.model_label ?? ''} onChange={(e) => set('model_label', e.target.value)} placeholder="Tomato___Bacterial_spot" /></div>
           </div>
-          <div><label className="lumina-label">Description (EN)</label><textarea className="lumina-input" rows={3} value={form.description_en ?? ''} onChange={(e) => set('description_en', e.target.value)} /></div>
+          <div><label className="lumina-label">Description (EN)</label><textarea className="lumina-input" rows={3} value={form.description ?? ''} onChange={(e) => set('description', e.target.value)} /></div>
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button className="btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
             <button className="btn-primary" onClick={() => upsertMutation.mutate(form)} disabled={upsertMutation.isPending}>{upsertMutation.isPending ? 'Saving…' : 'Save'}</button>

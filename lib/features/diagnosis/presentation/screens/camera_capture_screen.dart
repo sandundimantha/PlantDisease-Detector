@@ -11,6 +11,7 @@ import 'package:plant_disease_detector/features/diagnosis/presentation/screens/p
 import 'package:plant_disease_detector/core/providers/camera_provider.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
+import 'package:plant_disease_detector/features/expert_consult/presentation/screens/expert_consult_screen.dart';
 
 class CameraCaptureScreen extends ConsumerStatefulWidget {
   const CameraCaptureScreen({super.key});
@@ -20,8 +21,6 @@ class CameraCaptureScreen extends ConsumerStatefulWidget {
 }
 
 class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with TickerProviderStateMixin {
-  int _selectedMode = 0;
-  final List<String> _modes = ['Leaf Spot', 'Pest', 'Soil'];
   
   late AnimationController _scanController;
   late AnimationController _boxController;
@@ -399,48 +398,23 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Segmented Mode Selector
+                      // What this camera can check: the model only knows leaf diseases
                       Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
-                          children: List.generate(_modes.length, (index) {
-                            final isSelected = _selectedMode == index;
-                            return GestureDetector(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                setState(() => _selectedMode = index);
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                curve: Curves.easeInOut,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? Colors.white : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(26),
-                                  boxShadow: isSelected ? [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)] : [],
-                                ),
-                                child: Text(
-                                  switch (index) {
-                                    0 => context.tr(en: 'Leaf Spot', si: 'පත්‍ර ලප', ta: 'இலைப்புள்ளி'),
-                                    1 => context.tr(en: 'Pest', si: 'පළිබෝධ', ta: 'பூச்சி'),
-                                    2 => context.tr(en: 'Soil', si: 'පස', ta: 'மண்'),
-                                    _ => _modes[index],
-                                  },
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.7),
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
+                          children: [
+                            const Icon(Icons.eco_rounded, color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.tr(en: 'Leaf disease scan', si: 'පත්‍ර රෝග ස්කෑන්', ta: 'இலை நோய் ஸ்கேன்'),
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -498,9 +472,9 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> with 
                             ),
                           ),
 
-                          // Advice Button
+                          // Advice: ask an agricultural officer
                           GestureDetector(
-                            onTap: () => HapticFeedback.selectionClick(),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [

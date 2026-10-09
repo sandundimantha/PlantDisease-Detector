@@ -196,6 +196,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         imagePath: finalImagePath,
       );
 
+      if (!mounted) return;
       final messenger = ScaffoldMessenger.of(context);
       final savedText = context.tr(en: 'Profile updated', si: 'පැතිකඩ යාවත්කාලීන කළා', ta: 'சுயவிவரம் புதுப்பிக்கப்பட்டது');
       final failText = context.tr(

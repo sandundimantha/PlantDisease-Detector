@@ -32,7 +32,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void initState() {
     super.initState();
     // Upload any scans saved while offline (e.g. from a previous session).
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncNow());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncNow();
+      NotificationService().requestPermission();
+    });
   }
 
   Future<void> _syncNow() async {
