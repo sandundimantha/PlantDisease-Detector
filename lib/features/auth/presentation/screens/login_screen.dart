@@ -6,6 +6,10 @@ import 'package:plant_disease_detector/core/theme/app_theme.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
 import 'package:plant_disease_detector/core/widgets/language_selector_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:plant_disease_detector/core/config/env.dart';
 import 'package:plant_disease_detector/core/auth/user_role.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/main_screen.dart';
 
@@ -23,11 +27,88 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
   String _selectedRole = 'Farmer'; // Farmer or Officer
 
+  /// Where the browser sends the user back after Google / Facebook sign-in.
+  /// Must also be listed under Supabase → Authentication → URL Configuration.
+  static const _oauthRedirect = 'io.lumina.app://login-callback';
+  StreamSubscription<AuthState>? _authSub;
+  bool _awaitingSocial = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // The OAuth sign-in finishes in the browser; Supabase reports it here when
+    // the deep link brings the user back to the app.
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((state) {
+      if (_awaitingSocial && state.event == AuthChangeEvent.signedIn) {
+        _awaitingSocial = false;
+        _finishLogin();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _authSub?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Amazon is in the wireframe, but Supabase has no Amazon sign-in, so the
+  /// button only explains that it is not available yet.
+  void _amazonNotAvailable() {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(context.tr(
+        en: 'Amazon login is not switched on yet. Please use email for now.',
+        si: 'Amazon ඇතුල්වීම තවම සක්‍රිය කර නැත. දැනට ඊමේල් භාවිතා කරන්න.',
+        ta: 'Amazon உள்நுழைவு இன்னும் இயக்கப்படவில்லை. இப்போது மின்னஞ்சலைப் பயன்படுத்தவும்.',
+      )),
+    ));
+  }
+
+  /// Google / Facebook sign-in through Supabase. New users get a farmer
+  /// profile from the sign-up trigger, like an email sign-up.
+  Future<void> _socialLogin(OAuthProvider provider) async {
+    final name = provider == OAuthProvider.google ? 'Google' : 'Facebook';
+    final notReadyText = context.tr(
+      en: '$name login is not switched on yet. Please use email for now.',
+      si: '$name ඇතුල්වීම තවම සක්‍රිය කර නැත. දැනට ඊමේල් භාවිතා කරන්න.',
+      ta: '$name உள்நுழைவு இன்னும் இயக்கப்படவில்லை. இப்போது மின்னஞ்சலைப் பயன்படுத்தவும்.',
+    );
+    final failText = context.tr(
+      en: 'Could not open $name login. Check your connection and try again.',
+      si: '$name ඇතුල්වීම විවෘත කළ නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.',
+      ta: '$name உள்நுழைவைத் திறக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.',
+    );
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isLoading = true);
+    try {
+      // Ask Supabase which providers are switched on, so the button never
+      // sends the farmer to a browser error page.
+      final res = await http
+          .get(Uri.parse('${Env.supabaseUrl}/auth/v1/settings'), headers: {'apikey': Env.supabaseAnonKey})
+          .timeout(const Duration(seconds: 8));
+      final external = (jsonDecode(res.body)['external'] as Map?) ?? const {};
+      if (external[provider.name] != true) {
+        messenger.showSnackBar(SnackBar(content: Text(notReadyText)));
+        return;
+      }
+      _awaitingSocial = true;
+      final opened = await Supabase.instance.client.auth.signInWithOAuth(
+        provider,
+        redirectTo: _oauthRedirect,
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+      if (!opened) {
+        _awaitingSocial = false;
+        messenger.showSnackBar(SnackBar(content: Text(failText)));
+      }
+    } catch (_) {
+      _awaitingSocial = false;
+      messenger.showSnackBar(SnackBar(content: Text(failText), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // Forgot password: Supabase emails a reset link to the address entered.
@@ -81,12 +162,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: password,
       );
       
-      // Route by the role stored in Supabase, not by the tab that was picked.
+      await _finishLogin();
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.trAuthError(e.message)), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  /// After any sign-in: route by the role stored in Supabase, not by the tab
+  /// that was picked.
+  Future<void> _finishLogin() async {
+    if (mounted) setState(() => _isLoading = true);
+    try {
       final role = await fetchUserRole();
+      if (!mounted) return;
       final rejection = role == null
-          ? 'Could not verify your account. Check your connection and try again.'
+          ? context.tr(en: 'Could not verify your account. Check your connection and try again.', si: 'ඔබේ ගිණුම තහවුරු කළ නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'உங்கள் கணக்கைச் சரிபார்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')
           : (_selectedRole == 'Officer' && role != 'officer')
-              ? 'This account is not registered as an officer. Please log in as a Farmer.'
+              ? context.tr(en: 'This account is not registered as an officer. Please log in as a Farmer.', si: 'මෙම ගිණුම නිලධාරියෙකු ලෙස ලියාපදිංචි කර නැත. කරුණාකර ගොවියෙකු ලෙස ඇතුල් වන්න.', ta: 'இந்தக் கணக்கு அலுவலராகப் பதிவு செய்யப்படவில்லை. விவசாயியாக உள்நுழையவும்.')
               : null;
       if (role == null || rejection != null) {
         await Supabase.instance.client.auth.signOut();
@@ -120,6 +224,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     }
+  }
+
+  Widget _socialButton({required String tooltip, required Color background, Color? border, required Widget child, required VoidCallback onTap}) {
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        child: InkWell(
+          onTap: _isLoading ? null : onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: background,
+              shape: BoxShape.circle,
+              border: border == null ? null : Border.all(color: border, width: 1.5),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 3))],
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -315,9 +445,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ),
                             ),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
 
-                          // Social login removed: those buttons opened the app without signing in.
+                          // ── OR ── Social Login (wireframe): Google / Facebook via Supabase OAuth
+                          Row(
+                            children: [
+                              const Expanded(child: Divider(color: AppColors.border, thickness: 1)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(context.tr(en: 'OR', si: 'හෝ', ta: 'அல்லது'), style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                              ),
+                              const Expanded(child: Divider(color: AppColors.border, thickness: 1)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.tr(en: 'Social Login', si: 'සමාජ මාධ්‍ය හරහා ඇතුල්වන්න', ta: 'சமூக ஊடக உள்நுழைவு'),
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(height: 14),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _socialButton(
+                                tooltip: context.tr(en: 'Continue with Facebook', si: 'Facebook සමඟ ඉදිරියට', ta: 'Facebook உடன் தொடரவும்'),
+                                background: const Color(0xFF1877F2),
+                                child: const Text('f', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900, height: 1.15)),
+                                onTap: () => _socialLogin(OAuthProvider.facebook),
+                              ),
+                              const SizedBox(width: 24),
+                              _socialButton(
+                                tooltip: context.tr(en: 'Continue with Google', si: 'Google සමඟ ඉදිරියට', ta: 'Google உடன் தொடரவும்'),
+                                background: Colors.white,
+                                border: AppColors.border,
+                                child: const Text('G', style: TextStyle(color: Color(0xFF4285F4), fontSize: 26, fontWeight: FontWeight.w800)),
+                                onTap: () => _socialLogin(OAuthProvider.google),
+                              ),
+                              const SizedBox(width: 24),
+                              _socialButton(
+                                tooltip: context.tr(en: 'Continue with Amazon', si: 'Amazon සමඟ ඉදිරියට', ta: 'Amazon உடன் தொடரவும்'),
+                                background: const Color(0xFF131921),
+                                child: const Text('a', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, height: 1.0)),
+                                onTap: _amazonNotAvailable,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
                           // Sign up text
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:plant_disease_detector/core/services/notification_service.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
 import 'package:plant_disease_detector/core/providers/locale_provider.dart';
@@ -14,12 +15,12 @@ import 'package:plant_disease_detector/features/diagnosis/application/scan_histo
 import 'package:plant_disease_detector/features/sync/presentation/screens/sync_status_screen.dart';
 
 /// Selected bottom tab (0 Home, 1 Farm, 2 History, 3 Profile). Other screens
-/// can switch tabs, e.g. Home â†’ Recent Scans â†’ See All opens History.
+/// can switch tabs, e.g. Home → Recent Scans → See All opens History.
 final mainTabProvider = StateProvider<int>((ref) => 0);
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// MainScreen â€” Handles Bottom Navigation (Glassmorphism)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
+// MainScreen — Handles Bottom Navigation (Glassmorphism)
+// ─────────────────────────────────────────────────────────────────────────────
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
@@ -94,14 +95,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           child: Text(
                             !online
                                 ? context.tr(
-                                    en: pendingCount > 0 ? 'Offline Â· $pendingCount scan(s) will upload later' : 'Offline Â· scanning still works',
-                                    si: pendingCount > 0 ? 'à¶±à·œà¶¶à·à¶³à·’ Â· à·ƒà·Šà¶šà·‘à¶±à·Š $pendingCount à¶šà·Š à¶´à·ƒà·”à·€ à¶‹à¶©à·”à¶œà¶­ à·€à·š' : 'à¶±à·œà¶¶à·à¶³à·’ Â· à·ƒà·Šà¶šà·‘à¶±à·Š à¶šà·’à¶»à·“à¶¸ à¶­à·€à¶¸à¶­à·Š à¶šà·Šâ€à¶»à·’à¶ºà· à¶šà¶»à¶ºà·’',
-                                    ta: pendingCount > 0 ? 'à®†à®ƒà®ªà¯à®²à¯ˆà®©à¯ Â· $pendingCount à®¸à¯à®•à¯‡à®©à¯ à®ªà®¿à®©à¯à®©à®°à¯ à®ªà®¤à®¿à®µà¯‡à®±à¯à®±à®ªà¯à®ªà®Ÿà¯à®®à¯' : 'à®†à®ƒà®ªà¯à®²à¯ˆà®©à¯ Â· à®¸à¯à®•à¯‡à®©à¯ à®‡à®©à¯à®©à¯à®®à¯ à®µà¯‡à®²à¯ˆ à®šà¯†à®¯à¯à®¯à¯à®®à¯',
+                                    en: pendingCount > 0 ? 'Offline · $pendingCount scan(s) will upload later' : 'Offline · scanning still works',
+                                    si: pendingCount > 0 ? 'නොබැඳි · ස්කෑන් $pendingCount ක් පසුව උඩුගත වේ' : 'නොබැඳි · ස්කෑන් කිරීම තවමත් ක්‍රියා කරයි',
+                                    ta: pendingCount > 0 ? 'ஆஃப்லைன் · $pendingCount ஸ்கேன் பின்னர் பதிவேற்றப்படும்' : 'ஆஃப்லைன் · ஸ்கேன் இன்னும் வேலை செய்யும்',
                                   )
                                 : context.tr(
                                     en: '$pendingCount scan(s) waiting to upload',
-                                    si: 'à·ƒà·Šà¶šà·‘à¶±à·Š $pendingCount à¶šà·Š à¶‹à¶©à·”à¶œà¶­ à¶šà·’à¶»à·“à¶¸à¶§ à¶‡à¶­',
-                                    ta: '$pendingCount à®¸à¯à®•à¯‡à®©à¯ à®ªà®¤à®¿à®µà¯‡à®±à¯à®±à®•à¯ à®•à®¾à®¤à¯à®¤à®¿à®°à¯à®•à¯à®•à®¿à®±à®¤à¯',
+                                    si: 'ස්කෑන් $pendingCount ක් උඩුගත කිරීමට ඇත',
+                                    ta: '$pendingCount ஸ்கேன் பதிவேற்றக் காத்திருக்கிறது',
                                   ),
                             style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                             maxLines: 1,
@@ -116,7 +117,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ),
             ),
           
-          // â”€â”€ LIGHT PREMIUM GLASSMORPHIC NAV BAR â”€â”€
+          // ── LIGHT PREMIUM GLASSMORPHIC NAV BAR ──
           Positioned(
             left: 24, right: 24, bottom: 24,
             child: Container(
@@ -152,11 +153,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildNavItem(0, Icons.home_rounded,      context.tr(en: 'Home',    si: 'à¶¸à·”à¶½à·Š à¶´à·’à¶§à·”à·€', ta: 'à®®à¯à®•à®ªà¯à®ªà¯')),
-                        _buildNavItem(1, Icons.grid_view_rounded, context.tr(en: 'Farm',    si: 'à¶œà·œà·€à·’à¶´à·…',    ta: 'à®ªà®£à¯à®£à¯ˆ')),
+                        _buildNavItem(0, Icons.home_rounded,      context.tr(en: 'Home',    si: 'මුල් පිටුව', ta: 'முகப்பு')),
+                        _buildNavItem(1, Icons.grid_view_rounded, context.tr(en: 'Farm',    si: 'ගොවිපළ',    ta: 'பண்ணை')),
                         const SizedBox(width: 58),
-                        _buildNavItem(2, Icons.history_rounded,   context.tr(en: 'History', si: 'à¶‰à¶­à·’à·„à·à·ƒà¶º',   ta: 'à®µà®°à®²à®¾à®±à¯')),
-                        _buildNavItem(3, Icons.person_rounded,    context.tr(en: 'Profile', si: 'à¶´à·à¶­à·’à¶šà¶©',    ta: 'à®šà¯à®¯à®µà®¿à®µà®°à®®à¯')),
+                        _buildNavItem(2, Icons.history_rounded,   context.tr(en: 'History', si: 'ඉතිහාසය',   ta: 'வரலாறு')),
+                        _buildNavItem(3, Icons.person_rounded,    context.tr(en: 'Profile', si: 'පැතිකඩ',    ta: 'சுயவிவரம்')),
                       ],
                     ),
                   ),
@@ -165,7 +166,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
           ),
 
-          // â”€â”€ PREMIUM LIGHT FAB â”€â”€
+          // ── PREMIUM LIGHT FAB ──
           Positioned(
             bottom: 40,
             left: 0, right: 0,
@@ -202,7 +203,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 24),
                         const SizedBox(height: 2),
                         Text(
-                          context.tr(en: 'SCAN', si: 'à·ƒà·Šà¶šà·‘à¶±à·Š', ta: 'à®¸à¯à®•à¯‡à®©à¯'),
+                          context.tr(en: 'SCAN', si: 'ස්කෑන්', ta: 'ஸ்கேன்'),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 8, fontWeight: FontWeight.w800,
@@ -254,4 +255,3 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 }
-

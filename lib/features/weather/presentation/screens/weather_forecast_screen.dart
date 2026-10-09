@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/features/weather/data/weather_model.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,7 +70,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          locationState.isLoading ? context.tr(en: 'LOCATING...', si: 'à·ƒà·Šà¶®à·à¶±à¶º à·ƒà·œà¶ºà¶¸à·’à¶±à·Š...', ta: 'à®‡à®°à¯à®ªà¯à®ªà®¿à®Ÿà®®à¯ à®…à®±à®¿à®¯à®ªà¯à®ªà®Ÿà¯à®•à®¿à®±à®¤à¯...') : locationState.address.toUpperCase(),
+                          locationState.isLoading ? context.tr(en: 'LOCATING...', si: 'ස්ථානය සොයමින්...', ta: 'இருப்பிடம் அறியப்படுகிறது...') : locationState.address.toUpperCase(),
                           style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 1.2),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -109,7 +109,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                             ),
                             const SizedBox(width: 20),
                             Text(
-                              weatherState.isLoading ? '--Â°C' : '$currentTempÂ°C',
+                              weatherState.isLoading ? '--°C' : '$currentTemp°C',
                               style: AppTextStyles.headlineLarge.copyWith(
                                 color: Colors.white, 
                                 fontSize: 90, 
@@ -121,7 +121,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          weatherState.isLoading ? context.tr(en: 'LOADING...', si: 'à¶´à·–à¶»à¶«à¶º à·€à·™à¶¸à·’à¶±à·Š...', ta: 'à®à®±à¯à®±à¯à®•à®¿à®±à®¤à¯...') : '${context.tr(en: 'CURRENTLY', si: 'à¶¯à·à¶±à¶§', ta: 'à®¤à®±à¯à®ªà¯‹à®¤à¯')}, ${weatherState.weather?.condition.toUpperCase() ?? (isDay ? "SUNNY" : "CLEAR")}',
+                          weatherState.isLoading ? context.tr(en: 'LOADING...', si: 'පූරණය වෙමින්...', ta: 'ஏற்றுகிறது...') : '${context.tr(en: 'CURRENTLY', si: 'දැනට', ta: 'தற்போது')}, ${weatherState.weather?.condition.toUpperCase() ?? (isDay ? "SUNNY" : "CLEAR")}',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.titleMedium.copyWith(color: Colors.white, letterSpacing: 3, fontWeight: FontWeight.w600),
                         ),
@@ -129,9 +129,9 @@ class WeatherForecastScreen extends ConsumerWidget {
                         Text(
                           weatherState.weather == null
                               ? ''
-                              : '${context.tr(en: 'Feels like', si: 'à¶¯à·à¶±à·™à¶± à¶‹à·‚à·Šà¶«à¶­à·Šà·€à¶º', ta: 'à®‰à®£à®°à¯à®µà®¤à¯')} ${weatherState.weather!.feelsLike.round()}Â°C'
-                                  '${weatherState.weather!.daily.isEmpty ? '' : '  |  H: ${weatherState.weather!.daily.first.maxTemp.round()}Â°  |  L: ${weatherState.weather!.daily.first.minTemp.round()}Â°'}'
-                                  '  |  ${context.tr(en: 'Humidity', si: 'à¶†à¶»à·Šà¶¯à·Šâ€à¶»à¶­à·à·€à¶º', ta: 'à®ˆà®°à®ªà¯à®ªà®¤à®®à¯')} ${weatherState.weather!.humidity}%',
+                              : '${context.tr(en: 'Feels like', si: 'දැනෙන උෂ්ණත්වය', ta: 'உணர்வது')} ${weatherState.weather!.feelsLike.round()}°C'
+                                  '${weatherState.weather!.daily.isEmpty ? '' : '  |  H: ${weatherState.weather!.daily.first.maxTemp.round()}°  |  L: ${weatherState.weather!.daily.first.minTemp.round()}°'}'
+                                  '  |  ${context.tr(en: 'Humidity', si: 'ආර්ද්‍රතාවය', ta: 'ஈரப்பதம்')} ${weatherState.weather!.humidity}%',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLarge.copyWith(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w500, fontSize: 16),
                         ),
@@ -163,7 +163,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(context.tr(en: 'HOURLY FORECAST', si: 'à¶´à·à¶ºà¶š à¶šà·à¶½à¶œà·”à¶« à¶…à¶±à·à·€à·à¶šà·’à¶º', ta: 'à®®à®£à®¿à®¨à¯‡à®° à®®à¯à®©à¯à®©à®±à®¿à®µà®¿à®ªà¯à®ªà¯'), style: AppTextStyles.titleSmall.copyWith(color: const Color(0xFFF5C842), letterSpacing: 1.5)),
+                                    Text(context.tr(en: 'HOURLY FORECAST', si: 'පැයක කාලගුණ අනාවැකිය', ta: 'மணிநேர முன்னறிவிப்பு'), style: AppTextStyles.titleSmall.copyWith(color: const Color(0xFFF5C842), letterSpacing: 1.5)),
                                 const SizedBox(height: 16),
                                 
                                 // Hourly List
@@ -177,7 +177,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                 ),
                                 
                                 const SizedBox(height: 32),
-                                Text(context.tr(en: '7-DAY FORECAST', si: 'à¶¯à·’à¶± 7à¶š à¶…à¶±à·à·€à·à¶šà·’à¶º', ta: '7 à®¨à®¾à®³à¯ à®®à¯à®©à¯à®©à®±à®¿à®µà®¿à®ªà¯à®ªà¯'), style: AppTextStyles.titleSmall.copyWith(color: const Color(0xFFF5C842), letterSpacing: 1.5)),
+                                Text(context.tr(en: '7-DAY FORECAST', si: 'දින 7ක අනාවැකිය', ta: '7 நாள் முன்னறிவிப்பு'), style: AppTextStyles.titleSmall.copyWith(color: const Color(0xFFF5C842), letterSpacing: 1.5)),
                                 const SizedBox(height: 16),
                                 
                                 // 7-Day List
@@ -215,7 +215,7 @@ class WeatherForecastScreen extends ConsumerWidget {
       return [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(context.tr(en: 'Forecast not available', si: 'à¶…à¶±à·à·€à·à¶šà·’à¶º à¶½à¶¶à· à¶œà¶­ à¶±à·œà·„à·à¶š', ta: 'à®®à¯à®©à¯à®©à®±à®¿à®µà®¿à®ªà¯à®ªà¯ à®•à®¿à®Ÿà¯ˆà®•à¯à®•à®µà®¿à®²à¯à®²à¯ˆ'), style: const TextStyle(color: Colors.white70)),
+          child: Text(context.tr(en: 'Forecast not available', si: 'අනාවැකිය ලබා ගත නොහැක', ta: 'முன்னறிவிப்பு கிடைக்கவில்லை'), style: const TextStyle(color: Colors.white70)),
         ),
       ];
     }
@@ -226,10 +226,10 @@ class WeatherForecastScreen extends ConsumerWidget {
           final hour = h.time.hour;
           final isHourDay = hour > 5 && hour < 18;
           final timeStr = i == 0
-              ? context.tr(en: 'Now', si: 'à¶¯à·à¶±à·Š', ta: 'à®‡à®ªà¯à®ªà¯‹à®¤à¯')
+              ? context.tr(en: 'Now', si: 'දැන්', ta: 'இப்போது')
               : '${hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour)} ${hour >= 12 ? 'PM' : 'AM'}';
           final (icon, color) = _iconFor(h.weatherCode, isHourDay);
-          return _buildHourlyCard(timeStr, icon, '${h.temperature.round()}Â°', color, i == 0);
+          return _buildHourlyCard(timeStr, icon, '${h.temperature.round()}°', color, i == 0);
         }(),
     ];
   }
@@ -242,10 +242,10 @@ class WeatherForecastScreen extends ConsumerWidget {
       for (var i = 0; i < days.length; i++)
         () {
           final d = days[i];
-          final name = i == 0 ? context.tr(en: 'TODAY', si: 'à¶…à¶¯', ta: 'à®‡à®©à¯à®±à¯') : names[d.date.weekday - 1];
+          final name = i == 0 ? context.tr(en: 'TODAY', si: 'අද', ta: 'இன்று') : names[d.date.weekday - 1];
           final (icon, color) = _iconFor(d.weatherCode, true);
-          final label = d.rainChance > 0 ? '$name  ðŸ’§${d.rainChance}%' : name;
-          return _buildDailyRow(label, icon, '${d.maxTemp.round()}Â°', '${d.minTemp.round()}Â°', color);
+          final label = d.rainChance > 0 ? '$name  💧${d.rainChance}%' : name;
+          return _buildDailyRow(label, icon, '${d.maxTemp.round()}°', '${d.minTemp.round()}°', color);
         }(),
     ];
   }
@@ -311,4 +311,3 @@ class WeatherForecastScreen extends ConsumerWidget {
     );
   }
 }
-
