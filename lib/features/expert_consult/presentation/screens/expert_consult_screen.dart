@@ -438,8 +438,10 @@ class _RequestConsultSheetState extends ConsumerState<_RequestConsultSheet> {
           );
       if (mounted) Navigator.pop(context, created);
     } catch (e) {
-      _showError(context.tr(en: 'Request could not be sent. Check your connection and try again.', si: 'ඉල්ලීම යැවිය නොහැක. ඔබගේ සබැඳුම පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'கோரிக்கையை அனுப்ப முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.'));
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        _showError(context.tr(en: 'Request could not be sent. Check your connection and try again.', si: 'ඉල්ලීම යැවිය නොහැක. ඔබගේ සබැඳුම පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'கோரிக்கையை அனுப்ப முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.'));
+        setState(() => _submitting = false);
+      }
     }
   }
 

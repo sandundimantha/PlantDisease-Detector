@@ -27,6 +27,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     setState(() => _isSubmitting = true);
     try {
       await ref.read(postCommentsProvider(widget.post.id).notifier).addComment(_commentController.text.trim());
+      if (!mounted) return;
       _commentController.clear();
       FocusScope.of(context).unfocus();
     } catch (e) {
@@ -115,7 +116,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: comments.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      separatorBuilder: (_, _i) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final comment = comments[index];
                         final cAuthor = comment.author?.fullName ?? 'Farmer';
