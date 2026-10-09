@@ -143,7 +143,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: ClipRRect(
@@ -222,7 +222,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.grey.shade200),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
                             ],
                           ),
                           child: ClipRRect(
@@ -240,7 +240,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.close, color: Colors.white, size: 18),
@@ -261,7 +261,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               color: Colors.white,
               border: Border(top: BorderSide(color: Colors.grey.shade200)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, -4)),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, -4)),
               ],
             ),
             child: SafeArea(
@@ -295,7 +295,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: color, size: 24),

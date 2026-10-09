@@ -49,16 +49,24 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
     );
-    
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
 
     _isInitialized = true;
     _listenToAnnouncements();
     // Lives as long as the app; switches alerts when another user signs in.
     Supabase.instance.client.auth.onAuthStateChange.listen((_) => _listenForUser());
     _listenForUser();
+  }
+
+  /// Asks for the Android 13+ notification permission. Called once the user
+  /// reaches the app (not on the blank launch screen), so they see why.
+  Future<void> requestPermission() async {
+    try {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+    } catch (e) {
+      log('Notification permission request failed: $e');
+    }
   }
 
   static String _t(String en, String si, String ta) => switch (AppStrings.currentLocaleCode) {

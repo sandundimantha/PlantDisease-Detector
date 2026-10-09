@@ -11,6 +11,7 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/features/farm_log/data/farm_models.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
+import 'package:plant_disease_detector/features/farm_log/presentation/widgets/farm_forms.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FarmScreen — Matches Figma FarmScreen.tsx
@@ -57,14 +58,21 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                           style: AppTextStyles.headlineMedium.copyWith(letterSpacing: -0.5, fontSize: 24),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          context.tr(
-                            en: '8.5 total acres · 4 blocks',
-                            si: 'අක්කර 8.5 · කොටස් 4ක්',
-                            ta: '8.5 மொத்த ஏக்கர் · 4 தொகுதிகள்',
-                          ),
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.settingsIcon),
-                        ),
+                        Builder(builder: (context) {
+                          final fields = fieldsAsync.valueOrNull ?? const <FieldBlock>[];
+                          final acres = fields.fold<double>(0, (sum, f) => sum + fieldAcres(f));
+                          final a = acres % 1 == 0 ? acres.toInt().toString() : acres.toStringAsFixed(1);
+                          return Text(
+                            fields.isEmpty
+                                ? context.tr(en: 'No fields added yet', si: 'තවම ක්ෂේත්‍ර එක් කර නැත', ta: 'இன்னும் வயல்கள் சேர்க்கப்படவில்லை')
+                                : context.tr(
+                                    en: '$a total acres · ${fields.length} ${fields.length == 1 ? 'field' : 'fields'}',
+                                    si: 'අක්කර $a · ක්ෂේත්‍ර ${fields.length}',
+                                    ta: '$a மொத்த ஏக்கர் · ${fields.length} வயல்கள்',
+                                  ),
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.settingsIcon),
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -103,15 +111,33 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     const SizedBox(height: 20),
 
                     // Field Blocks
-                    Text(
-                      context.tr(en: 'Field Blocks', si: 'ක්ෂේත්‍ර කොටස්', ta: 'பண்ணை தொகுதிகள்'),
-                      style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          context.tr(en: 'Field Blocks', si: 'ක්ෂේත්‍ර කොටස්', ta: 'பண்ணை தொகுதிகள்'),
+                          style: AppTextStyles.titleSmall.copyWith(color: AppColors.textPrimary),
+                        ),
+                        _smallAction(
+                          context.tr(en: 'Add Field', si: 'ක්ෂේත්‍රය එක්කරන්න', ta: 'வயல் சேர்க்க'),
+                          () => showAddFieldSheet(context, ref),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     fieldsAsync.when(
-                      data: (fields) => Column(
-                        children: fields.map((f) => _buildFieldCard(f)).toList(),
-                      ),
+                      data: (fields) => fields.isEmpty
+                          ? _emptyCard(
+                              Icons.grid_view_rounded,
+                              context.tr(
+                                en: 'Add your fields to track their health and harvests.',
+                                si: 'ඒවායේ සෞඛ්‍යය සහ අස්වැන්න සොයා බැලීමට ඔබේ ක්ෂේත්‍ර එක් කරන්න.',
+                                ta: 'அவற்றின் ஆரோக்கியத்தையும் அறுவடையையும் கண்காணிக்க உங்கள் வயல்களைச் சேர்க்கவும்.',
+                              ),
+                            )
+                          : Column(
+                              children: fields.map((f) => _buildFieldCard(f)).toList(),
+                            ),
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Text('Error loading fields: $err'),
                     ),
@@ -159,9 +185,18 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                     ),
                     const SizedBox(height: 12),
                     tasksAsync.when(
-                      data: (tasks) => Column(
-                        children: tasks.map((t) => _buildTaskCard(t)).toList(),
-                      ),
+                      data: (tasks) => tasks.isEmpty
+                          ? _emptyCard(
+                              Icons.event_note_rounded,
+                              context.tr(
+                                en: 'No tasks yet. Tap Add Log to record watering, spraying or harvesting.',
+                                si: 'තවම කාර්යයන් නැත. ජලය දැමීම, ඉසීම හෝ අස්වනු නෙළීම සටහන් කිරීමට සටහනක් එක්කරන්න ඔබන්න.',
+                                ta: 'இன்னும் பணிகள் இல்லை. நீர்ப்பாசனம், தெளிப்பு அல்லது அறுவடையைப் பதிவுசெய்ய பதிவு சேர்க்க என்பதைத் தட்டவும்.',
+                              ),
+                            )
+                          : Column(
+                              children: tasks.map((t) => _buildTaskCard(t)).toList(),
+                            ),
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (err, _) => Text('Error loading tasks: $err'),
                     ),
@@ -171,6 +206,45 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _smallAction(String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.add_rounded, size: 14, color: AppColors.primary),
+            const SizedBox(width: 4),
+            Text(label, style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyCard(IconData icon, String text) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.textSecondary),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, height: 1.4))),
+        ],
       ),
     );
   }
@@ -303,7 +377,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(
           children: [
@@ -324,7 +398,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           borderRadius: const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
                         ),
                         alignment: Alignment.center,
@@ -360,9 +434,14 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(color: statusColor.withOpacity(0.15), borderRadius: BorderRadius.circular(50)),
+                              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(50)),
                               child: Text(
-                                field.status,
+                                switch (field.status.toLowerCase()) {
+                                  'healthy' => context.tr(en: 'Healthy', si: 'නිරෝගී', ta: 'ஆரோக்கியம்'),
+                                  'monitor' => context.tr(en: 'Monitor', si: 'නිරීක්ෂණය', ta: 'கண்காணி'),
+                                  'at risk' => context.tr(en: 'At Risk', si: 'අවදානමේ', ta: 'ஆபத்து'),
+                                  _ => field.status,
+                                },
                                 style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -498,7 +577,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Opacity(
           opacity: task.isDone ? 0.6 : 1.0,
@@ -508,7 +587,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: task.isDone ? AppColors.severityDefault : color.withOpacity(0.1),
+                  color: task.isDone ? AppColors.severityDefault : color.withValues(alpha: 0.1),
                   border: task.isDone ? null : Border.all(color: color, width: 1.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -536,7 +615,7 @@ class _FarmScreenState extends ConsumerState<FarmScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(50),
                 ),
                 child: Text(

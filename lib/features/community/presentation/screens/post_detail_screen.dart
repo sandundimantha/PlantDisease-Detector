@@ -28,7 +28,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     try {
       await ref.read(postCommentsProvider(widget.post.id).notifier).addComment(_commentController.text.trim());
       _commentController.clear();
-      FocusScope.of(context).unfocus();
+      if (mounted) FocusScope.of(context).unfocus();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding comment: $e')));
@@ -115,7 +115,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: comments.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      separatorBuilder: (_, _) => const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final comment = comments[index];
                         final cAuthor = comment.author?.fullName ?? 'Farmer';

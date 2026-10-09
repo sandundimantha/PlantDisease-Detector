@@ -99,7 +99,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: mainIconColor.withOpacity(0.35),
+                                    color: mainIconColor.withValues(alpha: 0.35),
                                     blurRadius: 60,
                                     spreadRadius: 15,
                                   ),
@@ -109,7 +109,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                             ),
                             const SizedBox(width: 20),
                             Text(
-                              weatherState.isLoading ? '--°C' : '${currentTemp}°C',
+                              weatherState.isLoading ? '--°C' : '$currentTemp°C',
                               style: AppTextStyles.headlineLarge.copyWith(
                                 color: Colors.white, 
                                 fontSize: 90, 
@@ -133,7 +133,7 @@ class WeatherForecastScreen extends ConsumerWidget {
                                   '${weatherState.weather!.daily.isEmpty ? '' : '  |  H: ${weatherState.weather!.daily.first.maxTemp.round()}°  |  L: ${weatherState.weather!.daily.first.minTemp.round()}°'}'
                                   '  |  ${context.tr(en: 'Humidity', si: 'ආර්ද්‍රතාවය', ta: 'ஈரப்பதம்')} ${weatherState.weather!.humidity}%',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyLarge.copyWith(color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w500, fontSize: 16),
+                          style: AppTextStyles.bodyLarge.copyWith(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w500, fontSize: 16),
                         ),
                         const SizedBox(height: 40),
 
@@ -148,14 +148,14 @@ class WeatherForecastScreen extends ConsumerWidget {
                             child: Container(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [Colors.white.withOpacity(0.25), Colors.white.withOpacity(0.05)],
+                                  colors: [Colors.white.withValues(alpha: 0.25), Colors.white.withValues(alpha: 0.05)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 border: Border(
-                                  top: BorderSide(color: Colors.white.withOpacity(0.4), width: 1.5),
-                                  left: BorderSide(color: Colors.white.withOpacity(0.1), width: 0.5),
-                                  right: BorderSide(color: Colors.white.withOpacity(0.1), width: 0.5),
+                                  top: BorderSide(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+                                  left: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 0.5),
+                                  right: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 0.5),
                                 ),
                               ),
                               child: Padding(
@@ -257,13 +257,13 @@ class WeatherForecastScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: isSelected 
           ? const LinearGradient(colors: [Color(0xFFF5C842), Color(0xFFE2A066)], begin: Alignment.topLeft, end: Alignment.bottomRight) 
-          : LinearGradient(colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          : LinearGradient(colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.2), width: 1),
+        border: Border.all(color: isSelected ? Colors.transparent : Colors.white.withValues(alpha: 0.2), width: 1),
         boxShadow: [
           if (isSelected)
             BoxShadow(
-              color: const Color(0xFFF5C842).withOpacity(0.4),
+              color: const Color(0xFFF5C842).withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -287,9 +287,9 @@ class WeatherForecastScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

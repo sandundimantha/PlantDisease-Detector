@@ -82,8 +82,8 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
   }
 
   /// Applies the selected chip and the search text to the feed.
-  /// Trending: most liked/commented first · My Crops: posts about the user's
-  /// crops · Q&A: questions.
+  /// Latest: newest first · Trending: most liked/commented first ·
+  /// My Crops: posts about the user's crops · Q&A: questions.
   List<CommunityPost> _visiblePosts(List<CommunityPost> posts, List<String> myCrops) {
     final q = _query.trim().toLowerCase();
     Iterable<CommunityPost> list = posts;
@@ -94,14 +94,16 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
           (p.author?.fullName ?? '').toLowerCase().contains(q));
     }
     switch (_selectedFilterIndex) {
-      case 1:
+      case 0:
+        return list.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case 2:
         final crops = myCrops.map((c) => c.toLowerCase()).where((c) => c.isNotEmpty).toList();
         list = list.where((p) {
           if (p.category == 'My Crops') return true;
           final text = '${p.title ?? ''} ${p.content}'.toLowerCase();
           return crops.any(text.contains);
         });
-      case 2:
+      case 3:
         list = list.where((p) => p.category == 'Q&A' || p.content.contains('?') || (p.title ?? '').contains('?'));
       default:
         final sorted = list.toList()
@@ -124,6 +126,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
   }
 
   final List<Map<String, dynamic>> _filters = [
+    {'title': 'Latest', 'icon': Icons.schedule_rounded},
     {'title': 'Trending', 'icon': Icons.local_fire_department_rounded},
     {'title': 'My Crops', 'icon': Icons.eco_rounded},
     {'title': 'Q&A', 'icon': Icons.help_outline_rounded},
@@ -225,6 +228,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                       itemBuilder: (context, index) {
                         final isSelected = _selectedFilterIndex == index;
                         final filterTitles = [
+                          context.tr(en: 'Latest', si: 'නවතම', ta: 'சமீபத்தியது'),
                           context.tr(en: 'Trending', si: 'ජනප්‍රිය', ta: 'பிரபலமானது'),
                           context.tr(en: 'My Crops', si: 'මගේ බෝග', ta: 'என் பயிர்கள்'),
                           context.tr(en: 'Q&A', si: 'ප්‍රශ්නෝත්තර', ta: 'கேள்வி & பதில்'),
@@ -235,7 +239,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+                              color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isSelected ? AppColors.primary : Colors.grey.shade300,
@@ -274,7 +278,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.nature_people_rounded, size: 80, color: AppColors.primary.withOpacity(0.3)),
+                          Icon(Icons.nature_people_rounded, size: 80, color: AppColors.primary.withValues(alpha: 0.3)),
                           const SizedBox(height: 16),
                           Text(
                             allPosts.isEmpty
@@ -389,7 +393,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: ClipRRect(
@@ -468,8 +472,14 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
                             ],
                           ),
                         );
-                        if (confirm == true) {
-                          ref.read(communityFeedProvider.notifier).deletePost(post.id);
+                        if (confirm == true && mounted) {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final failText = context.tr(en: 'Post could not be deleted. Check your connection and try again.', si: 'පළ කිරීම මැකිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'இடுகையை நீக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
+                          try {
+                            await ref.read(communityFeedProvider.notifier).deletePost(post.id);
+                          } catch (_) {
+                            messenger.showSnackBar(SnackBar(content: Text(failText)));
+                          }
                         }
                       }
                     },
@@ -651,15 +661,21 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    ref.read(communityFeedProvider.notifier).editPost(
-                      post.id,
-                      contentController.text,
-                      title: post.title != null ? titleController.text : null,
-                      imageUrl: post.imageUrl,
-                      category: post.category,
-                    );
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final failText = context.tr(en: 'Post could not be updated. Check your connection and try again.', si: 'පළ කිරීම යාවත්කාලීන කළ නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'இடுகையைப் புதுப்பிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
                     Navigator.pop(context);
+                    try {
+                      await ref.read(communityFeedProvider.notifier).editPost(
+                        post.id,
+                        contentController.text,
+                        title: post.title != null ? titleController.text : null,
+                        imageUrl: post.imageUrl,
+                        category: post.category,
+                      );
+                    } catch (_) {
+                      messenger.showSnackBar(SnackBar(content: Text(failText)));
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,

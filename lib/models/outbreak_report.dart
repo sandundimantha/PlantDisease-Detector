@@ -41,8 +41,9 @@ class OutbreakReport {
     final created = DateTime.tryParse(json['created_at']?.toString() ?? '');
     if (created != null) timeAgo = _ago(created);
     Color computedColor = AppColors.outbreakLow;
-    if (sev >= 0.7) computedColor = AppColors.outbreakHigh;
-    else if (sev >= 0.4) computedColor = AppColors.outbreakMedium;
+    if (sev >= 0.7) {
+      computedColor = AppColors.outbreakHigh;
+    } else if (sev >= 0.4) computedColor = AppColors.outbreakMedium;
 
     return OutbreakReport(
       id: json['id']?.toString() ?? '',

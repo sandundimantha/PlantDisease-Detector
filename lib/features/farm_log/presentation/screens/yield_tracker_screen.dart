@@ -6,6 +6,7 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plant_disease_detector/features/farm_log/application/farm_provider.dart';
+import 'package:plant_disease_detector/features/farm_log/presentation/widgets/farm_forms.dart';
 import 'package:intl/intl.dart';
 import 'package:plant_disease_detector/features/farm_log/data/farm_models.dart';
 
@@ -64,6 +65,19 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
     return months.length > 6 ? months.sublist(months.length - 6) : months;
   }
 
+  /// A harvest belongs to a field, so a farmer with no fields is asked to add one first.
+  Future<void> _addHarvest() async {
+    List<FieldBlock> fields = ref.read(fieldBlocksProvider).valueOrNull ?? await ref.read(fieldBlocksProvider.future);
+    if (!mounted) return;
+    if (fields.isEmpty) {
+      final added = await showAddFieldSheet(context, ref);
+      if (!added || !mounted) return;
+      fields = await ref.read(fieldBlocksProvider.future);
+      if (!mounted || fields.isEmpty) return;
+    }
+    await showAddHarvestSheet(context, ref, fields);
+  }
+
   // Colors
   final Color _goldAccent = const Color(0xFFF5C842);
   final Color _darkGreen = const Color(0xFF0F3820);
@@ -74,6 +88,15 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
 
     return Scaffold(
       backgroundColor: _darkGreen,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addHarvest,
+        backgroundColor: _goldAccent,
+        icon: const Icon(Icons.add_rounded, color: Color(0xFF0F3820)),
+        label: Text(
+          context.tr(en: 'Add Harvest', si: 'අස්වැන්න එක්කරන්න', ta: 'அறுவடை சேர்க்க'),
+          style: const TextStyle(color: Color(0xFF0F3820), fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -139,12 +162,12 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: isSelected ? _goldAccent : Colors.white.withOpacity(0.1),
+                                  color: isSelected ? _goldAccent : Colors.white.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
-                                  border: isSelected ? null : Border.all(color: Colors.white.withOpacity(0.2)),
+                                  border: isSelected ? null : Border.all(color: Colors.white.withValues(alpha: 0.2)),
                                   boxShadow: [
                                     if (isSelected)
-                                      BoxShadow(color: _goldAccent.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
+                                      BoxShadow(color: _goldAccent.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 4)),
                                   ],
                                 ),
                                 child: Text(
@@ -347,9 +370,9 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
         child: Container(
           padding: padding ?? const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
           child: child,
         ),
@@ -388,7 +411,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _goldAccent.withOpacity(0.2),
+              color: _goldAccent.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: _goldAccent, size: 22),
@@ -413,7 +436,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
       ),
       child: Row(
@@ -441,5 +464,5 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
     );
   }
 
-  Widget _buildDivider() => Divider(height: 1, color: Colors.white.withOpacity(0.1), indent: 16, endIndent: 16);
+  Widget _buildDivider() => Divider(height: 1, color: Colors.white.withValues(alpha: 0.1), indent: 16, endIndent: 16);
 }

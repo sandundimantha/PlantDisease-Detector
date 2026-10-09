@@ -22,7 +22,6 @@ import 'package:plant_disease_detector/features/home/application/saved_items_pro
 import 'package:plant_disease_detector/features/home/presentation/screens/main_screen.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
-import 'package:flutter/foundation.dart';
 
 // ── Ultra Premium Tokens ───────────────────────────────────────────────────────
 const _bg = Color(0xFFF4F6F5); // Cool, luxury off-white
@@ -77,8 +76,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
     final hr = DateTime.now().hour;
     String greet = l10n?.goodEvening ?? 'Good Evening';
-    if (hr < 12) greet = l10n?.goodMorning ?? 'Good Morning';
-    else if (hr < 17) greet = l10n?.goodAfternoon ?? 'Good Afternoon';
+    if (hr < 12) {
+      greet = l10n?.goodMorning ?? 'Good Morning';
+    } else if (hr < 17) greet = l10n?.goodAfternoon ?? 'Good Afternoon';
 
     // Share of the last 10 scanned leaves that were healthy (-1 = no scans yet).
     double health = -1;
@@ -190,7 +190,7 @@ class _HeroSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
-                        colors: [const Color(0xFF2E8B57).withOpacity(0.4), Colors.transparent],
+                        colors: [const Color(0xFF2E8B57).withValues(alpha: 0.4), Colors.transparent],
                       ),
                     ),
                   ),
@@ -204,7 +204,7 @@ class _HeroSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
-                        colors: [const Color(0xFFF5C842).withOpacity(0.15), Colors.transparent],
+                        colors: [const Color(0xFFF5C842).withValues(alpha: 0.15), Colors.transparent],
                       ),
                     ),
                   ),
@@ -216,14 +216,14 @@ class _HeroSection extends StatelessWidget {
                       // Floating Glows
                       AnimatedBuilder(
                         animation: float,
-                        builder: (_, __) => Positioned(
+                        builder: (_, _) => Positioned(
                           right: 20, top: 40 + (float.value * 15),
                           child: Container(
                             width: 100, height: 100,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
-                                colors: [_gold.withOpacity(0.2), Colors.transparent],
+                                colors: [_gold.withValues(alpha: 0.2), Colors.transparent],
                               ),
                             ),
                           ),
@@ -278,8 +278,8 @@ class _HeroSection extends StatelessWidget {
                                 width: 38, height: 38,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: _gold.withOpacity(0.8), width: 1.5),
-                                  boxShadow: [BoxShadow(color: _gold.withOpacity(0.3), blurRadius: 10)],
+                                  border: Border.all(color: _gold.withValues(alpha: 0.8), width: 1.5),
+                                  boxShadow: [BoxShadow(color: _gold.withValues(alpha: 0.3), blurRadius: 10)],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
@@ -315,13 +315,13 @@ class _HeroSection extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
+                              colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
                               begin: Alignment.topLeft, end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.2),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.2),
                             boxShadow: [
-                              BoxShadow(color: const Color(0xFFF5C842).withOpacity(0.15), blurRadius: 15, spreadRadius: 1)
+                              BoxShadow(color: const Color(0xFFF5C842).withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 1)
                             ],
                           ),
                           child: Row(
@@ -343,7 +343,7 @@ class _HeroSection extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(timeStr, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
                               const SizedBox(width: 10),
-                              Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.9), size: 18),
+                              Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.9), size: 18),
                             ],
                           ),
                         ),
@@ -403,7 +403,7 @@ class _HealthCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 30, offset: const Offset(0, 15)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 30, offset: const Offset(0, 15)),
         ],
       ),
       child: ClipRRect(
@@ -413,12 +413,12 @@ class _HealthCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
+                colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFE2A066).withOpacity(0.4), width: 1.2),
+              border: Border.all(color: const Color(0xFFE2A066).withValues(alpha: 0.4), width: 1.2),
             ),
             child: Stack(
               children: [
@@ -428,7 +428,7 @@ class _HealthCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
-                    glowC.withOpacity(0.08), Colors.transparent,
+                    glowC.withValues(alpha: 0.08), Colors.transparent,
                   ]),
                 ))),
             // Layout: big number LEFT | hairline | info RIGHT
@@ -463,7 +463,7 @@ class _HealthCard extends StatelessWidget {
                 // Hairline vertical divider
                 Container(width: 1,
                     margin: const EdgeInsets.symmetric(vertical: 22),
-                    color: Colors.white.withOpacity(0.12)),
+                    color: Colors.white.withValues(alpha: 0.12)),
                 // Right panel: label + status + badges
                 Expanded(
                   child: Padding(
@@ -483,7 +483,7 @@ class _HealthCard extends StatelessWidget {
                           Container(width: 8, height: 8,
                             decoration: BoxDecoration(
                               color: glowC, shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: glowC.withOpacity(0.4),
+                              boxShadow: [BoxShadow(color: glowC.withValues(alpha: 0.4),
                                   blurRadius: 6, spreadRadius: 1)],
                             )),
                           const SizedBox(width: 8),
@@ -521,9 +521,9 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
     decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.08),
+      color: Colors.white.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
     ),
     child: Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, color: const Color(0xFFF5C842), size: 12),
@@ -560,7 +560,7 @@ class _ScanCTA extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
-              BoxShadow(color: const Color(0xFF238E50).withOpacity(0.12),
+              BoxShadow(color: const Color(0xFF238E50).withValues(alpha: 0.12),
                   blurRadius: 20, offset: const Offset(0, 8)),
             ],
           ),
@@ -569,7 +569,7 @@ class _ScanCTA extends StatelessWidget {
               // Ghost watermark
               Positioned(right: 12, top: 0, bottom: 0,
                 child: Icon(Icons.qr_code_scanner_rounded,
-                    size: 90, color: const Color(0xFF238E50).withOpacity(0.06)),
+                    size: 90, color: const Color(0xFF238E50).withValues(alpha: 0.06)),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -577,14 +577,14 @@ class _ScanCTA extends StatelessWidget {
                   // Icon with pulsing border ring
                   AnimatedBuilder(
                     animation: pulse,
-                    builder: (_, __) => Container(
+                    builder: (_, _) => Container(
                       width: 54, height: 54,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF238E50).withOpacity(0.15 + pulse.value * 0.1),
+                            color: const Color(0xFF238E50).withValues(alpha: 0.15 + pulse.value * 0.1),
                             blurRadius: 16, spreadRadius: pulse.value * 2,
                           )
                         ]
@@ -605,7 +605,7 @@ class _ScanCTA extends StatelessWidget {
                               fontWeight: FontWeight.w900, letterSpacing: -0.4, height: 1.1)),
                         const SizedBox(height: 5),
                         Text(context.tr(en: 'AI-powered diagnosis in seconds', si: 'තත්පර කිහිපයකින් AI මඟින් රෝග විනිශ්චය', ta: 'சில வினாடிகளில் AI மூலம் நோய் கண்டறிதல்'),
-                          style: TextStyle(color: const Color(0xFF0A1C11).withOpacity(0.55),
+                          style: TextStyle(color: const Color(0xFF0A1C11).withValues(alpha: 0.55),
                               fontSize: 11.5, fontWeight: FontWeight.w600)),
                       ],
                     ),
@@ -620,7 +620,7 @@ class _ScanCTA extends StatelessWidget {
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: const Color(0xFF145730).withOpacity(0.40),
+                        BoxShadow(color: const Color(0xFF145730).withValues(alpha: 0.40),
                             blurRadius: 12, offset: const Offset(0, 4)),
                       ],
                     ),
@@ -710,10 +710,10 @@ class _LuxTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: Colors.white, width: 2),
           boxShadow: [
-            BoxShadow(color: const Color(0xFF042211).withOpacity(0.04),
+            BoxShadow(color: const Color(0xFF042211).withValues(alpha: 0.04),
                 blurRadius: 24, offset: const Offset(0, 10)),
             // Faint colored shadow for that Apple-like glow
-            BoxShadow(color: accent.withOpacity(0.08),
+            BoxShadow(color: accent.withValues(alpha: 0.08),
                 blurRadius: 12, offset: const Offset(0, 4)),
           ],
         ),
@@ -724,7 +724,7 @@ class _LuxTile extends StatelessWidget {
               // Ghost icon watermark — right side
               Positioned(right: -10, bottom: -10,
                   child: Icon(icon, size: 75,
-                      color: accent.withOpacity(0.04))),
+                      color: accent.withValues(alpha: 0.04))),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
                 child: Column(
@@ -735,7 +735,7 @@ class _LuxTile extends StatelessWidget {
                     Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.12),
+                        color: accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, color: accent, size: 20),
@@ -752,7 +752,7 @@ class _LuxTile extends StatelessWidget {
                               height: 1.25, letterSpacing: 0.1)),
                         const SizedBox(height: 3),
                         Text(sub, maxLines: 1,
-                          style: TextStyle(color: const Color(0xFF0A1C11).withOpacity(0.45),
+                          style: TextStyle(color: const Color(0xFF0A1C11).withValues(alpha: 0.45),
                               fontSize: 9.5, fontWeight: FontWeight.w600,
                               letterSpacing: 0.2)),
                       ],
@@ -842,7 +842,7 @@ class _ScanCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -859,9 +859,9 @@ class _ScanCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _white.withOpacity(0.95),
+                    color: _white.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

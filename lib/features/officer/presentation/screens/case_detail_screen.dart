@@ -181,14 +181,16 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
   // ── Update: close the case; only report success if the row changed ────────
   Future<void> _resolveCase() async {
     final messenger = ScaffoldMessenger.of(context);
+    final doneText = context.tr(en: '✅ Case marked as resolved!', si: '✅ නඩුව විසඳූ ලෙස සලකුණු කළා!', ta: '✅ வழக்கு தீர்க்கப்பட்டதாகக் குறிக்கப்பட்டது!');
+    final failText = context.tr(en: 'Case could not be resolved. Check your connection and try again.', si: 'නඩුව විසඳිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'வழக்கைத் தீர்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.');
     try {
       await ref.read(chatProvider(_consultation!.id).notifier).markResolved();
       _refreshCaseLists();
-      messenger.showSnackBar(SnackBar(content: Text(context.tr(en: '✅ Case marked as resolved!', si: '✅ නඩුව විසඳූ ලෙස සලකුණු කළා!', ta: '✅ வழக்கு தீர்க்கப்பட்டதாகக் குறிக்கப்பட்டது!'))));
+      messenger.showSnackBar(SnackBar(content: Text(doneText)));
       if (mounted && context.canPop()) context.pop();
     } catch (e) {
       messenger.showSnackBar(SnackBar(
-        content: Text(context.tr(en: 'Case could not be resolved. Check your connection and try again.', si: 'නඩුව විසඳිය නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'வழக்கைத் தீர்க்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')),
+        content: Text(failText),
         backgroundColor: Color(0xFFEF4444),
       ));
     }

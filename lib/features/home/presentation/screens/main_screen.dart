@@ -1,3 +1,4 @@
+import 'package:plant_disease_detector/core/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
@@ -32,7 +33,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void initState() {
     super.initState();
     // Upload any scans saved while offline (e.g. from a previous session).
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncNow());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncNow();
+      NotificationService().requestPermission();
+    });
   }
 
   Future<void> _syncNow() async {
@@ -121,17 +125,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.9),
-                    const Color(0xFFF7EBE6).withOpacity(0.5), // Earthy warm tint
-                    Colors.white.withOpacity(0.4),
-                    const Color(0xFFF7EBE6).withOpacity(0.5),
+                    Colors.white.withValues(alpha: 0.9),
+                    const Color(0xFFF7EBE6).withValues(alpha: 0.5), // Earthy warm tint
+                    Colors.white.withValues(alpha: 0.4),
+                    const Color(0xFFF7EBE6).withValues(alpha: 0.5),
                   ],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF301608).withOpacity(0.06), // Warm shadow
+                    color: const Color(0xFF301608).withValues(alpha: 0.06), // Warm shadow
                     blurRadius: 30, offset: const Offset(0, 12),
                   ),
                 ],
@@ -143,7 +147,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   child: Container(
                     height: 72,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -179,7 +183,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFBA5A31).withOpacity(0.25), // Terracotta glow
+                        color: const Color(0xFFBA5A31).withValues(alpha: 0.25), // Terracotta glow
                         blurRadius: 20, offset: const Offset(0, 8),
                       ),
                     ],

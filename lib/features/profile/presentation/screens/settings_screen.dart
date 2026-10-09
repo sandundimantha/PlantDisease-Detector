@@ -64,7 +64,7 @@ class SettingsScreen extends ConsumerWidget {
               secondary: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
               title: Text(context.tr(en: 'Notifications', si: 'දැනුම්දීම්', ta: 'அறிவிப்புகள்'), style: AppTextStyles.titleMedium),
               subtitle: Text(
-                context.tr(en: 'Announcements and treatment reminders', si: 'නිවේදන සහ ප්‍රතිකාර මතක් කිරීම්', ta: 'அறிவிப்புகள் மற்றும் சிகிச்சை நினைவூட்டல்கள்'),
+                context.tr(en: 'Case updates, messages, announcements and reminders', si: 'සිද්ධි යාවත්කාලීන, පණිවිඩ, නිවේදන සහ මතක් කිරීම්', ta: 'வழக்கு புதுப்பிப்புகள், செய்திகள், அறிவிப்புகள் மற்றும் நினைவூட்டல்கள்'),
                 style: AppTextStyles.bodySmall,
               ),
               value: appSettings.notifications,
