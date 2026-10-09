@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:plant_disease_detector/core/theme/app_theme.dart';
 
-/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/// ─────────────────────────────────────────────────────────────────────────────
 /// Utility helpers used across the ML module
-/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/// ─────────────────────────────────────────────────────────────────────────────
 
 class AppUtils {
   AppUtils._();
 
-  /// Confidence score â†’ display color
+  /// Confidence score → display color
   static Color confidenceColor(double score) {
     if (score > 0.8) return AppColors.success;
     if (score >= 0.5) return AppColors.warning;
     return AppColors.error;
   }
 
-  /// Confidence score â†’ human-readable label
+  /// Confidence score → human-readable label
   static String confidenceLabel(double score) {
     if (score > 0.8) return 'High Confidence';
     if (score >= 0.5) return 'Moderate Confidence';

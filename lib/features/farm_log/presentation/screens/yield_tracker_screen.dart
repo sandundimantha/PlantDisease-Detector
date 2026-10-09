@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:plant_disease_detector/core/localization/app_strings.dart';
@@ -119,7 +119,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                       onPressed: () => context.pop(),
                     ),
                     Text(
-                      context.tr(en: 'Yield Tracker', si: 'à¶…à·ƒà·Šà·€à·à¶±à·Šà¶± à¶½à·”à·„à·”à¶¶à·à¶³à·“à¶¸', ta: 'à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯ à®•à®£à¯à®•à®¾à®£à®¿à®ªà¯à®ªà®¾à®³à®°à¯'),
+                      context.tr(en: 'Yield Tracker', si: 'අස්වැන්න ලුහුබැඳීම', ta: 'விளைச்சல் கண்காணிப்பாளர்'),
                       style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const LanguageSelectorButton(isCompact: true),
@@ -135,7 +135,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                     children: [
                       // Date Range Header
                       Text(
-                        context.tr(en: 'Date Range', si: 'à¶¯à·’à¶± à¶´à¶»à·à·ƒà¶º', ta: 'à®¤à¯‡à®¤à®¿ à®µà®°à®®à¯à®ªà¯'),
+                        context.tr(en: 'Date Range', si: 'දින පරාසය', ta: 'தேதி வரம்பு'),
                         style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 12),
@@ -150,10 +150,10 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                           itemBuilder: (context, index) {
                             final isSelected = _selectedTabIndex == index;
                             final tabLabels = [
-                              context.tr(en: 'All Time', si: 'à·ƒà·’à¶ºà¶½à·” à¶šà·à¶½', ta: 'à®Žà®²à¯à®²à®¾ à®¨à¯‡à®°à®®à¯à®®à¯'),
-                              context.tr(en: 'This Year', si: 'à¶¸à·™à¶¸ à·€à·ƒà¶»à·š', ta: 'à®‡à®¨à¯à®¤ à®†à®£à¯à®Ÿà¯'),
-                              context.tr(en: 'This Month', si: 'à¶¸à·™à¶¸ à¶¸à·à·ƒà¶ºà·š', ta: 'à®‡à®¨à¯à®¤ à®®à®¾à®¤à®®à¯'),
-                              context.tr(en: 'Custom', si: 'à·€à·™à¶±à¶­à·Š', ta: 'à®¤à®©à®¿à®ªà¯à®ªà®¯à®©à¯'),
+                              context.tr(en: 'All Time', si: 'සියලු කාල', ta: 'எல்லா நேரமும்'),
+                              context.tr(en: 'This Year', si: 'මෙම වසරේ', ta: 'இந்த ஆண்டு'),
+                              context.tr(en: 'This Month', si: 'මෙම මාසයේ', ta: 'இந்த மாதம்'),
+                              context.tr(en: 'Custom', si: 'වෙනත්', ta: 'தனிப்பயன்'),
                             ];
                             return GestureDetector(
                               onTap: () => index == 3 ? _pickCustomRange() : setState(() => _selectedTabIndex = index),
@@ -185,7 +185,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Chart and summary â€” calculated from the farmer's yield entries
+                      // Chart and summary — calculated from the farmer's yield entries
                       Builder(builder: (context) {
                         final entries = _inRange(yieldsAsync.valueOrNull ?? const <YieldEntry>[]);
                         final months = _monthlyTotals(entries);
@@ -204,7 +204,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                           children: [
                             if (_selectedTabIndex == 3 && _customRange != null) ...[
                               Text(
-                                '${DateFormat('d MMM yyyy').format(_customRange!.start)} â€“ ${DateFormat('d MMM yyyy').format(_customRange!.end)}',
+                                '${DateFormat('d MMM yyyy').format(_customRange!.start)} – ${DateFormat('d MMM yyyy').format(_customRange!.end)}',
                                 style: const TextStyle(color: Colors.white70, fontSize: 13),
                               ),
                               const SizedBox(height: 12),
@@ -214,7 +214,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    context.tr(en: 'Yield per Month (kg)', si: 'à¶¸à·à·ƒà·’à¶š à¶…à·ƒà·Šà·€à·à¶±à·Šà¶± (kg)', ta: 'à®®à®¾à®¤à®¾à®¨à¯à®¤à®¿à®° à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯ (kg)'),
+                                    context.tr(en: 'Yield per Month (kg)', si: 'මාසික අස්වැන්න (kg)', ta: 'மாதாந்திர விளைச்சல் (kg)'),
                                     style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 24),
@@ -223,7 +223,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                                     child: months.isEmpty
                                         ? Center(
                                             child: Text(
-                                              context.tr(en: 'No harvests in this period', si: 'à¶¸à·™à¶¸ à¶šà·à¶½à¶ºà·š à¶…à·ƒà·Šà·€à¶±à·” à¶±à·à¶­', ta: 'à®‡à®¨à¯à®¤à®•à¯ à®•à®¾à®²à®¤à¯à®¤à®¿à®²à¯ à®…à®±à¯à®µà®Ÿà¯ˆ à®‡à®²à¯à®²à¯ˆ'),
+                                              context.tr(en: 'No harvests in this period', si: 'මෙම කාලයේ අස්වනු නැත', ta: 'இந்தக் காலத்தில் அறுவடை இல்லை'),
                                               style: const TextStyle(color: Colors.white70),
                                             ),
                                           )
@@ -292,17 +292,17 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                             const SizedBox(height: 24),
                             Row(
                               children: [
-                                Expanded(child: _buildSummaryCard(Icons.shopping_bag_outlined, context.tr(en: 'Total Harvest', si: 'à¶¸à·”à·…à·” à¶…à·ƒà·Šà·€à·à¶±à·Šà¶±', ta: 'à®®à¯Šà®¤à¯à®¤ à®…à®±à¯à®µà®Ÿà¯ˆ'), '${nf.format(total)} kg')),
+                                Expanded(child: _buildSummaryCard(Icons.shopping_bag_outlined, context.tr(en: 'Total Harvest', si: 'මුළු අස්වැන්න', ta: 'மொத்த அறுவடை'), '${nf.format(total)} kg')),
                                 const SizedBox(width: 16),
-                                Expanded(child: _buildSummaryCard(Icons.emoji_events_outlined, context.tr(en: 'Avg Yield/Crop', si: 'à·ƒà·à¶¸à·à¶±à·Šâ€à¶º à¶…à·ƒà·Šà·€à·à¶±à·Šà¶±', ta: 'à®šà®°à®¾à®šà®°à®¿ à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯'), byCrop.isEmpty ? 'â€”' : '${nf.format((total / byCrop.length).round())} kg')),
+                                Expanded(child: _buildSummaryCard(Icons.emoji_events_outlined, context.tr(en: 'Avg Yield/Crop', si: 'සාමාන්‍ය අස්වැන්න', ta: 'சராசரி விளைச்சல்'), byCrop.isEmpty ? '—' : '${nf.format((total / byCrop.length).round())} kg')),
                               ],
                             ),
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                Expanded(child: _buildSummaryCard(Icons.grass_rounded, context.tr(en: 'Best Crop', si: 'à·„à·œà¶³à¶¸ à¶¶à·à¶œà¶º', ta: 'à®šà®¿à®±à®¨à¯à®¤ à®ªà®¯à®¿à®°à¯'), best == null ? 'â€”' : '${context.trCrop(best.key)}\n${nf.format(best.value)} kg')),
+                                Expanded(child: _buildSummaryCard(Icons.grass_rounded, context.tr(en: 'Best Crop', si: 'හොඳම බෝගය', ta: 'சிறந்த பயிர்'), best == null ? '—' : '${context.trCrop(best.key)}\n${nf.format(best.value)} kg')),
                                 const SizedBox(width: 16),
-                                Expanded(child: _buildSummaryCard(Icons.calendar_today_outlined, context.tr(en: 'Last Entry', si: 'à¶…à·€à·ƒà¶±à·Š à·ƒà¶§à·„à¶±', ta: 'à®•à®Ÿà¯ˆà®šà®¿ à®ªà®¤à®¿à®µà¯'), last == null ? 'â€”' : '${DateFormat('MMM d').format(last.date)}\n${nf.format(last.yieldAmount)} kg')),
+                                Expanded(child: _buildSummaryCard(Icons.calendar_today_outlined, context.tr(en: 'Last Entry', si: 'අවසන් සටහන', ta: 'கடைசி பதிவு'), last == null ? '—' : '${DateFormat('MMM d').format(last.date)}\n${nf.format(last.yieldAmount)} kg')),
                               ],
                             ),
                           ],
@@ -312,7 +312,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
 
                       // Yield Entries List
                       Text(
-                        context.tr(en: 'Yield Entries', si: 'à¶…à·ƒà·Šà·€à¶±à·” à·ƒà¶§à·„à¶±à·Š', ta: 'à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯ à®ªà®¤à®¿à®µà¯à®•à®³à¯'),
+                        context.tr(en: 'Yield Entries', si: 'අස්වනු සටහන්', ta: 'விளைச்சல் பதிவுகள்'),
                         style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
@@ -324,7 +324,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                             if (entries.isEmpty) {
                               return Padding(
                                 padding: const EdgeInsets.all(20),
-                                child: Center(child: Text(context.tr(en: 'No yield entries in this period.', si: 'à¶¸à·™à¶¸ à¶šà·à¶½à¶ºà·š à¶…à·ƒà·Šà·€à¶±à·” à·ƒà¶§à·„à¶±à·Š à¶±à·à¶­.', ta: 'à®‡à®¨à¯à®¤à®•à¯ à®•à®¾à®²à®¤à¯à®¤à®¿à®²à¯ à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯ à®ªà®¤à®¿à®µà¯à®•à®³à¯ à®‡à®²à¯à®²à¯ˆ.'), style: const TextStyle(color: Colors.white70))),
+                                child: Center(child: Text(context.tr(en: 'No yield entries in this period.', si: 'මෙම කාලයේ අස්වනු සටහන් නැත.', ta: 'இந்தக் காலத்தில் விளைச்சல் பதிவுகள் இல்லை.'), style: const TextStyle(color: Colors.white70))),
                               );
                             }
                             return Column(
@@ -347,7 +347,7 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
                             );
                           },
                           loading: () => const Padding(padding: EdgeInsets.all(30), child: Center(child: CircularProgressIndicator(color: Colors.white))),
-                          error: (err, _) => Padding(padding: const EdgeInsets.all(20), child: Text(context.tr(en: 'Could not load yield entries.', si: 'à¶…à·ƒà·Šà·€à¶±à·” à·ƒà¶§à·„à¶±à·Š à¶´à·–à¶»à¶«à¶º à¶šà·… à¶±à·œà·„à·à¶š.', ta: 'à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯ à®ªà®¤à®¿à®µà¯à®•à®³à¯ˆ à®à®±à¯à®± à®®à¯à®Ÿà®¿à®¯à®µà®¿à®²à¯à®²à¯ˆ.'), style: const TextStyle(color: Colors.redAccent))),
+                          error: (err, _) => Padding(padding: const EdgeInsets.all(20), child: Text(context.tr(en: 'Could not load yield entries.', si: 'අස්වනු සටහන් පූරණය කළ නොහැක.', ta: 'விளைச்சல் பதிவுகளை ஏற்ற முடியவில்லை.'), style: const TextStyle(color: Colors.redAccent))),
                         ),
                       ),
                       const SizedBox(height: 80),
@@ -441,10 +441,10 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
       ),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(context.tr(en: 'Date', si: 'à¶¯à·’à¶±à¶º', ta: 'à®¤à¯‡à®¤à®¿'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
-          Expanded(flex: 3, child: Text(context.tr(en: 'Crop', si: 'à¶¶à·à¶œà¶º', ta: 'à®ªà®¯à®¿à®°à¯'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text(context.tr(en: 'Field ID', si: 'à¶šà·Šà·‚à·šà¶­à·Šâ€à¶»à¶º', ta: 'à®¨à®¿à®²à®®à¯'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text(context.tr(en: 'Yield', si: 'à¶…à·ƒà·Šà·€à·à¶±à·Šà¶±', ta: 'à®µà®¿à®³à¯ˆà®šà¯à®šà®²à¯'), textAlign: TextAlign.right, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(context.tr(en: 'Date', si: 'දිනය', ta: 'தேதி'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(flex: 3, child: Text(context.tr(en: 'Crop', si: 'බෝගය', ta: 'பயிர்'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(context.tr(en: 'Field ID', si: 'ක්ෂේත්‍රය', ta: 'நிலம்'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
+          Expanded(flex: 2, child: Text(context.tr(en: 'Yield', si: 'අස්වැන්න', ta: 'விளைச்சல்'), textAlign: TextAlign.right, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold))),
         ],
       ),
     );
@@ -466,4 +466,3 @@ class _YieldTrackerScreenState extends ConsumerState<YieldTrackerScreen> {
 
   Widget _buildDivider() => Divider(height: 1, color: Colors.white.withValues(alpha: 0.1), indent: 16, endIndent: 16);
 }
-

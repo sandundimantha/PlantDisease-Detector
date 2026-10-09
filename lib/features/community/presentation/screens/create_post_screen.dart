@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +49,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   Future<void> _submitPost() async {
     if (_contentController.text.trim().isEmpty && _selectedImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr(en: 'Please add some text or a photo to post.', si: 'à¶´à·… à¶šà·’à¶»à·“à¶¸à¶§ à¶´à·™à·…à¶šà·Š à·„à· à¶¡à·à¶ºà·à¶»à·–à¶´à¶ºà¶šà·Š à¶‘à¶šà·Š à¶šà¶»à¶±à·Šà¶±.', ta: 'à®‡à®Ÿà¯à®•à¯ˆà®¯à®¿à®Ÿ à®‰à®°à¯ˆ à®…à®²à¯à®²à®¤à¯ à®ªà®Ÿà®¤à¯à®¤à¯ˆà®šà¯ à®šà¯‡à®°à¯à®•à¯à®•à®µà¯à®®à¯.'))),
+        SnackBar(content: Text(context.tr(en: 'Please add some text or a photo to post.', si: 'පළ කිරීමට පෙළක් හෝ ඡායාරූපයක් එක් කරන්න.', ta: 'இடுகையிட உரை அல்லது படத்தைச் சேர்க்கவும்.'))),
       );
       return;
     }
@@ -74,7 +74,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
       if (mounted) {
         final messenger = ScaffoldMessenger.of(context);
-        final posted = context.tr(en: 'Post shared with the community', si: 'à¶´à·…à¶šà·’à¶»à·“à¶¸ à¶´à·Šâ€à¶»à¶¢à·à·€ à·ƒà¶¸à¶Ÿ à¶¶à·™à¶¯à·à¶œà¶±à·Šà¶±à· à¶½à¶¯à·“', ta: 'à®‡à®Ÿà¯à®•à¯ˆ à®šà®®à¯‚à®•à®¤à¯à®¤à¯à®Ÿà®©à¯ à®ªà®•à®¿à®°à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
+        final posted = context.tr(en: 'Post shared with the community', si: 'පළකිරීම ප්‍රජාව සමඟ බෙදාගන්නා ලදී', ta: 'இடுகை சமூகத்துடன் பகிரப்பட்டது');
         context.pop();
         messenger.showSnackBar(SnackBar(content: Text(posted), backgroundColor: AppColors.primary));
       }
@@ -82,7 +82,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.tr(en: 'Could not post. Check your connection and try again.', si: 'à¶´à·… à¶šà·… à¶±à·œà·„à·à¶š. à·ƒà¶¸à·Šà¶¶à¶±à·Šà¶°à¶­à·à·€à¶º à¶´à¶»à·“à¶šà·Šà·‚à· à¶šà¶» à¶±à·à·€à¶­ à¶‹à¶­à·Šà·ƒà·à·„ à¶šà¶»à¶±à·Šà¶±.', ta: 'à®‡à®Ÿà¯à®•à¯ˆà®¯à®¿à®Ÿ à®®à¯à®Ÿà®¿à®¯à®µà®¿à®²à¯à®²à¯ˆ. à®‡à®£à¯ˆà®ªà¯à®ªà¯ˆà®šà¯ à®šà®°à®¿à®ªà®¾à®°à¯à®¤à¯à®¤à¯ à®®à¯€à®£à¯à®Ÿà¯à®®à¯ à®®à¯à®¯à®±à¯à®šà®¿à®•à¯à®•à®µà¯à®®à¯.')),
+            content: Text(context.tr(en: 'Could not post. Check your connection and try again.', si: 'පළ කළ නොහැක. සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.', ta: 'இடுகையிட முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.')),
             backgroundColor: Colors.red,
           ),
         );
@@ -102,7 +102,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PremiumAppBar(
-        title: Text(context.tr(en: 'Create Post', si: 'à¶´à·… à¶šà¶»à¶±à·Šà¶±', ta: 'à®‡à®Ÿà¯à®•à¯ˆà®¯à¯ˆ à®‰à®°à¯à®µà®¾à®•à¯à®•à¯')),
+        title: Text(context.tr(en: 'Create Post', si: 'පළ කරන්න', ta: 'இடுகையை உருவாக்கு')),
         actions: [
           _isLoading
               ? const Padding(
@@ -123,7 +123,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: Text(context.tr(en: 'Post', si: 'à¶´à·… à¶šà¶»à¶±à·Šà¶±', ta: 'à®‡à®Ÿà¯à®•à¯ˆ'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    child: Text(context.tr(en: 'Post', si: 'පළ කරන්න', ta: 'இடுகை'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   ),
                 )
         ],
@@ -267,7 +267,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             child: SafeArea(
               child: Row(
                 children: [
-                  Text(context.tr(en: 'Add to your post', si: 'à¶”à¶¶à·š à¶´à·…à¶šà·’à¶»à·“à¶¸à¶§ à¶‘à¶šà·Š à¶šà¶»à¶±à·Šà¶±', ta: 'à®‰à®™à¯à®•à®³à¯ à®‡à®Ÿà¯à®•à¯ˆà®¯à®¿à®²à¯ à®šà¯‡à®°à¯à®•à¯à®•à®µà¯à®®à¯'), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                  Text(context.tr(en: 'Add to your post', si: 'ඔබේ පළකිරීමට එක් කරන්න', ta: 'உங்கள் இடுகையில் சேர்க்கவும்'), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                   const Spacer(),
                   _buildToolIcon(
                     icon: Icons.photo_library_rounded,
@@ -303,4 +303,3 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
   }
 }
-

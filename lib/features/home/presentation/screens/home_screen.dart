@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,7 +23,7 @@ import 'package:plant_disease_detector/features/home/presentation/screens/main_s
 import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/models/disease_result.dart';
 
-// â”€â”€ Ultra Premium Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Ultra Premium Tokens ───────────────────────────────────────────────────────
 const _bg = Color(0xFFF4F6F5); // Cool, luxury off-white
 const _white = Colors.white;
 const _emLight = Color(0xFF1E7045);
@@ -99,26 +99,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // â‘  STUNNING HERO WITH GLASS HEALTH CARD
+                // ① STUNNING HERO WITH GLASS HEALTH CARD
                 _HeroSection(user: user, greet: greet, loc: loc, wx: wx, float: _float, health: health, scanCount: scans.length, cropCount: user.primaryCrops.length),
                 
                 const SizedBox(height: 65), // Spacing for straddling card
 
-                // â‘¢ GLOWING SCAN CTA
+                // ③ GLOWING SCAN CTA
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: _ScanCTA(pulse: _pulse),
                 ),
                 const SizedBox(height: 32),
 
-                // â‘£ BENTO GRID ACTIONS
+                // ④ BENTO GRID ACTIONS
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: _BentoActions(),
                 ),
                 const SizedBox(height: 32),
 
-                // â‘¤ RECENT SCANS
+                // ⑤ RECENT SCANS
                 scansAsync.when(
                   data: (data) => _RecentScans(scans: data.take(3).toList()),
                   loading: () => const Center(child: Padding(
@@ -127,7 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   )),
                   error: (error, stack) => Center(child: Padding(
                     padding: EdgeInsets.all(24.0),
-                    child: Text(context.tr(en: 'Error loading scans', si: 'à·ƒà·Šà¶šà·‘à¶±à·Š à¶´à·–à¶»à¶«à¶º à¶šà·… à¶±à·œà·„à·à¶š', ta: 'à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯ˆ à®à®±à¯à®± à®®à¯à®Ÿà®¿à®¯à®µà®¿à®²à¯à®²à¯ˆ'), style: TextStyle(color: Colors.red)),
+                    child: Text(context.tr(en: 'Error loading scans', si: 'ස්කෑන් පූරණය කළ නොහැක', ta: 'ஸ்கேன்களை ஏற்ற முடியவில்லை'), style: TextStyle(color: Colors.red)),
                   )),
                 ),
               ],
@@ -139,9 +139,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// â‘  HERO & TRUE GLASS WEATHER CARD
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════════════
+// ① HERO & TRUE GLASS WEATHER CARD
+// ══════════════════════════════════════════════════════════════════════════════
 class _HeroSection extends StatelessWidget {
   final dynamic user, greet, loc, wx;
   final AnimationController float;
@@ -334,7 +334,7 @@ class _HeroSection extends StatelessWidget {
                               const SizedBox(width: 12),
                               Icon(wx.weather?.isDay != false ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded, color: wx.weather?.isDay != false ? Colors.orangeAccent : Colors.indigo.shade200, size: 14),
                               const SizedBox(width: 4),
-                              Text('$tempÂ°C', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+                              Text('$temp°C', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
                               const SizedBox(width: 12),
                               Container(width: 1, height: 12, color: Colors.white30),
                               const SizedBox(width: 12),
@@ -378,9 +378,9 @@ class _HeroSection extends StatelessWidget {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// â‘¡ ULTRA-PREMIUM HEALTH CARD â€” Editorial Light Theme Layout
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════════════
+// ② ULTRA-PREMIUM HEALTH CARD — Editorial Light Theme Layout
+// ══════════════════════════════════════════════════════════════════════════════
 class _HealthCard extends StatelessWidget {
   final double health;
   final int count;
@@ -393,9 +393,9 @@ class _HealthCard extends StatelessWidget {
     final pct = noScans ? 0 : (health * 100).round();
     final Color glowC = noScans ? const Color(0xFF9AA79F) : pct >= 80 ? const Color(0xFF238E50)
         : pct >= 60 ? const Color(0xFFF5C842) : const Color(0xFFFF6B6B);
-    final String lbl  = noScans ? context.tr(en: 'Scan a leaf to start', si: 'à¶†à¶»à¶¸à·Šà¶· à¶šà·’à¶»à·“à¶¸à¶§ à¶šà·œà·…à¶ºà¶šà·Š à·ƒà·Šà¶šà·‘à¶±à·Š à¶šà¶»à¶±à·Šà¶±', ta: 'à®¤à¯Šà®Ÿà®™à¯à®• à®’à®°à¯ à®‡à®²à¯ˆà®¯à¯ˆ à®¸à¯à®•à¯‡à®©à¯ à®šà¯†à®¯à¯à®¯à®µà¯à®®à¯')
-        : pct >= 80 ? context.tr(en: 'Excellent', si: 'à·€à·’à·à·’à·‚à·Šà¶§à¶ºà·’', ta: 'à®šà®¿à®±à®ªà¯à®ªà¯')
-        : pct >= 60 ? context.tr(en: 'Moderate', si: 'à¶¸à¶°à·Šâ€à¶ºà¶¸', ta: 'à®¨à®Ÿà¯à®¤à¯à®¤à®°à®®à¯') : context.tr(en: 'At Risk', si: 'à¶…à·€à¶¯à·à¶±à¶¸à·Š', ta: 'à®†à®ªà®¤à¯à®¤à®¿à®²à¯');
+    final String lbl  = noScans ? context.tr(en: 'Scan a leaf to start', si: 'ආරම්භ කිරීමට කොළයක් ස්කෑන් කරන්න', ta: 'தொடங்க ஒரு இலையை ஸ்கேன் செய்யவும்')
+        : pct >= 80 ? context.tr(en: 'Excellent', si: 'විශිෂ්ටයි', ta: 'சிறப்பு')
+        : pct >= 60 ? context.tr(en: 'Moderate', si: 'මධ්‍යම', ta: 'நடுத்தரம்') : context.tr(en: 'At Risk', si: 'අවදානම්', ta: 'ஆபத்தில்');
 
     return Container(
       height: 118,
@@ -441,7 +441,7 @@ class _HealthCard extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(noScans ? 'â€”' : '$pct',
+                        Text(noScans ? '—' : '$pct',
                           style: const TextStyle(
                             color: Colors.white, fontSize: 68,
                             fontWeight: FontWeight.w900, height: 1,
@@ -471,7 +471,7 @@ class _HealthCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(context.tr(en: 'FARM HEALTH SCORE', si: 'à¶œà·œà·€à·’à¶´à¶½ à·ƒà·žà¶›à·Šâ€à¶º à¶¯à¶»à·Šà·à¶šà¶º', ta: 'à®ªà®£à¯à®£à¯ˆ à®†à®°à¯‹à®•à¯à®•à®¿à®¯ à®®à®¤à®¿à®ªà¯à®ªà¯†à®£à¯').toUpperCase(),
+                        Text(context.tr(en: 'FARM HEALTH SCORE', si: 'ගොවිපල සෞඛ්‍ය දර්ශකය', ta: 'பண்ணை ஆரோக்கிய மதிப்பெண்').toUpperCase(),
                           style: const TextStyle(
                             color: Color(0xFFF5C842),
                             fontSize: 9.5, fontWeight: FontWeight.w900,
@@ -493,9 +493,9 @@ class _HealthCard extends StatelessWidget {
                         ]),
                         Row(children: [
                           _Chip(icon: Icons.document_scanner_rounded,
-                              text: context.tr(en: '$count Scans', si: 'à·ƒà·Šà¶šà·‘à¶±à·Š $count', ta: '$count à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯')),
+                              text: context.tr(en: '$count Scans', si: 'ස්කෑන් $count', ta: '$count ஸ்கேன்கள்')),
                           const SizedBox(width: 8),
-                          _Chip(icon: Icons.eco_rounded, text: context.tr(en: '$cropCount Crops', si: 'à·€à¶œà·à·€à¶±à·Š $cropCount', ta: '$cropCount à®ªà®¯à®¿à®°à¯à®•à®³à¯')),
+                          _Chip(icon: Icons.eco_rounded, text: context.tr(en: '$cropCount Crops', si: 'වගාවන් $cropCount', ta: '$cropCount பயிர்கள்')),
                         ]),
                       ],
                     ),
@@ -533,9 +533,9 @@ class _Chip extends StatelessWidget {
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// â‘¢ REFINED SCAN CTA â€” Light Premium Glow
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════════════
+// ③ REFINED SCAN CTA — Light Premium Glow
+// ══════════════════════════════════════════════════════════════════════════════
 class _ScanCTA extends StatelessWidget {
   final Animation<double> pulse;
   const _ScanCTA({required this.pulse});
@@ -599,11 +599,11 @@ class _ScanCTA extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(context.tr(en: 'Scan Your Crop', si: 'à¶”à¶¶à·š à·€à¶œà·à·€ à¶´à¶»à·“à¶šà·Šà·‚à· à¶šà¶»à¶±à·Šà¶±', ta: 'à®‰à®™à¯à®•à®³à¯ à®ªà®¯à®¿à®°à¯ˆ à®¸à¯à®•à¯‡à®©à¯ à®šà¯†à®¯à¯à®¯à®µà¯à®®à¯'),
+                        Text(context.tr(en: 'Scan Your Crop', si: 'ඔබේ වගාව පරීක්ෂා කරන්න', ta: 'உங்கள் பயிரை ஸ்கேன் செய்யவும்'),
                           style: const TextStyle(color: Color(0xFF0A1C11), fontSize: 20,
                               fontWeight: FontWeight.w900, letterSpacing: -0.4, height: 1.1)),
                         const SizedBox(height: 5),
-                        Text(context.tr(en: 'AI-powered diagnosis in seconds', si: 'à¶­à¶­à·Šà¶´à¶» à¶šà·’à·„à·’à¶´à¶ºà¶šà·’à¶±à·Š AI à¶¸à¶Ÿà·’à¶±à·Š à¶»à·à¶œ à·€à·’à¶±à·’à·à·Šà¶ à¶º', ta: 'à®šà®¿à®² à®µà®¿à®©à®¾à®Ÿà®¿à®•à®³à®¿à®²à¯ AI à®®à¯‚à®²à®®à¯ à®¨à¯‹à®¯à¯ à®•à®£à¯à®Ÿà®±à®¿à®¤à®²à¯'),
+                        Text(context.tr(en: 'AI-powered diagnosis in seconds', si: 'තත්පර කිහිපයකින් AI මඟින් රෝග විනිශ්චය', ta: 'சில வினாடிகளில் AI மூலம் நோய் கண்டறிதல்'),
                           style: TextStyle(color: const Color(0xFF0A1C11).withValues(alpha: 0.55),
                               fontSize: 11.5, fontWeight: FontWeight.w600)),
                       ],
@@ -636,28 +636,28 @@ class _ScanCTA extends StatelessWidget {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// â‘£ LUXURY ACTIONS â€” Unified dark base + colored top accent
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════════════
+// ④ LUXURY ACTIONS — Unified dark base + colored top accent
+// ══════════════════════════════════════════════════════════════════════════════
 class _BentoActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(context.tr(en: 'QUICK ACTIONS', si: 'à¶‰à¶šà·Šà¶¸à¶±à·Š à¶šà·Šâ€à¶»à·’à¶ºà·', ta: 'à®µà®¿à®°à¯ˆà®µà®¾à®© à®šà¯†à®¯à®²à¯à®•à®³à¯'),
+        Text(context.tr(en: 'QUICK ACTIONS', si: 'ඉක්මන් ක්‍රියා', ta: 'விரைவான செயல்கள்'),
             style: TextStyle(color: _textMute, fontSize: 10.5,
                 fontWeight: FontWeight.w800, letterSpacing: 1.6)),
         const SizedBox(height: 14),
         Row(children: [
           Expanded(flex: 5, child: _LuxTile(
-            icon: Icons.radar_rounded, label: context.tr(en: 'Disease\nRadar', si: 'à¶»à·à¶œ\nà¶»à·šà¶©à·à¶»à·Š', ta: 'à®¨à¯‹à®¯à¯\nà®°à¯‡à®Ÿà®¾à®°à¯'), sub: context.tr(en: 'Nearby alerts', si: 'à¶…à·€à¶§ à¶…à¶±à¶­à·”à¶»à·” à¶‡à¶Ÿà·€à·“à¶¸à·Š', ta: 'à®…à®°à¯à®•à®¿à®²à¯à®³à¯à®³ à®Žà®šà¯à®šà®°à®¿à®•à¯à®•à¯ˆà®•à®³à¯'),
+            icon: Icons.radar_rounded, label: context.tr(en: 'Disease\nRadar', si: 'රෝග\nරේඩාර්', ta: 'நோய்\nரேடார்'), sub: context.tr(en: 'Nearby alerts', si: 'අවට අනතුරු ඇඟවීම්', ta: 'அருகிலுள்ள எச்சரிக்கைகள்'),
             accent: const Color(0xFFD4637A),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseRadarScreen())),
           )),
           const SizedBox(width: 13),
           Expanded(flex: 4, child: _LuxTile(
-            icon: Icons.support_agent_rounded, label: context.tr(en: 'Expert\nHelp', si: 'à·€à·’à·à·šà·‚à¶¥\nà·ƒà·„à¶º', ta: 'à®¨à®¿à®ªà¯à®£à®°à¯\nà®‰à®¤à®µà®¿'), sub: context.tr(en: 'Ask a pro', si: 'à·€à·’à·à·šà·‚à¶¥à¶ºà·™à¶šà·”à¶œà·™à¶±à·Š à·€à·’à¶¸à·ƒà¶±à·Šà¶±', ta: 'à®’à®°à¯ à®¨à®¿à®ªà¯à®£à®°à®¿à®Ÿà®®à¯ à®•à¯‡à®³à¯à®™à¯à®•à®³à¯'),
+            icon: Icons.support_agent_rounded, label: context.tr(en: 'Expert\nHelp', si: 'විශේෂඥ\nසහය', ta: 'நிபுணர்\nஉதவி'), sub: context.tr(en: 'Ask a pro', si: 'විශේෂඥයෙකුගෙන් විමසන්න', ta: 'ஒரு நிபுணரிடம் கேளுங்கள்'),
             accent: const Color(0xFFD4943A),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpertConsultScreen())),
           )),
@@ -665,20 +665,20 @@ class _BentoActions extends StatelessWidget {
         const SizedBox(height: 13),
         Row(children: [
           Expanded(flex: 4, child: _LuxTile(
-            icon: Icons.menu_book_rounded, label: context.tr(en: 'Disease\nLibrary', si: 'à¶»à·à¶œ\nà¶±à·à¶¸à·à·€à¶½à·’à¶º', ta: 'à®¨à¯‹à®¯à¯\nà®¨à¯‚à®²à®•à®®à¯'), sub: context.tr(en: 'Symptoms & cures', si: 'à¶½à¶šà·Šà·‚à¶« à·ƒà·„ à¶´à·Šâ€à¶»à¶­à·’à¶šà·à¶»', ta: 'à®…à®±à®¿à®•à¯à®±à®¿à®•à®³à¯ & à®šà®¿à®•à®¿à®šà¯à®šà¯ˆ'),
+            icon: Icons.menu_book_rounded, label: context.tr(en: 'Disease\nLibrary', si: 'රෝග\nනාමාවලිය', ta: 'நோய்\nநூலகம்'), sub: context.tr(en: 'Symptoms & cures', si: 'ලක්ෂණ සහ ප්‍රතිකාර', ta: 'அறிகுறிகள் & சிகிச்சை'),
             accent: const Color(0xFF4A86D4),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiseaseCatalogueScreen())),
           )),
           const SizedBox(width: 13),
           Expanded(flex: 5, child: _LuxTile(
-            icon: Icons.people_rounded, label: context.tr(en: 'Community\nForum', si: 'à¶´à·Šâ€à¶»à¶¢à·\nà·ƒà¶‚à·ƒà¶¯à¶º', ta: 'à®šà®®à¯‚à®•\nà®®à®©à¯à®±à®®à¯'), sub: context.tr(en: 'Share & learn', si: 'à¶¶à·™à¶¯à·à¶œà¶±à·Šà¶± à·ƒà·„ à¶‰à¶œà·™à¶± à¶œà¶±à·Šà¶±', ta: 'à®ªà®•à®¿à®°à®µà¯à®®à¯ à®•à®±à¯à®•à®µà¯à®®à¯'),
+            icon: Icons.people_rounded, label: context.tr(en: 'Community\nForum', si: 'ප්‍රජා\nසංසදය', ta: 'சமூக\nமன்றம்'), sub: context.tr(en: 'Share & learn', si: 'බෙදාගන්න සහ ඉගෙන ගන්න', ta: 'பகிரவும் கற்கவும்'),
             accent: const Color(0xFF3CAF70),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityFeedScreen())),
           )),
         ]),
         const SizedBox(height: 13),
         _LuxTile(
-          icon: Icons.lightbulb_outline_rounded, label: context.tr(en: 'Farming Tips', si: 'à¶œà·œà·€à·’ à¶‹à¶´à¶¯à·™à·ƒà·Š', ta: 'à®µà®¿à®µà®šà®¾à®¯ à®•à¯à®±à®¿à®ªà¯à®ªà¯à®•à®³à¯'), sub: context.tr(en: 'Seasonal advice for your crops', si: 'à¶”à¶¶à·š à¶¶à·à¶œ à·ƒà¶³à·„à· à·ƒà·˜à¶­à·”à¶¸à¶º à¶‹à¶´à¶¯à·™à·ƒà·Š', ta: 'à®‰à®™à¯à®•à®³à¯ à®ªà®¯à®¿à®°à¯à®•à®³à¯à®•à¯à®•à®¾à®© à®ªà®°à¯à®µà®•à®¾à®² à®†à®²à¯‹à®šà®©à¯ˆ'),
+          icon: Icons.lightbulb_outline_rounded, label: context.tr(en: 'Farming Tips', si: 'ගොවි උපදෙස්', ta: 'விவசாய குறிப்புகள்'), sub: context.tr(en: 'Seasonal advice for your crops', si: 'ඔබේ බෝග සඳහා සෘතුමය උපදෙස්', ta: 'உங்கள் பயிர்களுக்கான பருவகால ஆலோசனை'),
           accent: const Color(0xFF8A6FD4),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TipsFeedScreen())),
         ),
@@ -720,7 +720,7 @@ class _LuxTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              // Ghost icon watermark â€” right side
+              // Ghost icon watermark — right side
               Positioned(right: -10, bottom: -10,
                   child: Icon(icon, size: 75,
                       color: accent.withValues(alpha: 0.04))),
@@ -767,9 +767,9 @@ class _LuxTile extends StatelessWidget {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// â‘¤ RECENT SCANS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════════════════════════════
+// ⑤ RECENT SCANS
+// ══════════════════════════════════════════════════════════════════════════════
 class _RecentScans extends StatelessWidget {
   final List<dynamic> scans;
   const _RecentScans({required this.scans});
@@ -784,10 +784,10 @@ class _RecentScans extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(context.tr(en: 'RECENT SCANS', si: 'à¶¸à·‘à¶­à¶šà·à¶½à·“à¶± à·ƒà·Šà¶šà·‘à¶±à·Š', ta: 'à®šà®®à¯€à®ªà®¤à¯à®¤à®¿à®¯ à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯'), style: const TextStyle(color: _textMute, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+              Text(context.tr(en: 'RECENT SCANS', si: 'මෑතකාලීන ස්කෑන්', ta: 'சமீபத்திய ஸ்கேன்கள்'), style: const TextStyle(color: _textMute, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
               GestureDetector(
                 onTap: () => ProviderScope.containerOf(context).read(mainTabProvider.notifier).state = 2,
-                child: Text(context.tr(en: 'See All', si: 'à·ƒà·’à¶ºà¶½à·Šà¶½ à¶¶à¶½à¶±à·Šà¶±', ta: 'à®…à®©à¯ˆà®¤à¯à®¤à¯ˆà®¯à¯à®®à¯ à®•à®¾à®£à¯à®•'), style: const TextStyle(color: _copper, fontSize: 13, fontWeight: FontWeight.w800)),
+                child: Text(context.tr(en: 'See All', si: 'සියල්ල බලන්න', ta: 'அனைத்தையும் காண்க'), style: const TextStyle(color: _copper, fontSize: 13, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
@@ -799,7 +799,7 @@ class _RecentScans extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(color: _white, borderRadius: BorderRadius.circular(24)),
-              child: Center(child: Text(context.tr(en: 'No recent scans found.', si: 'à¶¸à·‘à¶­à¶šà·à¶½à·“à¶± à·ƒà·Šà¶šà·‘à¶±à·Š à·„à¶¸à·”à·€à·–à¶ºà·š à¶±à·à¶­.', ta: 'à®šà®®à¯€à®ªà®¤à¯à®¤à®¿à®¯ à®¸à¯à®•à¯‡à®©à¯à®•à®³à¯ à®Žà®¤à¯à®µà¯à®®à¯ à®•à®¾à®£à®ªà¯à®ªà®Ÿà®µà®¿à®²à¯à®²à¯ˆ.'), style: const TextStyle(color: _textMute))),
+              child: Center(child: Text(context.tr(en: 'No recent scans found.', si: 'මෑතකාලීන ස්කෑන් හමුවූයේ නැත.', ta: 'சமீபத்திய ஸ்கேன்கள் எதுவும் காணப்படவில்லை.'), style: const TextStyle(color: _textMute))),
             ),
           )
         else
@@ -898,7 +898,7 @@ class _ScanCard extends StatelessWidget {
   }
 }
 
-// Saved Items â€” Create (save) and Delete (unsave) straight from a recent scan.
+// Saved Items — Create (save) and Delete (unsave) straight from a recent scan.
 class _BookmarkButton extends ConsumerStatefulWidget {
   final ScanRecord scan;
   const _BookmarkButton({required this.scan});
@@ -915,10 +915,10 @@ class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
     final notifier = ref.read(savedItemsProvider.notifier);
     final existing = notifier.itemForScan(widget.scan.id);
     final messenger = ScaffoldMessenger.of(context);
-    final savedText = context.tr(en: 'Saved to Saved Items', si: 'à·ƒà·”à¶»à·à¶šà·’ à¶…à¶ºà·’à¶­à¶¸ à·€à¶½à¶§ à·ƒà·”à¶»à·à¶šà·”à¶«à·', ta: 'à®šà¯‡à®®à®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®µà¯ˆà®¯à®¿à®²à¯ à®šà¯‡à®°à¯à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
-    final removedText = context.tr(en: 'Removed from saved items', si: 'à·ƒà·”à¶»à·à¶šà·’ à¶…à¶ºà·’à¶­à¶¸ à·€à¶½à·’à¶±à·Š à¶‰à·€à¶­à·Š à¶šà·…à·', ta: 'à®šà¯‡à®®à®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®µà¯ˆà®¯à®¿à®²à®¿à®°à¯à®¨à¯à®¤à¯ à®¨à¯€à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯');
-    final viewText = context.tr(en: 'View', si: 'à¶¶à¶½à¶±à·Šà¶±', ta: 'à®ªà®¾à®°à¯');
-    final errorText = context.tr(en: 'Something went wrong. Please try again.', si: 'à¶ºà¶¸à¶šà·Š à·€à·à¶»à¶¯à·”à¶«à·. à¶±à·à·€à¶­ à¶‹à¶­à·Šà·ƒà·à·„ à¶šà¶»à¶±à·Šà¶±.', ta: 'à®à®¤à¯‹ à®¤à®µà®±à¯ à®¨à®Ÿà®¨à¯à®¤à®¤à¯. à®®à¯€à®£à¯à®Ÿà¯à®®à¯ à®®à¯à®¯à®±à¯à®šà®¿à®•à¯à®•à®µà¯à®®à¯.');
+    final savedText = context.tr(en: 'Saved to Saved Items', si: 'සුරැකි අයිතම වලට සුරැකුණා', ta: 'சேமிக்கப்பட்டவையில் சேர்க்கப்பட்டது');
+    final removedText = context.tr(en: 'Removed from saved items', si: 'සුරැකි අයිතම වලින් ඉවත් කළා', ta: 'சேமிக்கப்பட்டவையிலிருந்து நீக்கப்பட்டது');
+    final viewText = context.tr(en: 'View', si: 'බලන්න', ta: 'பார்');
+    final errorText = context.tr(en: 'Something went wrong. Please try again.', si: 'යමක් වැරදුණා. නැවත උත්සාහ කරන්න.', ta: 'ஏதோ தவறு நடந்தது. மீண்டும் முயற்சிக்கவும்.');
 
     setState(() => _busy = true);
     try {
@@ -942,7 +942,7 @@ class _BookmarkButtonState extends ConsumerState<_BookmarkButton> {
         messenger.showSnackBar(SnackBar(content: Text(removedText)));
       }
     } catch (_) {
-      // e.g. saved from another device meanwhile â€” resync with the database.
+      // e.g. saved from another device meanwhile — resync with the database.
       ref.invalidate(savedItemsProvider);
       messenger.showSnackBar(SnackBar(content: Text(errorText), backgroundColor: Colors.red));
     } finally {
