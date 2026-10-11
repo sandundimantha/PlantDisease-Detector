@@ -20,6 +20,7 @@ import 'package:plant_disease_detector/core/providers/app_settings_provider.dart
 import 'package:plant_disease_detector/features/home/application/saved_items_provider.dart';
 import 'package:plant_disease_detector/features/home/presentation/screens/saved_items_screen.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
+import 'package:plant_disease_detector/features/officer/data/consultation_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ProfileScreen — Matches Figma ProfileScreen.tsx
@@ -32,6 +33,18 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool? _isOfficer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final role = await fetchUserRole();
+    if (mounted) setState(() => _isOfficer = role == 'officer');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,10 +171,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildProfileCard(ref, scanCount),
-                    _buildAchievements(achievements),
-                    _buildFarmDetails(ref),
-                    _buildSavedItemsLink(ref),
+                    _isOfficer == true
+                        ? _buildOfficerProfileCard(ref)
+                        : _buildProfileCard(ref, scanCount),
+                    if (_isOfficer != true) _buildAchievements(achievements),
+                    if (_isOfficer != true) _buildFarmDetails(ref),
+                    if (_isOfficer != true) _buildSavedItemsLink(ref),
                     _buildSettings(settings),
                     
                     Padding(
@@ -306,6 +321,160 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildOfficerProfileCard(WidgetRef ref) {
+    final userData = ref.watch(userProvider);
+    final stats = ref.watch(officerStatsProvider);
+    final displayName = userData.fullName.isNotEmpty
+        ? userData.fullName
+        : 'Agriculture Officer';
+    final district = userData.district.isNotEmpty
+        ? userData.district
+        : 'Assigned service area not set';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      decoration: BoxDecoration(
+        gradient: AppGradients.profileCard,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildOfficerAvatar(userData),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: AppTextStyles.headlineMedium.copyWith(
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Agriculture Officer · $district',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.75),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.verified_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Officer account',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+            ],
+          ),
+          const SizedBox(height: 20),
+          stats.when(
+            loading: () => const SizedBox(
+              height: 48,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+            error: (_, error) => Row(
+              children: [
+                Expanded(child: _buildProfileStat('—', 'Pending Cases')),
+                const SizedBox(width: 12),
+                Expanded(child: _buildProfileStat('—', 'Resolved Today')),
+                const SizedBox(width: 12),
+                Expanded(child: _buildProfileStat('—', 'Urgent Cases')),
+              ],
+            ),
+            data: (values) => Row(
+              children: [
+                Expanded(
+                  child: _buildProfileStat(
+                    '${values['pending'] ?? 0}',
+                    'Pending Cases',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildProfileStat(
+                    '${values['resolvedToday'] ?? 0}',
+                    'Resolved Today',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildProfileStat(
+                    '${values['urgent'] ?? 0}',
+                    'Urgent Cases',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfficerAvatar(UserData userData) {
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 3),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: userData.imagePath != null && userData.imagePath!.isNotEmpty
+            ? SmartImage(src: userData.imagePath!, fit: BoxFit.cover)
+            : Container(
+                color: Colors.white.withValues(alpha: 0.2),
+                child: Center(
+                  child: Text(
+                    userData.fullName.isNotEmpty
+                        ? userData.fullName[0].toUpperCase()
+                        : 'O',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
       ),
     );
   }

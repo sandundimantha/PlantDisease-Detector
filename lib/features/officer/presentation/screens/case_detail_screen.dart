@@ -102,30 +102,25 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             height: MediaQuery.of(context).size.height * 0.42,
             child: Hero(
               tag: 'case_image_${_consultation?.id ?? 'detail'}',
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      _consultation?.imageUrl ??
-                          'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?q=80&w=600&auto=format&fit=crop',
-                    ),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.black.withValues(alpha: 0.6),
-                        Colors.black.withValues(alpha: 0.2),
-                        const Color(0xFFF8FAFC),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: const [0.0, 0.5, 1.0],
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildCaseImage(),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withValues(alpha: 0.6),
+                          Colors.black.withValues(alpha: 0.2),
+                          const Color(0xFFF8FAFC),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -150,6 +145,42 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCaseImage() {
+    final imageUrl = _consultation?.imageUrl;
+    const fallbackUrl =
+        'https://images.unsplash.com/photo-1599940824399-b87987ceb72a'
+        '?q=80&w=600&auto=format&fit=crop';
+
+    if (imageUrl == null || imageUrl.trim().isEmpty) {
+      return _buildMissingImagePlaceholder();
+    }
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Image.network(
+          fallbackUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              _buildMissingImagePlaceholder(),
+        );
+      },
+    );
+  }
+
+  Widget _buildMissingImagePlaceholder() {
+    return Container(
+      color: const Color(0xFFDDEFEA),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.eco_rounded,
+        color: Color(0xFF0F766E),
+        size: 72,
       ),
     );
   }
