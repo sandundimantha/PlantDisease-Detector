@@ -15,6 +15,7 @@ import 'package:plant_disease_detector/core/widgets/language_selector_button.dar
 import 'package:plant_disease_detector/core/providers/location_provider.dart';
 import 'package:plant_disease_detector/shared/widgets/smart_image.dart';
 import 'package:plant_disease_detector/features/weather/presentation/providers/weather_provider.dart';
+import 'package:plant_disease_detector/features/weather/presentation/screens/weather_forecast_screen.dart';
 import 'package:plant_disease_detector/core/providers/user_provider.dart';
 import 'package:plant_disease_detector/l10n/app_localizations.dart';
 // ─────────────────────────────────────────────────────────────────────────────
@@ -418,40 +419,51 @@ class _OfficerHomeTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
-                          begin: Alignment.topLeft, end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.2),
-                        boxShadow: [
-                          BoxShadow(color: const Color(0xFFF5C842).withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 1)
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.location_on_rounded, color: Color(0xFFE8C97A), size: 14),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(city, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: -0.2), overflow: TextOverflow.ellipsis),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WeatherForecastScreen(),
                           ),
-                          const SizedBox(width: 10),
-                          Container(width: 1, height: 12, color: Colors.white30),
-                          const SizedBox(width: 10),
-                          Icon(wx.weather?.isDay != false ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded, color: wx.weather?.isDay != false ? Colors.orangeAccent : Colors.indigo.shade200, size: 14),
-                          const SizedBox(width: 4),
-                          Text('$temp°C', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
-                          const SizedBox(width: 10),
-                          Container(width: 1, height: 12, color: Colors.white30),
-                          const SizedBox(width: 10),
-                          const Icon(Icons.access_time_rounded, color: Colors.white70, size: 14),
-                          const SizedBox(width: 4),
-                          Text(timeStr, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
-                        ],
+                        );
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.white.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.05)],
+                            begin: Alignment.topLeft, end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0xFFF5C842).withValues(alpha: 0.15), blurRadius: 15, spreadRadius: 1)
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: Color(0xFFE8C97A), size: 14),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(city, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: -0.2), overflow: TextOverflow.ellipsis),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(width: 1, height: 12, color: Colors.white30),
+                            const SizedBox(width: 10),
+                            Icon(wx.weather?.isDay != false ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded, color: wx.weather?.isDay != false ? Colors.orangeAccent : Colors.indigo.shade200, size: 14),
+                            const SizedBox(width: 4),
+                            Text('$temp°C', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+                            const SizedBox(width: 10),
+                            Container(width: 1, height: 12, color: Colors.white30),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.access_time_rounded, color: Colors.white70, size: 14),
+                            const SizedBox(width: 4),
+                            Text(timeStr, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
