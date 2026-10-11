@@ -395,7 +395,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.edit_rounded, color: Colors.white, size: 20),
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
+                },
+                tooltip: context.tr(
+                  en: 'Edit profile',
+                  si: 'පැතිකඩ සංස්කරණය',
+                  ta: 'சுயவிவரத்தைத் திருத்து',
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
